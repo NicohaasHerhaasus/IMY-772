@@ -1,1 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment (keep .env.example committed)
+.env
+.env.local
+.env.*.local
+
+# Logs & debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE (optional — uncomment if you do not share editor settings)
+# .vscode/
+.idea/
