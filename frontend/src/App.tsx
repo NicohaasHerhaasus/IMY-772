@@ -9,8 +9,8 @@ import RiverFlows from "./pages/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
-import UploadDatafiles from "./pages/admin/UploadDatafiles/UploadDatafiles";
-import ManageDatafiles from "./pages/admin/ManageDatafiles/ManageDatafiles";
+import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
+import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
 
 
 function App() {

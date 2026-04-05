@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
-import "./AdminLayout.css";
 
 // Hardcoded mock user — replace with your auth context later
 const MOCK_USER = {
@@ -11,9 +10,9 @@ const MOCK_USER = {
 
 export default function AdminLayout() {
   return (
-    <div className="admin-layout">
+    <div className="flex min-h-[calc(100vh-72px)] bg-cream">
       <AdminSidebar user={MOCK_USER} />
-      <main className="admin-layout__content">
+      <main className="flex-1 px-14 py-12 overflow-y-auto">
         <Outlet />
       </main>
     </div>

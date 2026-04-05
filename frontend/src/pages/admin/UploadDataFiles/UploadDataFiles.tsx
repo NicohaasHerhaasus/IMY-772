@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
+import { Button, Card, FormField, Select } from "../../../components/ui";
 import "./UploadDatafiles.css";
 
-// Mock river list — replace with API call later
 const RIVER_OPTIONS = [
   "Apies River",
   "Hennops River",
@@ -12,14 +12,12 @@ const RIVER_OPTIONS = [
 
 export default function UploadDatafiles() {
   const [riverName, setRiverName] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [collectionDate, setCollectionDate] = useState("");
   const [sampleNumber, setSampleNumber] = useState("1");
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Drag & Drop ──────────────────────────────────────
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
@@ -32,13 +30,10 @@ export default function UploadDatafiles() {
     setDragging(true);
   };
 
-  const handleDragLeave = () => setDragging(false);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) setFile(e.target.files[0]);
   };
 
-  // ── Submit ────────────────────────────────────────────
   const handleUpload = () => {
     if (!riverName || !collectionDate || !file) {
       alert("Please fill in all required fields.");
@@ -54,61 +49,24 @@ export default function UploadDatafiles() {
   };
 
   return (
-    <div className="upload-page">
-      <h1 className="upload-page__title">Upload Data</h1>
+    <div>
+      <h1 className="text-[2rem] font-bold text-primary mb-7 tracking-[-0.3px]">
+        Upload Data
+      </h1>
 
-      <div className="upload-card">
+      <Card className="gap-7">
         {/* Row 1: River Name + Date + Sample Number */}
-        <div className="upload-card__row">
-          {/* River Name Dropdown */}
-          <div className="upload-field upload-field--grow">
-            <label className="upload-field__label">
-              River Name <span className="upload-field__required">*</span>
-            </label>
-            <div
-              className={`upload-select ${dropdownOpen ? "upload-select--open" : ""}`}
-              onClick={() => setDropdownOpen((p) => !p)}
-            >
-              <span className={riverName ? "" : "upload-select__placeholder"}>
-                {riverName || "None"}
-              </span>
-              <svg
-                className={`upload-select__chevron ${dropdownOpen ? "upload-select__chevron--up" : ""}`}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                width={18}
-                height={18}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+        <div className="flex gap-6 items-end flex-wrap">
+          <FormField label="River Name" required className="flex-1 min-w-[200px]">
+            <Select
+              value={riverName}
+              onChange={setRiverName}
+              options={RIVER_OPTIONS}
+              placeholder="None"
+            />
+          </FormField>
 
-              {dropdownOpen && (
-                <ul className="upload-select__dropdown" onClick={(e) => e.stopPropagation()}>
-                  {RIVER_OPTIONS.map((r) => (
-                    <li
-                      key={r}
-                      className={`upload-select__option ${r === riverName ? "upload-select__option--selected" : ""}`}
-                      onClick={() => {
-                        setRiverName(r);
-                        setDropdownOpen(false);
-                      }}
-                    >
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          {/* Date of Collection */}
-          <div className="upload-field upload-field--grow">
-            <label className="upload-field__label">
-              Date of Collection <span className="upload-field__required">*</span>
-            </label>
+          <FormField label="Date of Collection" required className="flex-1 min-w-[200px]">
             <div className="upload-date">
               <input
                 type="date"
@@ -132,23 +90,16 @@ export default function UploadDatafiles() {
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-          </div>
+          </FormField>
 
-          {/* Sample Upload Number */}
-          <div className="upload-field upload-field--shrink">
-            <label className="upload-field__label">
-              Sample Upload Number <span className="upload-field__required">*</span>
-            </label>
+          <FormField label="Sample Upload Number" required>
             <div className="upload-stepper">
               <input
                 type="text"
                 inputMode="numeric"
                 className="upload-stepper__input"
                 value={sampleNumber}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, "");
-                  setSampleNumber(val);
-                }}
+                onChange={(e) => setSampleNumber(e.target.value.replace(/[^0-9]/g, ""))}
                 onBlur={() => {
                   const n = parseInt(sampleNumber, 10);
                   setSampleNumber(String(isNaN(n) || n < 1 ? 1 : n));
@@ -160,30 +111,31 @@ export default function UploadDatafiles() {
                   onClick={() => setSampleNumber((n) => String(parseInt(n, 10) + 1))}
                   aria-label="Increase"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={10} height={10}><polyline points="6 15 12 9 18 15" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={10} height={10}>
+                    <polyline points="6 15 12 9 18 15" />
+                  </svg>
                 </button>
                 <button
                   className="upload-stepper__btn"
                   onClick={() => setSampleNumber((n) => String(Math.max(1, parseInt(n, 10) - 1)))}
                   aria-label="Decrease"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={10} height={10}><polyline points="6 9 12 15 18 9" /></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={10} height={10}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </button>
               </div>
             </div>
-          </div>
+          </FormField>
         </div>
 
         {/* Row 2: File Dropzone */}
-        <div className="upload-field">
-          <label className="upload-field__label">
-            Import Data <span className="upload-field__required">*</span>
-          </label>
+        <FormField label="Import Data" required>
           <div
             className={`upload-dropzone ${dragging ? "upload-dropzone--dragging" : ""} ${file ? "upload-dropzone--has-file" : ""}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
+            onDragLeave={() => setDragging(false)}
             onClick={() => fileInputRef.current?.click()}
           >
             <input
@@ -218,18 +170,18 @@ export default function UploadDatafiles() {
               </>
             )}
           </div>
-        </div>
+        </FormField>
 
         {/* Row 3: Action Buttons */}
-        <div className="upload-card__actions">
-          <button className="upload-btn upload-btn--primary" onClick={handleUpload}>
+        <div className="flex gap-4 flex-wrap">
+          <Button onClick={handleUpload} className="px-8">
             Upload your data
-          </button>
-          <button className="upload-btn upload-btn--outline" onClick={handlePreview}>
+          </Button>
+          <Button variant="outline" onClick={handlePreview} className="px-8">
             Preview data
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

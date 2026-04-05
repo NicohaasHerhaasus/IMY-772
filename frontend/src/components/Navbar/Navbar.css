@@ -1,37 +1,14 @@
 /* =============================================
-   DESIGN TOKENS — edit these to retheme easily
-   ============================================= */
-:root {
-  --color-bg-nav: #F1F3E8;          /* cream/off-white from the design */
-  --color-primary: #0d3d3d;  
-  --color-active: #0A2942;       /* dark teal — logo, active pill */
-  --color-accent: #1a9e7a;          /* bright teal — logo highlight, hover */
-  --color-text-nav: #2c2c2c;        /* nav link text */
-  --color-text-muted: #6b7280;      /* secondary text */
-  --color-surface: #ffffff;
-  --color-danger: #dc2626;
-
-  --nav-height: 72px;
-  --nav-border: 1px solid rgba(0, 0, 0, 0.1);
-  --radius-pill: 9999px;
-  --radius-md: 10px;
-  --radius-sm: 6px;
-
-  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
-  --transition-fast: 150ms ease;
-}
-
-/* =============================================
    NAVBAR SHELL
    ============================================= */
 .navbar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  height: var(--nav-height);
+  height: 72px;
   padding: 0 32px;
-  background: var(--color-bg-nav);
-  border-bottom: var(--nav-border);
+  background: var(--color-cream);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -45,7 +22,6 @@
   font-weight: 800;
   letter-spacing: -0.5px;
   text-decoration: none;
-  color: var(--color-primary);
   background: linear-gradient(135deg, var(--color-primary) 40%, var(--color-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -69,14 +45,14 @@
 .navbar__link {
   display: inline-block;
   padding: 8px 20px;
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--color-text-nav);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  color: #2c2c2c;
+  transition: background 150ms ease, color 150ms ease;
   white-space: nowrap;
 }
 
@@ -86,12 +62,12 @@
 }
 
 .navbar__link--active {
-  background: var(--color-active);
+  background: var(--color-sidebar);
   color: #ffffff;
 }
 
 .navbar__link--active:hover {
-  background: var(--color-active);
+  background: var(--color-sidebar);
   color: #ffffff;
 }
 
@@ -113,9 +89,9 @@
   border-radius: 50%;
   border: 1.5px solid rgba(0, 0, 0, 0.2);
   background: transparent;
-  color: var(--color-text-nav);
+  color: #2c2c2c;
   cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  transition: border-color 150ms ease, background 150ms ease;
 }
 
 .navbar__profile-btn:hover {
@@ -130,17 +106,12 @@
   top: calc(100% + 10px);
   right: 0;
   min-width: 196px;
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-dropdown);
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.07);
   padding: 6px;
   animation: dropdown-in 140ms ease forwards;
-}
-
-@keyframes dropdown-in {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
 .navbar__dropdown-item {
@@ -149,16 +120,16 @@
   gap: 10px;
   width: 100%;
   padding: 9px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text-nav);
+  color: #2c2c2c;
   text-decoration: none;
   background: transparent;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background 150ms ease, color 150ms ease;
 }
 
 .navbar__dropdown-item:hover {
