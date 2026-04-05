@@ -1,0 +1,224 @@
+/* =============================================
+   ADMIN SIDEBAR
+   ============================================= */
+
+.admin-sidebar {
+  width: 300px;
+  min-width: 300px;
+  min-height: calc(100vh - 72px); /* full height minus navbar */
+  background: #0A2942;            /* dark teal from design */
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0 24px 0;
+  position: relative;
+  transition: width 250ms ease, min-width 250ms ease;
+  overflow: hidden;
+}
+
+.admin-sidebar--collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+
+/* =============================================
+   SECTION LABEL
+   ============================================= */
+.admin-sidebar__section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0 20px 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-sidebar__section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* =============================================
+   USER CARD
+   ============================================= */
+.admin-sidebar__user-card {
+  margin: 0 16px 28px 16px;
+  background: #004F52;
+  border-radius: 12px;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-sidebar__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.admin-sidebar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-sidebar__avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #e5e7eb;
+  border-radius: 50%;
+}
+
+.admin-sidebar__username {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.admin-sidebar__role {
+  font-size: 0.8rem;
+  color: #1a9e7a;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.admin-sidebar__contributed {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+.admin-sidebar__contributed span:last-child {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* =============================================
+   NAV LINKS
+   ============================================= */
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 0 0;
+  flex: 1;
+}
+
+.admin-sidebar__nav-link {
+  position: relative;
+  display: block;
+  padding: 11px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  transition: color 150ms ease, background 150ms ease;
+  white-space: nowrap;
+}
+
+.admin-sidebar__nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Active state — amber/yellow left border like in the design */
+.admin-sidebar__nav-link--active {
+  color: #FFC267;
+  font-weight: 600;
+}
+
+.admin-sidebar__nav-link--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #FFC267;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Tooltip shown in collapsed mode */
+.admin-sidebar__nav-tooltip {
+  display: none;
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a2e3b;
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.admin-sidebar--collapsed .admin-sidebar__nav-link:hover .admin-sidebar__nav-tooltip {
+  display: block;
+}
+
+/* =============================================
+   LOG OUT
+   ============================================= */
+.admin-sidebar__logout {
+  margin: 0 24px 0 24px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  padding: 8px 0;
+  text-decoration: underline;
+  transition: color 150ms ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.admin-sidebar__logout:hover {
+  color: #ffffff;
+}
+
+/* =============================================
+   COLLAPSE TOGGLE
+   ============================================= */
+.admin-sidebar__toggle {
+  position: absolute;
+  bottom: 40px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: #0d2d3a;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease, color 150ms ease;
+  z-index: 10;
+}
+
+.admin-sidebar__toggle:hover {
+  background: #1a9e7a;
+  color: #fff;
+  border-color: #1a9e7a;
+}

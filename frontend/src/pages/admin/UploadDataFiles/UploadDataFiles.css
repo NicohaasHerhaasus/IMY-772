@@ -1,0 +1,161 @@
+/* =============================================
+   DATE PICKER
+   (custom icon overlay + hide native picker arrow)
+   ============================================= */
+.upload-date {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.upload-date__input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.upload-date__input:focus {
+  border-color: #1a9e7a;
+}
+
+.upload-date__input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+  width: 32px;
+  height: 100%;
+  position: absolute;
+  right: 0;
+}
+
+.upload-date__icon {
+  position: absolute;
+  right: 12px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+/* =============================================
+   NUMBER STEPPER
+   (hide browser spin buttons, custom controls)
+   ============================================= */
+.upload-stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.upload-stepper__input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  background: transparent;
+}
+
+.upload-stepper__input::-webkit-outer-spin-button,
+.upload-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.upload-stepper__controls {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.upload-stepper__btn {
+  flex: 1;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.upload-stepper__btn:hover {
+  background: #e8f5f0;
+  color: #1a9e7a;
+}
+
+/* =============================================
+   FILE DROPZONE
+   ============================================= */
+.upload-dropzone {
+  background: #ffffff;
+  border: 2px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+  text-align: center;
+}
+
+.upload-dropzone:hover {
+  border-color: #1a9e7a;
+  background: #f0faf6;
+}
+
+.upload-dropzone--dragging {
+  border-color: #1a9e7a;
+  background: #e8f5f0;
+}
+
+.upload-dropzone--has-file {
+  border-style: solid;
+  border-color: #1a9e7a;
+  background: #f0faf6;
+}
+
+.upload-dropzone__input {
+  display: none;
+}
+
+.upload-dropzone__text {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+.upload-dropzone__link {
+  color: #1a9e7a;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-dropzone__hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.upload-dropzone__filename {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0d3d3d;
+  margin: 0;
+}
