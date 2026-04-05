@@ -1,0 +1,351 @@
+/* =============================================
+   UPLOAD PAGE
+   ============================================= */
+.upload-page {
+  width: 100%;
+}
+
+.upload-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d3d3d;
+  margin: 0 0 28px 0;
+  letter-spacing: -0.3px;
+}
+
+/* =============================================
+   CARD WRAPPER
+   ============================================= */
+.upload-card {
+  background: #d6ece4;     /* soft mint green from design */
+  border-radius: 16px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* =============================================
+   ROW LAYOUT
+   ============================================= */
+.upload-card__row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+/* =============================================
+   FIELD WRAPPER
+   ============================================= */
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upload-field--grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.upload-field--shrink {
+  flex: 0 0 auto;
+}
+
+.upload-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a2e3b;
+  letter-spacing: 0.01em;
+}
+
+.upload-field__required {
+  color: #e53e3e;
+  margin-left: 2px;
+}
+
+/* =============================================
+   SELECT DROPDOWN
+   ============================================= */
+.upload-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  user-select: none;
+  transition: border-color 150ms ease;
+  min-width: 0;
+}
+
+.upload-select:hover,
+.upload-select--open {
+  border-color: #1a9e7a;
+}
+
+.upload-select__placeholder {
+  color: #9ca3af;
+}
+
+.upload-select__chevron {
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+  color: #6b7280;
+}
+
+.upload-select__chevron--up {
+  transform: rotate(180deg);
+}
+
+.upload-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  animation: dropdown-in 140ms ease forwards;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.upload-select__option {
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #1a2e3b;
+  transition: background 120ms ease;
+}
+
+.upload-select__option:hover {
+  background: #e8f5f0;
+}
+
+.upload-select__option--selected {
+  background: #1a9e7a;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.upload-select__option--selected:hover {
+  background: #158a6a;
+}
+
+/* =============================================
+   DATE PICKER
+   ============================================= */
+.upload-date {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.upload-date__input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.upload-date__input:focus {
+  border-color: #1a9e7a;
+}
+
+.upload-date__input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+  width: 32px;
+  height: 100%;
+  position: absolute;
+  right: 0;
+}
+
+.upload-date__icon {
+  position: absolute;
+  right: 12px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+/* =============================================
+   NUMBER STEPPER
+   ============================================= */
+.upload-stepper {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  width: 90px;
+}
+
+.upload-stepper__input {
+  flex: 1;
+  padding: 10px 10px;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  text-align: center;
+  -moz-appearance: textfield;
+  background: transparent;
+}
+
+.upload-stepper__input::-webkit-outer-spin-button,
+.upload-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.upload-stepper__controls {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.upload-stepper__btn {
+  flex: 1;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.upload-stepper__btn:hover {
+  background: #e8f5f0;
+  color: #1a9e7a;
+}
+
+/* =============================================
+   FILE DROPZONE
+   ============================================= */
+.upload-dropzone {
+  background: #ffffff;
+  border: 2px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+  text-align: center;
+}
+
+.upload-dropzone:hover {
+  border-color: #1a9e7a;
+  background: #f0faf6;
+}
+
+.upload-dropzone--dragging {
+  border-color: #1a9e7a;
+  background: #e8f5f0;
+}
+
+.upload-dropzone--has-file {
+  border-style: solid;
+  border-color: #1a9e7a;
+  background: #f0faf6;
+}
+
+.upload-dropzone__input {
+  display: none;
+}
+
+.upload-dropzone__text {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+.upload-dropzone__link {
+  color: #1a9e7a;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-dropzone__hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.upload-dropzone__filename {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0d3d3d;
+  margin: 0;
+}
+
+/* =============================================
+   ACTION BUTTONS
+   ============================================= */
+.upload-card__actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.upload-btn {
+  padding: 13px 32px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  border: 2px solid transparent;
+  letter-spacing: 0.01em;
+}
+
+.upload-btn--primary {
+  background: #004F52;
+  color: #ffffff;
+  border-color: #0d3d3d;
+}
+
+.upload-btn--primary:hover {
+  background: #0a2e2e;
+  border-color: #0a2e2e;
+}
+
+.upload-btn--outline {
+  background: transparent;
+  color: #1a9e7a;
+  border-color: #1a9e7a;
+}
+
+.upload-btn--outline:hover {
+  background: #1a9e7a;
+  color: #ffffff;
+}

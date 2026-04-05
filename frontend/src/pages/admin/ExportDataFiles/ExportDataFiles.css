@@ -1,0 +1,221 @@
+/* =============================================
+   EXPORT PAGE
+   ============================================= */
+
+.export-page__title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d3d3d;
+  margin: 0 0 28px 0;
+  letter-spacing: -0.3px;
+  transition: all 200ms ease;
+}
+
+/* =============================================
+   CARD
+   ============================================= */
+.export-card {
+  background: #d6ece4;
+  border-radius: 16px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =============================================
+   FIELD
+   ============================================= */
+.export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a2e3b;
+  letter-spacing: 0.01em;
+}
+
+.export-field__required {
+  color: #e53e3e;
+  margin-left: 2px;
+}
+
+/* =============================================
+   SELECT
+   ============================================= */
+.export-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1a2e3b;
+  user-select: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.export-select:hover,
+.export-select--open {
+  border-color: #1a9e7a;
+  box-shadow: 0 0 0 3px rgba(26, 158, 122, 0.1);
+}
+
+.export-select__placeholder {
+  color: #9ca3af;
+}
+
+.export-select__chevron {
+  flex-shrink: 0;
+  color: #6b7280;
+  transition: transform 200ms ease;
+}
+
+.export-select__chevron--up {
+  transform: rotate(180deg);
+}
+
+.export-select__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  animation: dropdown-in 140ms ease forwards;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.export-select__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1a2e3b;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.export-select__option:hover {
+  background: #e8f5f0;
+}
+
+.export-select__option--selected {
+  background: #1a9e7a;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.export-select__option--selected:hover {
+  background: #158a6a;
+}
+
+.export-select__option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #4b5563;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.export-select__option--selected .export-select__option-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* =============================================
+   SUMMARY PILL
+   ============================================= */
+.export-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(26, 158, 122, 0.12);
+  border: 1px solid rgba(26, 158, 122, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #0d3d3d;
+  animation: fade-in 200ms ease forwards;
+}
+
+.export-summary svg {
+  color: #1a9e7a;
+  flex-shrink: 0;
+}
+
+.export-summary strong {
+  font-weight: 600;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================
+   EXPORT BUTTON
+   ============================================= */
+.export-card__actions {
+  display: flex;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 36px;
+  background: #0d3d3d;
+  color: #ffffff;
+  border: 2px solid #0d3d3d;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, transform 100ms ease;
+  letter-spacing: 0.01em;
+}
+
+.export-btn:hover:not(.export-btn--disabled) {
+  background: #0a2e2e;
+  border-color: #0a2e2e;
+}
+
+.export-btn:active:not(.export-btn--disabled) {
+  transform: scale(0.98);
+}
+
+.export-btn--disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
