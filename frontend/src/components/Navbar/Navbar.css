@@ -1,0 +1,182 @@
+/* =============================================
+   DESIGN TOKENS — edit these to retheme easily
+   ============================================= */
+:root {
+  --color-bg-nav: #F1F3E8;          /* cream/off-white from the design */
+  --color-primary: #0d3d3d;  
+  --color-active: #0A2942;       /* dark teal — logo, active pill */
+  --color-accent: #1a9e7a;          /* bright teal — logo highlight, hover */
+  --color-text-nav: #2c2c2c;        /* nav link text */
+  --color-text-muted: #6b7280;      /* secondary text */
+  --color-surface: #ffffff;
+  --color-danger: #dc2626;
+
+  --nav-height: 72px;
+  --nav-border: 1px solid rgba(0, 0, 0, 0.1);
+  --radius-pill: 9999px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --transition-fast: 150ms ease;
+}
+
+/* =============================================
+   NAVBAR SHELL
+   ============================================= */
+.navbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: var(--nav-height);
+  padding: 0 32px;
+  background: var(--color-bg-nav);
+  border-bottom: var(--nav-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* =============================================
+   LOGO
+   ============================================= */
+.navbar__logo {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-decoration: none;
+  color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 40%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  justify-self: start;
+}
+
+/* =============================================
+   NAV LINKS
+   ============================================= */
+.navbar__links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar__link {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-text-nav);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.navbar__link:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-primary);
+}
+
+.navbar__link--active {
+  background: var(--color-active);
+  color: #ffffff;
+}
+
+.navbar__link--active:hover {
+  background: var(--color-active);
+  color: #ffffff;
+}
+
+/* =============================================
+   PROFILE ICON + DROPDOWN
+   ============================================= */
+.navbar__profile {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.navbar__profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.2);
+  background: transparent;
+  color: var(--color-text-nav);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.navbar__profile-btn:hover {
+  border-color: var(--color-primary);
+  background: rgba(13, 61, 61, 0.05);
+  color: var(--color-primary);
+}
+
+/* Dropdown */
+.navbar__dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 196px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 6px;
+  animation: dropdown-in 140ms ease forwards;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.navbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-nav);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.navbar__dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-primary);
+}
+
+.navbar__dropdown-item--danger {
+  color: var(--color-danger);
+}
+
+.navbar__dropdown-item--danger:hover {
+  background: rgba(220, 38, 38, 0.06);
+  color: var(--color-danger);
+}
+
+.navbar__dropdown-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.07);
+  margin: 4px 0;
+}
