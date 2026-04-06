@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar/Navbar";
 
 // Import your page components (create these as empty components for now)
 import About from "./pages/about/About"
-import MapView from "./pages/MapView";
+import MapView from "./pages/mapview/MapView";
 import AmrProfiles from "./pages/AmrProfiles";
 import RiverFlows from "./pages/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
