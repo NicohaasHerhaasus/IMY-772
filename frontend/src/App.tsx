@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 
 // Import your page components (create these as empty components for now)
-import About from "./pages/About"
+import About from "./pages/about/About"
 import MapView from "./pages/MapView";
 import AmrProfiles from "./pages/AmrProfiles";
 import RiverFlows from "./pages/RiverFlows";
