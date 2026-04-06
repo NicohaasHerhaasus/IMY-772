@@ -2,8 +2,9 @@
 
 What has already been implemented:
 - leaflet map container installed
-- shows river location by coords and displays info from RIVER interface 
+- shows dots to indicate river location by coords and displays info from RIVER interface 
 - maps to river risk to show overall river health
+- added map focus when clicking on an existing river in the sidebar
 - all info is still static !!!
 
 1. Heatmap 
@@ -23,6 +24,3 @@ shows AMR intensity
     - setActiveRiver(r.id);
     - map.flyTo(r.coordinates, 10);
 - you’ll need useMap() from react-leaflet
-
-4. Add map focus when clicking an exisiting river in the sidebar
-- 
