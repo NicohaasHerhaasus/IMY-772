@@ -22,13 +22,12 @@ export default function About() {
 
             <h1 className="about-heading">
               <span className="we-are">WE ARE</span>
-              <span className="brand">LOGO</span>
+              <span className="brand">EcoMap</span>
             </h1>
 
             <p className="about-body">
-              Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
-              maecenus sem fusce nascetur non habitasse. We are committed to
-              protecting and celebrating the world's most vital river ecosystems.
+              EcoMap is an open-source platform dedicated to monitoring  and surveying environmental antimicrobial resistance.
+              We are committed to protecting and celebrating the world's most vital river ecosystems.
             </p>
 
             <button className="about-cta">

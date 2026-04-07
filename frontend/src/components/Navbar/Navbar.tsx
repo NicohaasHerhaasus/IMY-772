@@ -30,7 +30,7 @@ export default function Navbar() {
     <nav className="navbar">
       {/* Logo */}
       <Link to="/" className="navbar__logo">
-        LOGO
+        EcoMap
       </Link>
 
       {/* Nav Links */}

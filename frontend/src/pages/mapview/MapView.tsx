@@ -4,7 +4,7 @@ import { useMap } from "react-leaflet";
 import { useEffect } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "./MapView.css";
-
+import { useRiver } from "../../layouts/RiverContext";
 
 // ── Types ──────────────────────────────────────────────
 interface River {
@@ -29,7 +29,7 @@ const RIVERS: River[] = [
   { id: 1, name: "Apies River",    sites: 14, location: "Pretoria", province:"Gauteng", coordinates:[-25.75,28.23],risk:"high" },
   { id: 2, name: "Henops River",   sites: 8,  location: "Centurion" , province:"Gauteng", coordinates: [-25.85, 28.18] , risk: "medium"},
   { id: 3, name: "Limpopo River",  sites: 10, location: "Limpopo" ,province:"Limpopo" ,coordinates: [-22.0, 29.0] , risk: "low"},
-  { id: 4, name: "Lotus River",  sites: 6, location: "Cape Town" ,province:"Western Cape" ,coordinates: [-34.05, 18.51] , risk: "medium"},
+  { id: 4, name: "Lotus River",  sites: 6, location: "Cape Town" ,province:"Western Cape" ,coordinates: [-34.05, 18.51] , risk: "high"},
 
 ];
 
@@ -82,8 +82,8 @@ function useCountUp(target: number, duration: number = 800) {
 
 // ── Component ──────────────────────────────────────────
 export default function MapView() {
-  const [activeRiver, setActiveRiver] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
   const stats = STATS[activeRiver];
   const [selectedProvince, setSelectedProvince] = useState<string>("All");
   const [riverSearch, setRiverSearch] = useState("");
