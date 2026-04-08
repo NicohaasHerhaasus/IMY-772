@@ -3,9 +3,10 @@ import Navbar from "./components/Navbar/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 
-import About from "./pages/About";
-import MapView from "./pages/MapView";
-import AmrProfiles from "./pages/AmrProfiles";
+// Import your page components (create these as empty components for now)
+import About from "./pages/about/About"
+import MapView from "./pages/mapview/MapView";
+import AmrProfiles from "./pages/amrprofiles/AmrProfiles";
 import RiverFlows from "./pages/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
@@ -14,9 +15,12 @@ import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
 import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
 import CallbackPage from "./pages/CallbackPage";
 
+import { RiverProvider } from "../../frontend/src/layouts/RiverContext";
+
 
 function App() {
   return (
+    <RiverProvider>
     <BrowserRouter>
       <AuthProvider>
         <Navbar />
@@ -38,6 +42,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </RiverProvider>
   );
 }
 
