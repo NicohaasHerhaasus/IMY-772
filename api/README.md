@@ -10,7 +10,7 @@
    cp .env.example .env
    ```
 
-   Edit `.env` with your real DB credentials and a strong `JWT_SECRET` for anything beyond local dev.
+   Edit `.env` with your real DB credentials and Cognito app details (see [Authentication](#authentication) below).
 
 3. Install and run:
 
@@ -170,14 +170,9 @@ The router is mounted at **`/api/auth`**, so:
 
 Express matches **method + path** and runs the **middleware chain for that route** in order.
 
-**For `POST /api/auth/register` and `POST /api/auth/login`:**
+**For `GET /api/auth/me`** (and any other protected route):
 
-1. **`validate(validateRegisterDTO)`** or **`validate(validateLoginDTO)`** runs. It reads **`req.body`** and, if something is wrong, calls **`next(new ValidationError(...))`**. That **skips** the controller and jumps to **error handling** (see below).
-2. If validation passes, **`next()`** runs and Express calls the **controller** method.
-
-**For `GET /api/auth/me`:**
-
-1. **`authMiddleware`** runs first. It reads **`Authorization: Bearer <token>`**, uses **`TokenService`** to verify the JWT, and sets **`req.userId`** (and role). On failure it calls **`next(UnauthorizedError)`**.
+1. **`authMiddleware`** runs first. It reads **`Authorization: Bearer <token>`**, calls `CognitoJwtVerifier.verify()` which checks the signature against Cognito's JWKS, validates expiry and issuer, then sets **`req.userId`** (Cognito `sub`) and **`req.userRole`** (from `cognito:groups`). On failure it calls **`next(UnauthorizedError)`**.
 2. If OK, the **controller** `getProfile` runs.
 
 The router file is also where **dependency injection** happens: it constructs **`PostgresUserRepository`**, **`AuthService`**, **`AuthController`** once at startup. Each request reuses those instances.
@@ -230,38 +225,96 @@ The middleware picks the right **HTTP status** and **JSON body** and sends the r
 ### Flow diagram (mental model)
 
 ```text
-Client
+Client (sends Cognito access token as Bearer header)
   → TCP / HTTP into Node
   → Express builds req, res
   → express.json()  →  cors()
   → match /health OR mount /api/auth
-  → auth: validate* OR authMiddleware
+  → authMiddleware (verifies Cognito JWT via JWKS; sets req.userId, req.userRole)
   → AuthController
   → AuthService
   → IUserRepository (PostgresUserRepository) + Pool → PostgreSQL
-                    PasswordService / TokenService
   ← return through service → controller → res.json()
   (or next(err) → errorMiddleware → res.json() error)
 ```
 
 ---
 
-## HTTP API reference
+## Authentication
 
-Base path for auth: **`/api/auth`**
+This API uses **AWS Cognito** for authentication. There is no local login or registration — all sign-in is handled by the Cognito Hosted UI on the frontend.
+
+### How it works
+
+1. The frontend signs the user in via Cognito and receives an **access token** (RS256 JWT).
+2. The frontend attaches that token to API requests as a Bearer header.
+3. `authMiddleware` verifies the token against Cognito's public JWKS endpoint (fetched automatically by `aws-jwt-verify` and cached).
+4. On success, `req.userId` is set to the Cognito `sub` (stable unique user ID) and `req.userRole` is set from the user's Cognito group (`cognito:groups[0]`).
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `COGNITO_USER_POOL_ID` | Your Cognito User Pool ID (e.g. `eu-north-1_xxxxxxxx`) |
+| `COGNITO_APP_CLIENT_ID` | Your App Client ID |
+
+### Sending the token from the frontend
+
+```ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const { tokens } = await fetchAuthSession();
+const accessToken = tokens?.accessToken.toString();
+
+const res = await fetch('http://localhost:3000/api/auth/me', {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
+```
+
+### Protecting a new endpoint
+
+Add `authMiddleware` to any route that requires a logged-in admin:
+
+```ts
+import { authMiddleware } from '../middleware/auth.middleware';
+
+// Single route
+router.post('/upload', authMiddleware, uploadController.upload);
+
+// All routes in a router
+router.use(authMiddleware);
+router.get('/files', filesController.list);
+router.delete('/files/:id', filesController.delete);
+```
+
+`authMiddleware` automatically returns **401** if the token is missing, malformed, expired, or issued by a different User Pool. Your controller only runs on a valid token.
+
+The middleware also sets two properties on `req` for use in your controller:
+
+| Property | Value |
+|----------|-------|
+| `req.userId` | Cognito `sub` — stable unique ID for the user |
+| `req.userRole` | First entry from the user's Cognito groups, or `'user'` if ungrouped |
+
+```ts
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
+
+getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { userId, userRole } = req; // typed, available after authMiddleware
+  // ...
+};
+```
+
+---
+
+## HTTP API reference
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/health` | No | Liveness check |
-| `POST` | `/api/auth/register` | No | Create user; returns user + JWT |
-| `POST` | `/api/auth/login` | No | Sign in; returns user + JWT |
-| `GET` | `/api/auth/me` | Bearer JWT | Current user profile |
+| `GET` | `/api/auth/me` | Bearer token | Current user profile (Cognito sub + role) |
 
-**Register body (JSON):** `name`, `surname`, `email`, `password` (min 8 chars), optional `role` (`admin` or `user`).
-
-**Login body (JSON):** `email`, `password`.
-
-**Protected routes:** header `Authorization: Bearer <token>`.
+**Protected routes:** send header `Authorization: Bearer <cognito_access_token>`.
 
 **JSON bodies** must be valid JSON (no trailing commas after the last property).
 

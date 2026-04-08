@@ -1,19 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
-import { TokenService } from '../../../infrastructure/security/token.service';
+import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { UnauthorizedError } from '../../../application/errors/app.errors';
 
-const tokenService = new TokenService();
+const verifier = CognitoJwtVerifier.create({
+  userPoolId: process.env.COGNITO_USER_POOL_ID ?? '',
+  clientId: process.env.COGNITO_APP_CLIENT_ID ?? '',
+  tokenUse: 'access',
+});
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
   userRole?: string;
 }
 
-export function authMiddleware(
+export async function authMiddleware(
   req: AuthenticatedRequest,
   _res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -21,10 +25,13 @@ export function authMiddleware(
     }
 
     const token = authHeader.split(' ')[1];
-    const payload = tokenService.verify(token);
+    const payload = await verifier.verify(token);
 
-    req.userId = payload.userId;
-    req.userRole = payload.role;
+    req.userId = payload.sub;
+    // Cognito groups are available as 'cognito:groups' on the access token
+    const groups = payload['cognito:groups'];
+    req.userRole = Array.isArray(groups) ? groups[0] : 'user';
+
     next();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
