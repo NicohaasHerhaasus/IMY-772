@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .about-page {
+          min-height: 100vh;
+          background:var(--color-cream);
+          font-family:'DM Sans', sans-serif;
+          display: flex;
+          align-items: center;
+          padding: 80px 6vw 60px;
+        }
+
+        .about-inner {
+          max-width: 1200px;
+          width: 100%;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 48px;
+          align-items: center;
+        }
+
+        /* LEFT COLUMN */
+        .about-left {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          opacity: 0;
+          transform: translateY(28px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .about-left.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .about-eyebrow {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #5B7B6F;
+        }
+
+        .about-heading {
+          font-family: 'DM Serif Display', serif;
+          line-height: 1.05;
+          color: #1C2B27;
+        }
+        .about-heading .we-are {
+          display: block;
+          font-size: clamp(32px, 4vw, 52px);
+          font-weight: 400;
+          letter-spacing: -0.01em;
+        }
+        .about-heading .brand {        
+        font-size: clamp(56px, 8vw, 108px);
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        text-decoration: none;
+        background: linear-gradient(135deg, var(--color-primary) 40%, var(--color-accent) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        justify-self: start;
+        }
+
+        .about-body {
+          font-size: 15px;
+          line-height: 1.75;
+          color: #5A6B64;
+          max-width: 420px;
+        }
+
+        .about-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, var(--color-primary) 40%, var(--color-accent) 100%);
+          color: #fff;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 13px 30px;
+          border-radius: 100px;
+          border: none;
+          cursor: pointer;
+          width: fit-content;
+          letter-spacing: 0.02em;
+          transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+          box-shadow: 0 4px 18px rgba(42, 107, 90, 0.25);
+        }
+        .about-cta:hover {
+          background: linear-gradient(135deg, var(--color-primary) 40%, var(--color-accent) 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 28px rgba(42, 107, 90, 0.35);
+        }
+        .about-cta:active {
+          transform: translateY(0);
+        }
+
+        /* RIGHT COLUMN — image grid */
+        .about-right {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 0.75s ease 0.2s, transform 0.75s ease 0.2s;
+        height: 460px;
+        }
+
+        .about-right.visible {
+        opacity: 1;
+        transform: translateY(0);
+        }
+
+        /* Centre stacked column */
+        .img-col {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: 100%;
+        }
+
+        .img-card {
+        overflow: hidden;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+        }
+
+        .img-card:hover {
+        transform: scale(1.025) translateY(-3px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .img-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        }
+
+        /* Stacked pair — each takes half the column height */
+        .img-card--top,
+        .img-card--bottom {
+        flex: 1;
+        border-radius: 16px;
+        }
+
+        /* Right tall image — full height */
+        .img-card--tall {
+        height: 100%;
+        border-radius: 16px;
+        }

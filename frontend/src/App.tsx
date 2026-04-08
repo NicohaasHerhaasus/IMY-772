@@ -2,9 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 
 // Import your page components (create these as empty components for now)
-import About from "./pages/About"
-import MapView from "./pages/MapView";
-import AmrProfiles from "./pages/AmrProfiles";
+import About from "./pages/about/About"
+import MapView from "./pages/mapview/MapView";
+import AmrProfiles from "./pages/amrprofiles/AmrProfiles";
 import RiverFlows from "./pages/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
@@ -12,9 +12,12 @@ import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
 import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
 import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
 
+import { RiverProvider } from "../../frontend/src/layouts/RiverContext";
+
 
 function App() {
   return (
+    <RiverProvider>
     <BrowserRouter>
       <Navbar />
       <Routes>
@@ -31,6 +34,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </RiverProvider>
   );
 }
 
