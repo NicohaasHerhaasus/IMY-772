@@ -6,9 +6,6 @@ import { PasswordService } from '../../../infrastructure/security/password.servi
 import { TokenService } from '../../../infrastructure/security/token.service';
 import { getPool } from '../../../infrastructure/database/pool';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
-import { validateRegisterDTO } from '../../../application/dtos/register.dto';
-import { validateLoginDTO } from '../../../application/dtos/login.dto';
 
 const router = Router();
 
@@ -19,8 +16,6 @@ const tokenService = new TokenService();
 const authService = new AuthService(userRepository, passwordService, tokenService);
 const authController = new AuthController(authService);
 
-router.post('/register', validate(validateRegisterDTO), authController.register);
-router.post('/login', validate(validateLoginDTO), authController.login);
 router.get('/me', authMiddleware, authController.getProfile);
 
 export default router;

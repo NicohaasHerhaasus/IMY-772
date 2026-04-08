@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "./Navbar.css";
 
 const NAV_LINKS = [
@@ -12,6 +13,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const location = useLocation();
+  const { user, login, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -77,33 +79,51 @@ export default function Navbar() {
 
         {dropdownOpen && (
           <div className="navbar__dropdown">
-            <Link
-              to="/admin"
-              className="navbar__dropdown-item"
-              onClick={() => setDropdownOpen(false)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16}>
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-              </svg>
-              Admin Settings
-            </Link>
-            <div className="navbar__dropdown-divider" />
-            <button
-              className="navbar__dropdown-item navbar__dropdown-item--danger"
-              onClick={() => {
-                setDropdownOpen(false);
-                // Replace with your actual logout logic
-                console.log("Logout");
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16}>
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Sign Out
-            </button>
+            {user ? (
+              <>
+                <Link
+                  to="/admin"
+                  className="navbar__dropdown-item"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16}>
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                  </svg>
+                  Admin Settings
+                </Link>
+                <div className="navbar__dropdown-divider" />
+                <button
+                  className="navbar__dropdown-item navbar__dropdown-item--danger"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    logout();
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16}>
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                className="navbar__dropdown-item"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  login();
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16}>
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                Admin Login
+              </button>
+            )}
           </div>
         )}
       </div>
