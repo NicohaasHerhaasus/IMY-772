@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PoolConfig } from 'pg';
 
 export const databaseConfig: PoolConfig = {
