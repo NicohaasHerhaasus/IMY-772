@@ -2,11 +2,29 @@ import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { UnauthorizedError } from '../../../application/errors/app.errors';
 
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: process.env.COGNITO_USER_POOL_ID ?? '',
-  clientId: process.env.COGNITO_APP_CLIENT_ID ?? '',
-  tokenUse: 'access',
-});
+import 'dotenv/config';
+
+function resolveCognitoConfig(): { userPoolId: string; clientId: string } {
+  const userPoolId =
+    process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID ?? '';
+  const clientId =
+    process.env.COGNITO_APP_CLIENT_ID ?? process.env.VITE_COGNITO_APP_CLIENT_ID ?? '';
+
+  return { userPoolId: userPoolId.trim(), clientId: clientId.trim() };
+}
+
+function createVerifier() {
+  const { userPoolId, clientId } = resolveCognitoConfig();
+  if (!userPoolId || !clientId) {
+    throw new UnauthorizedError('Cognito is not configured correctly on the API.');
+  }
+
+  return CognitoJwtVerifier.create({
+    userPoolId,
+    clientId,
+    tokenUse: 'access',
+  });
+}
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -19,6 +37,7 @@ export async function authMiddleware(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const verifier = createVerifier();
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedError('Authentication token is required.');
