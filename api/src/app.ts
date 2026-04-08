@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './presentation/http/routes/auth.routes';
+import genotypicAnalysisRoutes from './presentation/http/routes/genotypic-analysis.routes';
 import { errorMiddleware } from './presentation/http/middleware/error.middleware';
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/genotypic-analysis', genotypicAnalysisRoutes);
 
 app.use(errorMiddleware);
 
