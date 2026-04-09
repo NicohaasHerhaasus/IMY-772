@@ -1,6 +1,14 @@
-import { useState, useRef, useCallback, type ChangeEvent } from "react";
+import { useState, useRef, useCallback, useEffect, type ChangeEvent } from "react";
 import { Button, Card, FormField, Select } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
+import {
+  GENOTYPIC_PREVIEW_COLUMNS,
+  MAX_PREVIEW_ROWS,
+  type GenotypicUploadRow,
+  parseGenotypicXlsxForPreview,
+  parseStarAmrXlsxForPreview,
+  type StarAmrPreview,
+} from "./uploadPreview";
 import "./UploadDatafiles.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
@@ -63,35 +71,6 @@ const GENOTYPIC_TSV_HEADERS = [
   "MOX",
 ] as const;
 
-type GenotypicUploadRow = {
-  upCultureNumber: string;
-  isolateNumber: string;
-  farm: string;
-  trip: string;
-  source: string;
-  sampleNumber: string;
-  arCode: string;
-  isolateNumberSecondary: string;
-  notes: string;
-  organismIdentity: string;
-  owner: string;
-  intI1Positive: string;
-  intI2Positive: string;
-  intI3Positive: string;
-  ctxMGp1: string;
-  ctxMGp9: string;
-  ctxMGp825: string;
-  tem: string;
-  shv: string;
-  oxa: string;
-  acc: string;
-  ebc: string;
-  dha: string;
-  cit: string;
-  fox: string;
-  mox: string;
-};
-
 function parseGenotypicTsv(content: string): GenotypicUploadRow[] {
   const lines = content
     .replace(/\r\n/g, "\n")
@@ -146,15 +125,139 @@ function parseGenotypicTsv(content: string): GenotypicUploadRow[] {
   });
 }
 
+type FilePreviewState =
+  | { kind: "none" }
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | {
+      kind: "genotypic";
+      rows: GenotypicUploadRow[];
+      total: number;
+      sheetName?: string;
+    }
+  | { kind: "staramr"; data: StarAmrPreview };
+
+function GenotypicPreviewTable({ rows }: { rows: GenotypicUploadRow[] }) {
+  return (
+    <div className="upload-preview__scroll">
+      <table className="upload-preview-table">
+        <thead>
+          <tr>
+            {GENOTYPIC_PREVIEW_COLUMNS.map((col) => (
+              <th key={col.key}>{col.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri}>
+              {GENOTYPIC_PREVIEW_COLUMNS.map((col) => (
+                <td key={col.key}>{row[col.key] || "—"}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function StarAmrSheetPreview({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  if (headers.length === 0 && rows.length === 0) {
+    return <p className="upload-preview__empty">No rows in this sheet.</p>;
+  }
+  return (
+    <div className="upload-preview__scroll upload-preview__scroll--nested">
+      <table className="upload-preview-table upload-preview-table--compact">
+        <thead>
+          <tr>
+            {headers.map((h, i) => (
+              <th key={i}>{h || `Col ${i + 1}`}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((cells, ri) => (
+            <tr key={ri}>
+              {headers.map((_, ci) => (
+                <td key={ci}>{cells[ci] ?? ""}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function UploadDatafiles() {
   const { getAccessToken } = useAuth();
   const [uploadType, setUploadType] = useState<(typeof UPLOAD_TYPES)[number]>(UPLOAD_TYPES[0]);
   const [file, setFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<FilePreviewState>({ kind: "none" });
   const [dragging, setDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setFilePreview({ kind: "none" });
+      return;
+    }
+
+    let cancelled = false;
+    setFilePreview({ kind: "loading" });
+
+    const load = async () => {
+      try {
+        if (uploadType === "Genotypic Analysis TSV (.tsv)") {
+          const rows = parseGenotypicTsv(await file.text());
+          if (cancelled) return;
+          const slice = rows.slice(0, MAX_PREVIEW_ROWS);
+          setFilePreview({
+            kind: "genotypic",
+            rows: slice,
+            total: rows.length,
+          });
+          return;
+        }
+
+        const buffer = await file.arrayBuffer();
+
+        if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
+          const { rows, sheetName } = parseGenotypicXlsxForPreview(buffer);
+          if (cancelled) return;
+          const slice = rows.slice(0, MAX_PREVIEW_ROWS);
+          setFilePreview({
+            kind: "genotypic",
+            rows: slice,
+            total: rows.length,
+            sheetName,
+          });
+          return;
+        }
+
+        const data = parseStarAmrXlsxForPreview(buffer);
+        if (!cancelled) {
+          setFilePreview({ kind: "staramr", data });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setFilePreview({
+            kind: "error",
+            message: err instanceof Error ? err.message : "Could not read this file for preview.",
+          });
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [file, uploadType]);
 
   const accept =
     uploadType === "Genotypic Analysis TSV (.tsv)" ? ".tsv,.txt" : ".xlsx";
@@ -275,6 +378,7 @@ export default function UploadDatafiles() {
             onChange={(value) => {
               setUploadType(value as (typeof UPLOAD_TYPES)[number]);
               setFile(null);
+              setFilePreview({ kind: "none" });
               setMessage("");
               setError("");
             }}
@@ -330,6 +434,72 @@ export default function UploadDatafiles() {
             )}
           </div>
         </FormField>
+
+        {file && (
+          <section className="upload-preview-section" aria-label="File preview">
+            {filePreview.kind === "loading" && (
+              <p className="upload-preview__loading text-[0.9rem] text-text-muted">Reading file for preview…</p>
+            )}
+            {filePreview.kind === "error" && (
+              <div className="upload-preview upload-preview--warn">
+                <h2 className="upload-preview__title">Preview</h2>
+                <p className="upload-preview__error-msg">{filePreview.message}</p>
+                <p className="upload-preview__hint text-[0.85rem] text-text-muted">
+                  Fix the file or choose the correct upload type, then try again. You can still attempt upload if the
+                  server accepts the format.
+                </p>
+              </div>
+            )}
+            {filePreview.kind === "genotypic" && (
+              <div className="upload-preview">
+                <div className="upload-preview__head">
+                  <h2 className="upload-preview__title">Preview</h2>
+                  <p className="upload-preview__meta">
+                    Showing {filePreview.rows.length} of {filePreview.total} data row
+                    {filePreview.total === 1 ? "" : "s"}
+                    {filePreview.total > MAX_PREVIEW_ROWS ? ` (first ${MAX_PREVIEW_ROWS})` : ""}
+                    {filePreview.sheetName != null ? ` · Sheet: ${filePreview.sheetName}` : ""}
+                  </p>
+                </div>
+                <GenotypicPreviewTable rows={filePreview.rows} />
+              </div>
+            )}
+            {filePreview.kind === "staramr" && (
+              <div className="upload-preview">
+                <div className="upload-preview__head">
+                  <h2 className="upload-preview__title">Preview</h2>
+                  <p className="upload-preview__meta">
+                    StarAMR workbook · Sheets: {filePreview.data.sheetNames.join(", ") || "(none)"}
+                  </p>
+                </div>
+                {filePreview.data.warning && (
+                  <p className="upload-preview__banner">{filePreview.data.warning}</p>
+                )}
+                {filePreview.data.summary && (
+                  <div className="upload-preview__block">
+                    <h3 className="upload-preview__subtitle">{filePreview.data.summary.tabTitle}</h3>
+                    <StarAmrSheetPreview
+                      headers={filePreview.data.summary.headers}
+                      rows={filePreview.data.summary.rows}
+                    />
+                  </div>
+                )}
+                {filePreview.data.detailed && (
+                  <div className="upload-preview__block">
+                    <h3 className="upload-preview__subtitle">{filePreview.data.detailed.tabTitle}</h3>
+                    <StarAmrSheetPreview
+                      headers={filePreview.data.detailed.headers}
+                      rows={filePreview.data.detailed.rows}
+                    />
+                  </div>
+                )}
+                {!filePreview.data.summary && !filePreview.data.detailed && (
+                  <p className="upload-preview__empty">No Summary / Detailed_Summary tables to show.</p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {message && <p className="text-[0.9rem] text-primary font-semibold">{message}</p>}
         {error && <p className="text-[0.9rem] text-danger font-semibold">{error}</p>}

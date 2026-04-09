@@ -159,3 +159,150 @@
   color: #0d3d3d;
   margin: 0;
 }
+
+/* =============================================
+   FILE PREVIEW TABLE
+   ============================================= */
+.upload-preview-section {
+  margin-top: 0.5rem;
+}
+
+.upload-preview {
+  background: #ffffff;
+  border: 1px solid rgba(26, 158, 122, 0.22);
+  border-radius: 12px;
+  padding: 1.1rem 1.15rem 1.15rem;
+  box-shadow: 0 1px 3px rgba(13, 61, 61, 0.06);
+}
+
+.upload-preview--warn {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: #fffbeb;
+}
+
+.upload-preview__head {
+  margin-bottom: 0.75rem;
+}
+
+.upload-preview__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0d3d3d;
+  letter-spacing: -0.02em;
+}
+
+.upload-preview__subtitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1a2e3b;
+}
+
+.upload-preview__meta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.upload-preview__loading {
+  margin: 0;
+  padding: 0.75rem 0;
+}
+
+.upload-preview__error-msg {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.upload-preview__hint {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.upload-preview__banner {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.upload-preview__block + .upload-preview__block {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.upload-preview__empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+  color: #6b7280;
+}
+
+.upload-preview__scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: min(420px, 55vh);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fafcfb;
+}
+
+.upload-preview__scroll--nested {
+  max-height: min(280px, 40vh);
+}
+
+.upload-preview-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.upload-preview-table th,
+.upload-preview-table td {
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: top;
+  white-space: nowrap;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-preview-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, #e8f5f0 0%, #dff3ec 100%);
+  color: #0d3d3d;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(26, 158, 122, 0.35);
+  box-shadow: 0 1px 0 rgba(26, 158, 122, 0.12);
+}
+
+.upload-preview-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.upload-preview-table tbody tr:hover {
+  background: rgba(26, 158, 122, 0.08);
+}
+
+.upload-preview-table--compact {
+  font-size: 0.74rem;
+}
+
+.upload-preview-table--compact th,
+.upload-preview-table--compact td {
+  padding: 0.35rem 0.45rem;
+  max-width: 10rem;
+}
