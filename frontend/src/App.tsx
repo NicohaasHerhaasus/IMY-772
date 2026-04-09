@@ -9,6 +9,7 @@ import MapView from "./pages/mapview/MapView";
 import AmrProfiles from "./pages/amrprofiles/AmrProfiles";
 import RiverFlows from "./pages/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
+import IsolateExplorerPage from "./pages/IsolateExplorerPage";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
 import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
@@ -30,6 +31,7 @@ function App() {
           <Route path="/amr-profiles" element={<AmrProfiles />} />
           <Route path="/river-flows" element={<RiverFlows />} />
           <Route path="/data-explorer" element={<DataExplorer />} />
+          <Route path="/isolates" element={<IsolateExplorerPage />} />
           <Route path="/admin/callback" element={<CallbackPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/admin" element={<AdminLayout />}>

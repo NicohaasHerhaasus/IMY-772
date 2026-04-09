@@ -288,11 +288,15 @@ export default function AmrProfiles() {
   }, [activeRiverId]);
 
   // Filter rivers by search query
-  const filtered = useMemo(() =>
-    RIVERS.filter(r =>
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.province.toLowerCase().includes(searchQuery.toLowerCase())
-    ), [searchQuery]);
+  useMemo(
+    () =>
+      RIVERS.filter(
+        (river) =>
+          river.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          river.province.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [searchQuery],
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -502,7 +506,7 @@ useEffect(() => {
           <div className="amr-charts-row">
             {/* Grouped bar chart */}
             <div className="amr-chart-card amr-bar-chart">
-              {r.groupedBars.map((row, i) => (
+              {r.groupedBars.map((row) => (
                 <div key={row.label} className="amr-grouped-row">
                   <span className="amr-grouped-label">{row.label}</span>
                   <div className="amr-grouped-bars">
