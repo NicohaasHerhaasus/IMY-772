@@ -8,6 +8,21 @@ function normalizeHeader(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/** Match sheet tabs despite Excel/Cognito export differences (spacing, underscores, case). */
+function sheetNameKey(name: string): string {
+  return normalizeHeader(name);
+}
+
+function findWorksheet(workbook: XLSX.WorkBook, ...canonicalNames: string[]): XLSX.WorkSheet | undefined {
+  const wanted = new Set(canonicalNames.map((n) => sheetNameKey(n)));
+  for (const sheetName of workbook.SheetNames) {
+    if (wanted.has(sheetNameKey(sheetName))) {
+      return workbook.Sheets[sheetName];
+    }
+  }
+  return undefined;
+}
+
 function getCellValue(row: SheetRow, headerAliases: string[]): string | null {
   const aliasSet = new Set(headerAliases.map(normalizeHeader));
   for (const [header, rawValue] of Object.entries(row)) {
@@ -48,6 +63,19 @@ function toIsolateName(rawIsolateId: string | null): string | null {
   return rawIsolateId.replace(/_assembly\.fasta$/i, '').trim();
 }
 
+/** DB allows only Passed | Failed — map StarAMR / Excel variants. */
+function normalizeQualityModule(raw: string | null): 'Passed' | 'Failed' {
+  if (!raw) return 'Failed';
+  const v = raw.trim().toLowerCase();
+  if (v === 'passed' || v === 'pass' || v === 'ok' || v === 'yes' || v === 'true' || v === 'green') {
+    return 'Passed';
+  }
+  if (v === 'failed' || v === 'fail' || v === 'no' || v === 'false' || v === 'red') {
+    return 'Failed';
+  }
+  return 'Failed';
+}
+
 export class StarAmrUploadService {
   constructor(private readonly pool: Pool) {}
 
@@ -68,11 +96,14 @@ export class StarAmrUploadService {
       throw new ValidationError(['Invalid .xlsx file.']);
     }
 
-    const summarySheet = workbook.Sheets.Summary;
-    const detailedSummarySheet = workbook.Sheets.Detailed_Summary;
+    const summarySheet = findWorksheet(workbook, 'Summary');
+    const detailedSummarySheet = findWorksheet(workbook, 'Detailed_Summary', 'Detailed Summary');
     if (!summarySheet || !detailedSummarySheet) {
+      const have = workbook.SheetNames.join(', ');
       throw new ValidationError([
-        'Workbook must contain sheets named exactly "Summary" and "Detailed_Summary".',
+        'StarAMR import expects a StarAMR results workbook: a Summary sheet and a Detailed_Summary sheet.',
+        `Sheets in this file: ${have || '(none)'}`,
+        'If this file is the UP genotypic / binary information table (University of Pretoria Culture number, etc.), choose upload type "Genotypic Analysis Excel (.xlsx)" instead — not StarAMR.',
       ]);
     }
 
@@ -102,7 +133,15 @@ export class StarAmrUploadService {
           continue;
         }
 
-        const qualityModule = getCellValue(row, ['Quality Module', 'Quality']);
+        if (isolateName.length > 100) {
+          throw new ValidationError([
+            `Isolate name exceeds 100 characters (database limit): "${isolateName.slice(0, 60)}…"`,
+          ]);
+        }
+
+        const qualityModule = normalizeQualityModule(
+          getCellValue(row, ['Quality Module', 'Quality', 'QC', 'QC Result']),
+        );
         const sequenceType = getCellValue(row, ['Sequence Type', 'SequenceType']);
         const genomeLength = parseNullableInteger(
           getCellValue(row, ['Genome Length', 'GenomeLength']),
@@ -123,7 +162,7 @@ export class StarAmrUploadService {
               contigs = EXCLUDED.contigs
             RETURNING id
           `,
-          [isolateName, qualityModule ?? 'Failed', sequenceType, genomeLength, n50Value, contigs],
+          [isolateName, qualityModule, sequenceType, genomeLength, n50Value, contigs],
         );
 
         const isolateId = result.rows[0].id;
@@ -219,6 +258,15 @@ export class StarAmrUploadService {
       };
     } catch (error) {
       await client.query('ROLLBACK');
+      if (error && typeof error === 'object' && 'code' in error) {
+        const pg = error as { code?: string; message?: string };
+        if (pg.code === '23514') {
+          throw new ValidationError([
+            'A value did not match database rules (e.g. quality must be Passed/Failed).',
+            pg.message ?? '',
+          ]);
+        }
+      }
       throw error;
     } finally {
       client.release();

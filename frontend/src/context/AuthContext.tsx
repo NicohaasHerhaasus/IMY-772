@@ -8,6 +8,7 @@ import {
 import {
   getCurrentUser,
   fetchUserAttributes,
+  fetchAuthSession,
   signInWithRedirect,
   signOut,
   type AuthUser,
@@ -21,6 +22,7 @@ interface AuthContextValue {
   isLoggingOut: boolean;
   login: () => void;
   logout: () => void;
+  getAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -90,8 +92,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  async function getAccessToken(): Promise<string | null> {
+    try {
+      const session = await fetchAuthSession();
+      return session.tokens?.accessToken?.toString() ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, userAttributes, isLoading, isLoggingOut, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, userAttributes, isLoading, isLoggingOut, login, logout, getAccessToken }}
+    >
       {children}
     </AuthContext.Provider>
   );

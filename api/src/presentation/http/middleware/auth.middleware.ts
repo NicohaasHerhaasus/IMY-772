@@ -47,9 +47,9 @@ export async function authMiddleware(
     const payload = await verifier.verify(token);
 
     req.userId = payload.sub;
-    // Cognito groups are available as 'cognito:groups' on the access token
     const groups = payload['cognito:groups'];
-    req.userRole = Array.isArray(groups) ? groups[0] : 'user';
+    req.userRole =
+      Array.isArray(groups) && typeof groups[0] === 'string' ? groups[0] : 'user';
 
     next();
   } catch (error) {
