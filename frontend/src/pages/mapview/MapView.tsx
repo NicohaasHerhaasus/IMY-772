@@ -17,13 +17,6 @@ interface River {
   risk: "low" | "medium" | "high";
 }
 
-interface Visit {
-  id: number;
-  label: string;
-  sub: string;
-  count?: string;
-}
-
 // ── Static data ────────────────────────────────────────
 const RIVERS: River[] = [
   { id: 1, name: "Apies River",    sites: 14, location: "Pretoria", province:"Gauteng", coordinates:[-25.75,28.23],risk:"high" },
@@ -82,7 +75,6 @@ function useCountUp(target: number, duration: number = 800) {
 
 // ── Component ──────────────────────────────────────────
 export default function MapView() {
-  const [searchQuery, setSearchQuery] = useState("");
   const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
   const stats = STATS[activeRiver];
   const [selectedProvince, setSelectedProvince] = useState<string>("All");

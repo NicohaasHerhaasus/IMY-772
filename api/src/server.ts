@@ -2,6 +2,7 @@ import app from './app';
 import { getPool } from './infrastructure/database/pool';
 import { runMigration as runUsersMigration } from './infrastructure/database/migrations/001_create_users';
 import { runMigration as runGenotypicAnalysisMigration } from './infrastructure/database/migrations/002_create_genotypic_analysis';
+import { runMigration as runIsolatesMigration } from './infrastructure/database/migrations/003_create_isolates';
 
 const PORT = process.env.PORT || 3000;
 
@@ -14,6 +15,7 @@ const startServer = async () => {
 
     await runUsersMigration(pool);
     await runGenotypicAnalysisMigration(pool);
+    await runIsolatesMigration(pool);
 
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);

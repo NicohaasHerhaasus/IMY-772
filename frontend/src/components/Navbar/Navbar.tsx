@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { label: "AMR Profiles", path: "/amr-profiles" },
   { label: "River Flows", path: "/river-flows" },
   { label: "Data Explorer", path: "/data-explorer" },
+  { label: "Isolates", path: "/isolates" },
 ];
 
 export default function Navbar() {
