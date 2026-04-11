@@ -13,17 +13,48 @@ function resolveCognitoConfig(): { userPoolId: string; clientId: string } {
   return { userPoolId: userPoolId.trim(), clientId: clientId.trim() };
 }
 
-function createVerifier() {
+type CognitoVerifiers = {
+  access: ReturnType<typeof CognitoJwtVerifier.create>;
+  id: ReturnType<typeof CognitoJwtVerifier.create>;
+};
+
+let cachedVerifiers: { pool: string; client: string; verifiers: CognitoVerifiers } | null = null;
+
+function getCognitoVerifiers(): CognitoVerifiers {
   const { userPoolId, clientId } = resolveCognitoConfig();
   if (!userPoolId || !clientId) {
     throw new UnauthorizedError('Cognito is not configured correctly on the API.');
   }
 
-  return CognitoJwtVerifier.create({
-    userPoolId,
-    clientId,
-    tokenUse: 'access',
-  });
+  if (!cachedVerifiers || cachedVerifiers.pool !== userPoolId || cachedVerifiers.client !== clientId) {
+    cachedVerifiers = {
+      pool: userPoolId,
+      client: clientId,
+      verifiers: {
+        access: CognitoJwtVerifier.create({
+          userPoolId,
+          clientId,
+          tokenUse: 'access',
+        }),
+        id: CognitoJwtVerifier.create({
+          userPoolId,
+          clientId,
+          tokenUse: 'id',
+        }),
+      },
+    };
+  }
+
+  return cachedVerifiers.verifiers;
+}
+
+async function verifyCognitoJwt(token: string) {
+  const { access, id } = getCognitoVerifiers();
+  try {
+    return await access.verify(token);
+  } catch {
+    return await id.verify(token);
+  }
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -37,17 +68,20 @@ export async function authMiddleware(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const verifier = createVerifier();
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedError('Authentication token is required.');
     }
 
     const token = authHeader.split(' ')[1];
-    const payload = await verifier.verify(token);
+    let payload;
+    try {
+      payload = await verifyCognitoJwt(token);
+    } catch {
+      throw new UnauthorizedError('Invalid or expired token.');
+    }
 
     req.userId = payload.sub;
-    // Cognito groups are available as 'cognito:groups' on the access token
     const groups = payload['cognito:groups'];
     req.userRole = Array.isArray(groups) ? groups[0] : 'user';
 
