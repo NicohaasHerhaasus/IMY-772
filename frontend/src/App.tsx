@@ -7,7 +7,7 @@ import RequireAuth from "./components/RequireAuth";
 import About from "./pages/about/About"
 import MapView from "./pages/mapview/MapView";
 import AmrProfiles from "./pages/amrprofiles/AmrProfiles";
-import RiverFlows from "./pages/RiverFlows";
+import RiverFlows from "./pages/riverflows/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import IsolateExplorerPage from "./pages/IsolateExplorerPage";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
