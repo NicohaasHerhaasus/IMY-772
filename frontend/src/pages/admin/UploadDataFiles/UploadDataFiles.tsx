@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
-import "./UploadDatafiles.css";
+import "./UploadDataFiles.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
