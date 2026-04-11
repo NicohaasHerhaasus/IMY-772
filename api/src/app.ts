@@ -5,6 +5,7 @@ import authRoutes from './presentation/http/routes/auth.routes';
 import genotypicAnalysisRoutes from './presentation/http/routes/genotypic-analysis.routes';
 import uploadRoutes from './presentation/http/routes/upload.routes';
 import isolatesRoutes from './presentation/http/routes/isolates.routes';
+import sampleUploadRoutes from './presentation/http/routes/sample-upload.routes';
 import { errorMiddleware } from './presentation/http/middleware/error.middleware';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/genotypic-analysis', genotypicAnalysisRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/isolates', isolatesRoutes);
+app.use('/api/samples', sampleUploadRoutes);
 
 app.use(errorMiddleware);
 
