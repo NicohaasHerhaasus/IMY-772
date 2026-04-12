@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { useMap } from "react-leaflet";
-import { useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import L from "leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  CircleMarker,
+  Popup,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import "./MapView.css";
 import { useRiver } from "../../layouts/RiverContext";
 
-// ── Types ──────────────────────────────────────────────
+
 interface River {
   id: number;
   name: string;
@@ -17,7 +24,7 @@ interface River {
   risk: "low" | "medium" | "high";
 }
 
-// ── Static data ────────────────────────────────────────
+
 const RIVERS: River[] = [
   { id: 1, name: "Apies River",    sites: 14, location: "Pretoria", province:"Gauteng", coordinates:[-25.75,28.23],risk:"high" },
   { id: 2, name: "Henops River",   sites: 8,  location: "Centurion" , province:"Gauteng", coordinates: [-25.85, 28.18] , risk: "medium"},
@@ -26,7 +33,6 @@ const RIVERS: River[] = [
 
 ];
 
-// ── Overview stats (keyed by river id) ────────────────
 const STATS: Record<number, {
   samplingSites: number;
   sitesAtRisk: number;
@@ -48,6 +54,50 @@ function FlyToRiver({ coordinates }: { coordinates: [number, number] }) {
   });
 
   return null;
+}
+
+const pinDropIcon = L.divIcon({
+  className: "mv-pin-drop",
+  html: '<span class="mv-pin-drop__dot" aria-hidden="true"></span>',
+  iconSize: [28, 36],
+  iconAnchor: [14, 34],
+});
+
+function formatCoord(n: number) {
+  return n.toFixed(5);
+}
+
+function MapPinController({
+  pinPosition,
+  onPinChange,
+  onOpenModal,
+}: {
+  pinPosition: [number, number] | null;
+  onPinChange: (pos: [number, number]) => void;
+  onOpenModal: () => void;
+}) {
+  useMapEvents({
+    click(e) {
+      onPinChange([e.latlng.lat, e.latlng.lng]);
+      onOpenModal();
+    },
+  });
+
+  if (!pinPosition) return null;
+
+  return (
+    <Marker
+      position={pinPosition}
+      icon={pinDropIcon}
+      draggable
+      eventHandlers={{
+        dragend: (ev) => {
+          const ll = ev.target.getLatLng();
+          onPinChange([ll.lat, ll.lng]);
+        },
+      }}
+    />
+  );
 }
 
 function useCountUp(target: number, duration: number = 800) {
@@ -73,12 +123,15 @@ function useCountUp(target: number, duration: number = 800) {
 }
 
 
-// ── Component ──────────────────────────────────────────
 export default function MapView() {
   const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
   const stats = STATS[activeRiver];
   const [selectedProvince, setSelectedProvince] = useState<string>("All");
   const [riverSearch, setRiverSearch] = useState("");
+  const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [manualLat, setManualLat] = useState("");
+  const [manualLng, setManualLng] = useState("");
   const animatedSamplingSites = useCountUp(stats.samplingSites);
   const animatedSitesAtRisk = useCountUp(stats.sitesAtRisk);
   const animatedOrganisms = useCountUp(stats.organismsDetected);
@@ -99,10 +152,38 @@ useEffect(() => {
   }
 }, [selectedProvince, riverSearch]);
 
+  const updatePinPosition = useCallback((pos: [number, number]) => {
+    setPinPosition(pos);
+    setManualLat(formatCoord(pos[0]));
+    setManualLng(formatCoord(pos[1]));
+  }, []);
+
+  const applyManualCoords = useCallback(() => {
+    const lat = parseFloat(manualLat);
+    const lng = parseFloat(manualLng);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      updatePinPosition([lat, lng]);
+      setPinModalOpen(true);
+    }
+  }, [manualLat, manualLng, updatePinPosition]);
+
+  const pinCoordsLabel = useMemo(() => {
+    if (!pinPosition) return null;
+    return `${formatCoord(pinPosition[0])}, ${formatCoord(pinPosition[1])}`;
+  }, [pinPosition]);
+
+  useEffect(() => {
+    if (!pinModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPinModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pinModalOpen]);
+
   return (
     <div className="mapview-page">
 
-      {/* ── LEFT SIDEBAR ── */}
       <aside className="mv-sidebar">
 
         {/* Search */}
@@ -184,12 +265,39 @@ useEffect(() => {
 
       {/* ── MAP AREA ── */}
       <main className="mv-map-area">
-        {/* Replace src with your actual map component or image */}
-        {/* <img
-          className="mv-map-img"
-          src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1400&h=900&fit=crop"
-          alt="River map of South Africa"
-        /> */}
+        <div className="mv-pin-toolbar" role="region" aria-label="Pin location">
+          <span className="mv-pin-toolbar__label">Set pin by lat / lng</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            className="mv-pin-toolbar__input"
+            placeholder="Latitude"
+            value={manualLat}
+            onChange={(e) => setManualLat(e.target.value)}
+            aria-label="Latitude"
+          />
+          <input
+            type="text"
+            inputMode="decimal"
+            className="mv-pin-toolbar__input"
+            placeholder="Longitude"
+            value={manualLng}
+            onChange={(e) => setManualLng(e.target.value)}
+            aria-label="Longitude"
+          />
+          <button type="button" className="mv-pin-toolbar__btn" onClick={applyManualCoords}>
+            Place pin
+          </button>
+          <span className="mv-pin-toolbar__hint">
+            Or left-click the map; drag the pin to adjust.
+          </span>
+        </div>
+
+        {pinCoordsLabel && (
+          <div className="mv-pin-coords-chip" aria-live="polite">
+            Pin: {pinCoordsLabel}
+          </div>
+        )}
 
         <MapContainer
         
@@ -199,6 +307,12 @@ useEffect(() => {
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MapPinController
+            pinPosition={pinPosition}
+            onPinChange={updatePinPosition}
+            onOpenModal={() => setPinModalOpen(true)}
           />
 
           <FlyToRiver coordinates={RIVERS.find(r => r.id === activeRiver)!.coordinates}/>
@@ -286,6 +400,42 @@ useEffect(() => {
             <path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
+
+        {pinModalOpen && (
+          <div
+            className="mv-pin-modal-backdrop"
+            role="presentation"
+            onClick={() => setPinModalOpen(false)}
+          >
+            <div
+              className="mv-pin-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mv-pin-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="mv-pin-modal__close"
+                aria-label="Close"
+                onClick={() => setPinModalOpen(false)}
+              >
+                ×
+              </button>
+              <h2 id="mv-pin-modal-title" className="mv-pin-modal__title">
+                Add data at this location
+              </h2>
+              {pinPosition && (
+                <p className="mv-pin-modal__coords">
+                  Coordinates: {formatCoord(pinPosition[0])}°, {formatCoord(pinPosition[1])}°
+                </p>
+              )}
+              <p className="mv-pin-modal__placeholder">
+                Upload a CSV here, or enter data manually.
+              </p>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ── RIGHT OVERVIEW PANEL ── */}
