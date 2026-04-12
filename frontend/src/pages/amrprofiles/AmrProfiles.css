@@ -25,6 +25,47 @@
 .amr-sidebar::-webkit-scrollbar { display: none; }
 
 /* Search */
+.amr-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 2px solid #3eb99a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+ 
+.amr-select-wrap:focus-within {
+  border-color: #2A6B5A;
+  box-shadow: 0 0 0 3px rgba(62, 185, 154, 0.18);
+}
+ 
+/* The <select> element itself */
+.amr-select {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  line-height: 1.4;
+}
+ 
+.amr-select option {
+  background: #ffffff;
+  color: #111111;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 10px;
+}
 .amr-search-wrap { padding: 16px 14px 10px; }
 .amr-search {
   display: flex;
@@ -83,11 +124,10 @@
 .amr-ring-wrap .track { fill: none; stroke: #1c2f42; stroke-width: 10; }
 .amr-ring-wrap .progress {
   fill: none;
-  stroke: #e03e3e;
   stroke-width: 10;
   stroke-linecap: round;
   stroke-dasharray: 283;
-  transition: stroke-dashoffset 1s ease;
+  transition: stroke-dashoffset 1s ease, stroke 0.4s ease;
 }
 .amr-ring-label {
   position: absolute;
@@ -98,7 +138,6 @@
   font-family: 'Syne', sans-serif;
   font-size: 24px;
   font-weight: 800;
-  color: #e03e3e;
 }
 .amr-ring-desc {
   font-size: 11px;
@@ -166,23 +205,17 @@
 .amr-main::-webkit-scrollbar { display: none; }
 
 /* Two-column layout for the main area */
-.amr-content-grid {
+/* amr-content-grid no longer used — layout is now flat rows in amr-main */
+.amr-content-grid { display: none; }
+.amr-left-col     { display: none; }
+.amr-right-col    { display: none; }
+
+/* Row 3: Predicted Phenotypes + Data Analysis side by side */
+.amr-pheno-analytics-row {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
-  flex: 1;
-}
-
-.amr-left-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.amr-right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: start;
 }
 
 /* ── Cards ── */
@@ -356,10 +389,12 @@
   background: #dde8e0;
   border-radius: 14px;
   padding: 18px 20px;
-  flex: 1;
-  min-height: 240px;
+  min-height: 300px;
   display: flex;
   flex-direction: column;
+  /* No longer inside the right column — sits below the grid at full width */
+  width: 100%;
+  box-sizing: border-box;
 }
 .amr-map-inner {
   flex: 1;
