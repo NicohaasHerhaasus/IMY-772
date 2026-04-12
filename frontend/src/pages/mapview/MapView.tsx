@@ -13,7 +13,7 @@ import {
 import "./MapView.css";
 import { useRiver } from "../../layouts/RiverContext";
 
-// ── Types ──────────────────────────────────────────────
+
 interface River {
   id: number;
   name: string;
@@ -24,7 +24,7 @@ interface River {
   risk: "low" | "medium" | "high";
 }
 
-// ── Static data ────────────────────────────────────────
+
 const RIVERS: River[] = [
   { id: 1, name: "Apies River",    sites: 14, location: "Pretoria", province:"Gauteng", coordinates:[-25.75,28.23],risk:"high" },
   { id: 2, name: "Henops River",   sites: 8,  location: "Centurion" , province:"Gauteng", coordinates: [-25.85, 28.18] , risk: "medium"},
@@ -33,7 +33,6 @@ const RIVERS: River[] = [
 
 ];
 
-// ── Overview stats (keyed by river id) ────────────────
 const STATS: Record<number, {
   samplingSites: number;
   sitesAtRisk: number;
@@ -124,7 +123,6 @@ function useCountUp(target: number, duration: number = 800) {
 }
 
 
-// ── Component ──────────────────────────────────────────
 export default function MapView() {
   const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
   const stats = STATS[activeRiver];
@@ -186,7 +184,6 @@ useEffect(() => {
   return (
     <div className="mapview-page">
 
-      {/* ── LEFT SIDEBAR ── */}
       <aside className="mv-sidebar">
 
         {/* Search */}
