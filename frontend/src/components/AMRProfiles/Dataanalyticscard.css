@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* ── Card shell (dark navy, matches the Data Analysis section in the screenshot) ── */
+.dac-card {
+  background: #1c2f42;
+  border-radius: 14px;
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.dac-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #e8edf2;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Chart area ── */
+.dac-chart-area {
+  min-height: 200px;
+  transition: opacity 0.2s ease;
+}
+
+.dac-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: dacFadeIn 0.3s ease both;
+}
+
+@keyframes dacFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dac-chart-title {
+  font-size: 11px;
+  color: #8aa0b4;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Recharts overrides for dark theme */
+.dac-chart-wrap .recharts-cartesian-grid-horizontal line,
+.dac-chart-wrap .recharts-cartesian-grid-vertical  line {
+  stroke: #1c2f42;
+}
+.dac-chart-wrap .recharts-legend-item-text {
+  color: #8aa0b4 !important;
+  font-size: 10px !important;
+}
+
+/* ── Tab buttons ── */
+.dac-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.dac-tab {
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1.5px solid #3eb99a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  text-transform: uppercase;
+}
+
+.dac-tab--active {
+  background: #2A6B5A;
+  color: #fff;
+  border-color: #2A6B5A;
+}
+
+.dac-tab--inactive {
+  background: transparent;
+  color: #8aa0b4;
+}
+
+.dac-tab--inactive:hover {
+  background: rgba(62, 185, 154, 0.08);
+  color: #3eb99a;
+}
+
+/* ── Group by label ── */
+.dac-group-label {
+  font-size: 10px;
+  color: #4a6880;
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+}

@@ -2,12 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/RequireAuth";
+import { IsolatesProvider } from './context/IsolatesContext';
 
 // Import your page components (create these as empty components for now)
 import About from "./pages/about/About"
 import MapView from "./pages/mapview/MapView";
 import AmrProfiles from "./pages/amrprofiles/AmrProfiles";
-import RiverFlows from "./pages/RiverFlows";
+import RiverFlows from "./pages/riverflows/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import IsolateExplorerPage from "./pages/IsolateExplorerPage";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
@@ -21,6 +22,7 @@ import { RiverProvider } from "../../frontend/src/layouts/RiverContext";
 
 function App() {
   return (
+    <IsolatesProvider>
     <RiverProvider>
     <BrowserRouter>
       <AuthProvider>
@@ -45,6 +47,7 @@ function App() {
       </AuthProvider>
     </BrowserRouter>
     </RiverProvider>
+    </IsolatesProvider>
   );
 }
 
