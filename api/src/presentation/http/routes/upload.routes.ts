@@ -4,6 +4,7 @@ import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { StarAmrUploadService } from '../../../application/services/staramr-upload.service';
 import { UploadController } from '../controllers/upload.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -29,6 +30,6 @@ const pool = getPool();
 const starAmrUploadService = new StarAmrUploadService(pool);
 const uploadController = new UploadController(starAmrUploadService);
 
-router.post('/staramr', upload.single('file'), uploadController.uploadStarAmrWorkbook);
+router.post('/staramr', authMiddleware, upload.single('file'), uploadController.uploadStarAmrWorkbook);
 
 export default router;
