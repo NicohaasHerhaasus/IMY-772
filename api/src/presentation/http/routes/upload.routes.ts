@@ -3,6 +3,7 @@ import multer from 'multer';
 import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { StarAmrUploadService } from '../../../application/services/staramr-upload.service';
+import { ExampleAmrFinderPlusUploadService } from '../../../application/services/example-amrfinder-plus-upload.service';
 import { UploadController } from '../controllers/upload.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -28,8 +29,15 @@ const upload = multer({
 
 const pool = getPool();
 const starAmrUploadService = new StarAmrUploadService(pool);
-const uploadController = new UploadController(starAmrUploadService);
+const exampleAmrFinderPlusUploadService = new ExampleAmrFinderPlusUploadService(pool);
+const uploadController = new UploadController(starAmrUploadService, exampleAmrFinderPlusUploadService);
 
 router.post('/staramr', authMiddleware, upload.single('file'), uploadController.uploadStarAmrWorkbook);
+router.post(
+  '/example-amrfinder-plus',
+  authMiddleware,
+  upload.single('file'),
+  uploadController.uploadExampleAmrFinderPlusWorkbook,
+);
 
 export default router;

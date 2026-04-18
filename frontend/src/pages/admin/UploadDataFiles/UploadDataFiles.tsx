@@ -2,8 +2,11 @@ import { useState, useRef, useCallback, useEffect, type ChangeEvent } from "reac
 import { Button, Card, FormField, Select } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
 import {
+  EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS,
   GENOTYPIC_PREVIEW_COLUMNS,
   MAX_PREVIEW_ROWS,
+  parseExampleAmrFinderPlusXlsxForPreview,
+  type ExampleAmrFinderPlusRow,
   type GenotypicUploadRow,
   parseGenotypicXlsxForPreview,
   parseStarAmrXlsxForPreview,
@@ -42,6 +45,7 @@ const UPLOAD_TYPES = [
   "Genotypic Analysis Excel (.xlsx)",
   "Genotypic Analysis TSV (.tsv)",
   "StarAMR Workbook (.xlsx)",
+  "Example AMRFinderPlus Excel (.xlsx)",
 ] as const;
 
 const GENOTYPIC_TSV_HEADERS = [
@@ -137,7 +141,8 @@ type FilePreviewState =
       total: number;
       sheetName?: string;
     }
-  | { kind: "staramr"; data: StarAmrPreview };
+  | { kind: "staramr"; data: StarAmrPreview }
+  | { kind: "amrfinderplus"; rows: ExampleAmrFinderPlusRow[]; total: number };
 
 type SampleUploadPhase = "idle" | "validating" | "validated" | "uploading" | "done" | "error";
 
@@ -309,6 +314,31 @@ function StarAmrSheetPreview({ headers, rows }: { headers: string[]; rows: strin
   );
 }
 
+function ExampleAmrFinderPlusPreviewTable({ rows }: { rows: ExampleAmrFinderPlusRow[] }) {
+  return (
+    <div className="upload-preview__scroll">
+      <table className="upload-preview-table">
+        <thead>
+          <tr>
+            {EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS.map((col) => (
+              <th key={col.key}>{col.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri}>
+              {EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS.map((col) => (
+                <td key={col.key}>{row[col.key] || "—"}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function UploadDataFiles() {
   const { getAccessToken } = useAuth();
   const [uploadType, setUploadType] = useState<(typeof UPLOAD_TYPES)[number]>(UPLOAD_TYPES[0]);
@@ -376,6 +406,14 @@ export default function UploadDataFiles() {
             total: rows.length,
             sheetName,
           });
+          return;
+        }
+
+        if (uploadType === "Example AMRFinderPlus Excel (.xlsx)") {
+          const data = parseExampleAmrFinderPlusXlsxForPreview(buffer);
+          if (!cancelled) {
+            setFilePreview({ kind: "amrfinderplus", rows: data.rows, total: data.total });
+          }
           return;
         }
 
@@ -558,6 +596,24 @@ export default function UploadDataFiles() {
           `Import successful. Isolates: ${isolatesCount ?? 0}, Genotypes: ${genotypesCount ?? 0}, ` +
             `Phenotypes: ${phenotypesCount ?? 0}, Plasmids: ${plasmidsCount ?? 0}.`,
         );
+      } else if (uploadType === "Example AMRFinderPlus Excel (.xlsx)") {
+        if (!file.name.toLowerCase().endsWith(".xlsx")) {
+          throw new Error("Only .xlsx is supported for Example AMRFinderPlus.");
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_BASE_URL}/api/upload/example-amrfinder-plus`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: formData,
+        });
+        const rawText = await response.text();
+        const result = parseJsonResponse(rawText);
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(response, result, rawText));
+        }
+        const payload = result as { data?: { insertedCount?: number } } | null;
+        setMessage(`Uploaded ${payload?.data?.insertedCount ?? 0} AMRFinderPlus row(s).`);
       } else if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
         if (!file.name.toLowerCase().endsWith(".xlsx")) {
           throw new Error("Only .xlsx is supported for genotypic Excel.");
@@ -635,6 +691,8 @@ export default function UploadDataFiles() {
             ? "Dashboard sample workbook upload with strict server-side validator (required fields like geo_loc_name, latitude, and longitude)."
             : uploadType === "StarAMR Workbook (.xlsx)"
             ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel — not here."
+            : uploadType === "Example AMRFinderPlus Excel (.xlsx)"
+              ? "Requires the sheet 'Sheet 1 - exampleAMRFinderPlus' with columns like SampleID, Protein identifier, Gene symbol, and HMM description."
             : uploadType === "Genotypic Analysis Excel (.xlsx)"
               ? "Any .xlsx file or sheet name is fine. One row must contain the UP genotypic column headers in order (we scan the first 15 rows); data rows follow below that row."
               : "TSV must use the required column headers in order (tabs; empty cells allowed)."}
@@ -751,6 +809,19 @@ export default function UploadDataFiles() {
                 {!filePreview.data.summary && !filePreview.data.detailed && (
                   <p className="upload-preview__empty">No Summary / Detailed_Summary tables to show.</p>
                 )}
+              </div>
+            )}
+            {filePreview.kind === "amrfinderplus" && (
+              <div className="upload-preview">
+                <div className="upload-preview__head">
+                  <h2 className="upload-preview__title">Preview</h2>
+                  <p className="upload-preview__meta">
+                    Showing {filePreview.rows.length} of {filePreview.total} data row
+                    {filePreview.total === 1 ? "" : "s"}
+                    {filePreview.total > MAX_PREVIEW_ROWS ? ` (first ${MAX_PREVIEW_ROWS})` : ""}
+                  </p>
+                </div>
+                <ExampleAmrFinderPlusPreviewTable rows={filePreview.rows} />
               </div>
             )}
           </section>
