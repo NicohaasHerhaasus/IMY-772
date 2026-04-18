@@ -1,0 +1,44 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: SSH Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            cd /home/ubuntu/app
+
+            echo "==> Pulling latest changes"
+            git pull origin main
+
+            echo "==> Installing and building API"
+            cd api
+            npm install --omit=dev
+            npm run build
+            cd ..
+
+            echo "==> Installing and building frontend"
+            cd frontend
+            npm install --omit=dev
+            npm run build
+            cd ..
+
+            echo "==> Restarting API"
+            pm2 restart imy772-api
+
+            echo "==> Done"
+            pm2 status

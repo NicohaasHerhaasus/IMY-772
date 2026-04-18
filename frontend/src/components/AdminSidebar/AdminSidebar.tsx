@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: "Upload Datafiles", path: "/admin/upload" },
   { label: "Export Datafiles", path: "/admin/export" },
   { label: "Manage Datafiles", path: "/admin/manage" },
+  { label: "AMR Assistant", path: "/admin/chatbot" },
 ];
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
