@@ -534,7 +534,9 @@ export default function UploadDataFiles() {
         throw new Error("No access token. Sign in again.");
       }
 
-      if (uploadType === "StarAMR Workbook (.xlsx)") {
+      if (isSampleDashboard) {
+        throw new Error("Use Validate and Confirm upload for sample dashboard files.");
+      } else if (uploadType === "StarAMR Workbook (.xlsx)") {
         if (!file.name.toLowerCase().endsWith(".xlsx")) {
           throw new Error("Only .xlsx is supported for StarAMR.");
         }
@@ -597,8 +599,6 @@ export default function UploadDataFiles() {
         }
         const payload = result as { data?: { insertedCount?: number } } | null;
         setMessage(`Uploaded ${payload?.data?.insertedCount ?? rows.length} genotypic row(s).`);
-      } else if (isSampleDashboard) {
-        throw new Error("Use Validate and Confirm upload for sample dashboard files.");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
