@@ -1,554 +1,737 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "./AmrProfiles.css";
-import { useRiver } from "../../layouts/RiverContext"; 
+// import { useState, useEffect } from "react";
+// import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
+// import "leaflet/dist/leaflet.css";
+// import "./AmrProfiles.css";
+// import DataAnalyticsCard from "../../components/AMRProfiles/Dataanalyticscard";
+
+// // ── Types ──────────────────────────────────────────────
+// type BadgeType = "present" | "absent" | "trace";
+
+// type PillColor = "blue" | "orange" | "purple" | "green" | "teal";
+
+// interface Organism  { name: string; status: BadgeType; }
+// interface ArmGene {
+//   symbol: string;
+//   antibioticClass: string;
+//   pillColor: PillColor;
+//   elementType: string;
+//   identity: number;
+//   barColor: string;
+// }
+// interface PhenoChip { label: string; type: "resistant" | "moderate"; }
+// interface IntegronCard { label: string; value: number; sub: string; colorClass: string; }
+// interface RiverMarker  {
+//   name: string;
+//   coords: [number, number];
+//   risk: "low" | "medium" | "high";
+// }
+
+// // ── Static data ────────────────────────────────────────
+// const ORGANISMS: Organism[] = [
+//   { name: "E-Coli",              status: "present" },
+//   { name: "Helicobacter-pylori", status: "present" },
+//   { name: "Salmonella",          status: "absent"  },
+//   { name: "Staphylococcus",      status: "trace"   },
+//   { name: "Bacillus",            status: "present" },
+//   { name: "Lactobacillus",       status: "absent"  },
+// ];
+
+// const AMR_GENES: ArmGene[] = [
+//   { symbol: "blaCTX-M-14", antibioticClass: "BETA-LACTAM",   pillColor: "blue",   elementType: "AMR", identity: 100,  barColor: "#6ab4f5" },
+//   { symbol: "tet(A)",      antibioticClass: "TETRACYCLINE",  pillColor: "orange", elementType: "AMR", identity: 99.2, barColor: "#f0a500" },
+//   { symbol: "sul2",        antibioticClass: "SULFONAMIDE",   pillColor: "purple", elementType: "AMR", identity: 98.7, barColor: "#b09af0" },
+//   { symbol: "aph(3')-Ia",  antibioticClass: "AMINOGLYCOSIDE",pillColor: "green",  elementType: "AMR", identity: 100,  barColor: "#4caf82" },
+//   { symbol: "fosA3",       antibioticClass: "FOSFOMYCIN",    pillColor: "teal",   elementType: "AMR", identity: 97.1, barColor: "#3eb99a" },
+// ];
+
+// const INTEGRON_CARDS: IntegronCard[] = [
+//   { label: "IntI1", value: 9,  sub: "64% positive",    colorClass: "intval--active" },
+//   { label: "IntI2", value: 2,  sub: "14% positive",    colorClass: "intval--active" },
+//   { label: "IntI3", value: 0,  sub: "not detected",    colorClass: "intval--zero"   },
+//   { label: "ESBL",  value: 6,  sub: "43% producers",   colorClass: "intval--esbl"   },
+//   { label: "AmpC",  value: 2,  sub: "14% producers",   colorClass: "intval--active" },
+// ];
+
+// const PHENO_CHIPS: PhenoChip[] = [
+//   { label: "Ampicillin",   type: "resistant" },
+//   { label: "Ceftriaxone",  type: "resistant" },
+//   { label: "Tetracycline", type: "resistant" },
+//   { label: "Trimethoprim", type: "resistant" },
+//   { label: "Fosfomycin",   type: "moderate"  },
+//   { label: "Sulfisoxazole",type: "moderate"  },
+//   { label: "Kanamycin",    type: "moderate"  },
+//   { label: "Streptomycin", type: "moderate"  },
+// ];
+
+// const PLASMID_TYPES = ["IncFIB(K)", "IncI1-I(Alpha)", "Col(BS512)"];
 
 
-// Fix Leaflet default icon paths broken by bundlers
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+// const RIVERS: RiverMarker[] = [
+//   { name: "Apies River",   coords: [-25.75, 28.23], risk: "high"   },
+//   { name: "Henops River",  coords: [-25.85, 28.18], risk: "medium" },
+//   { name: "Limpopo River", coords: [-22.00, 29.00], risk: "low"    },
+//   { name: "Lotus River",   coords: [-34.05, 18.51], risk: "high"   },
+// ];
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+// const RISK_COLORS = { low: "#4caf82", medium: "#f0a500", high: "#e04040" };
+// const PILL_CLASS: Record<PillColor, string> = {
+//   blue: "pill-blue", orange: "pill-orange", purple: "pill-purple",
+//   green: "pill-green", teal: "pill-teal",
+// };
 
-// ── Types ──────────────────────────────────────────────
-type BadgeType = "present" | "absent" | "trace";
-type TabType   = "organisms" | "amr" | "metagenomics";
-type RiskLevel = "low" | "medium" | "high";
+// // ── Map fly controller ─────────────────────────────────
+// function FlyTo({ coords }: { coords: [number, number] }) {
+//   const map = useMap();
+//   useEffect(() => { map.flyTo(coords, 6, { duration: 1.2 }); }, [coords, map]);
+//   return null;
+// }
 
-interface Organism  { name: string; status: BadgeType; }
-interface WaterParam { label: string; value: number; color: "green" | "yellow" | "red"; }
-interface VisitBar  { label: string; height: number; color: string; }
-interface GroupedBar { label: string; purple: number; orange: number; }
-interface ColBar    { h: number; color: string; }
+// // ── Main component ─────────────────────────────────────
+// export default function AmrProfiles() {
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [showDropdown, setShowDropdown] = useState(false);
 
-interface RiverData {
-  id: number;
-  name: string;
-  province: string;
-  lat: number;
-  lng: number;
-  zoom: number;
-  healthScore: number;
-  riskLevel: RiskLevel;
-  riskTag: string;
-  riskDesc: string;
-  organisms: Organism[];
-  waterParams: WaterParam[];
-  visits: VisitBar[];
-  groupedBars: GroupedBar[];
-  colBars: ColBar[];
-  pieA: number;
-  pieB: number;
-}
+//   const healthScore  = 93;
+//   const dashOffset   = 283 - (healthScore / 100) * 283;
 
-// ── Risk colour helper ─────────────────────────────────
-const RISK_COLORS: Record<RiskLevel, string> = {
-  low:    "#4caf82",
-  medium: "#f0a500",
-  high:   "#e03e3e",
+//   return (
+//     <div className="amr-page">
+
+//       {/* ══ LEFT SIDEBAR ══ */}
+//       <aside className="amr-sidebar">
+
+//         {/* Search */}
+//         <div className="amr-search-wrap">
+//           <div className="amr-search">
+//             <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+//               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+//             </svg>
+//             <input
+//               type="text"
+//               placeholder="Search River"
+//               value={searchQuery}
+//               onChange={e => setSearchQuery(e.target.value)}
+//             />
+//           </div>
+//         </div>
+
+//         {/* Site details section */}
+//         <div className="amr-section-label">Site Details</div>
+
+//         {/* Resistance ring */}
+//         <div className="amr-ring-block">
+//           <div className="amr-ring-wrap">
+//             <svg viewBox="0 0 100 100">
+//               <circle className="track" cx="50" cy="50" r="45" />
+//               <circle
+//                 className="progress"
+//                 cx="50" cy="50" r="45"
+//                 strokeDashoffset={dashOffset}
+//               />
+//             </svg>
+//             <div className="amr-ring-label">{healthScore}%</div>
+//           </div>
+//           <p className="amr-ring-desc">
+//             83% of isolates carry<br/>
+//             &gt;1 AMR gene
+//           </p>
+//         </div>
+
+//         {/* Organisms */}
+//         <div className="amr-section-label">Organisms Detected</div>
+//         <div className="amr-organisms">
+//           {ORGANISMS.map(org => (
+//             <div key={org.name} className="amr-org-row">
+//               <span className="amr-org-name">{org.name}</span>
+//               <span className={`amr-badge amr-badge--${org.status}`}>
+//                 {org.status}
+//               </span>
+//             </div>
+//           ))}
+//         </div>
+
+//         {/* Collapse toggle */}
+//         <button className="amr-collapse-btn" aria-label="Collapse sidebar">
+//           <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+//             <path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2"
+//               strokeLinecap="round" strokeLinejoin="round"/>
+//           </svg>
+//         </button>
+//       </aside>
+
+//       {/* ══ MAIN CONTENT ══ */}
+//       <main className="amr-main">
+//         <div className="amr-content-grid">
+
+//           {/* ── LEFT COLUMN ── */}
+//           <div className="amr-left-col">
+
+//             {/* AMR Genes table */}
+//             <div className="amr-card">
+//               <div className="amr-card-title">AMR Genes</div>
+//               <table className="amr-gene-table">
+//                 <thead>
+//                   <tr>
+//                     <th>Gene symbol</th>
+//                     <th>Antibiotic class</th>
+//                     <th>Element type</th>
+//                     <th>% Identity</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {AMR_GENES.map(gene => (
+//                     <tr key={gene.symbol}>
+//                       <td style={{ fontFamily: "monospace", fontWeight: 500 }}>
+//                         {gene.symbol}
+//                       </td>
+//                       <td>
+//                         <span className={`gene-class-pill ${PILL_CLASS[gene.pillColor]}`}>
+//                           {gene.antibioticClass}
+//                         </span>
+//                       </td>
+//                       <td style={{ color: "#5a6b64", fontSize: 12 }}>
+//                         {gene.elementType}
+//                       </td>
+//                       <td>
+//                         <div className="identity-bar-wrap">
+//                           <span style={{ fontSize: 12, minWidth: 38 }}>
+//                             {gene.identity}%
+//                           </span>
+//                           <div className="identity-bar-track">
+//                             <div
+//                               className="identity-bar-fill"
+//                               style={{
+//                                 width: `${gene.identity}%`,
+//                                 background: gene.barColor,
+//                               }}
+//                             />
+//                           </div>
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+
+//             {/* Integrons & ESBL/AmpC */}
+//             <div className="amr-card">
+//               <div className="amr-card-title">Integrons &amp; ESBL/AmpC</div>
+//               <div className="amr-integron-grid">
+//                 {INTEGRON_CARDS.map(card => (
+//                   <div key={card.label} className="amr-integron-card">
+//                     <div className="amr-integron-label">{card.label}</div>
+//                     <div className={`amr-integron-value ${card.colorClass}`}>
+//                       {card.value}
+//                     </div>
+//                     <div className="amr-integron-sub">{card.sub}</div>
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+
+//             {/* Predicted phenotypes */}
+//             <div className="amr-card">
+//               <div className="amr-card-title">Predicted Phenotypes</div>
+
+//               <div className="amr-phenotype-section">
+//                 <div className="amr-phenotype-label">Predicted antibiotic resistance</div>
+//                 <div className="amr-pheno-chips">
+//                   {PHENO_CHIPS.map(chip => (
+//                     <span
+//                       key={chip.label}
+//                       className={`amr-pheno-chip chip-${chip.type}`}
+//                     >
+//                       {chip.label}
+//                     </span>
+//                   ))}
+//                 </div>
+//               </div>
+
+//               <div className="amr-phenotype-section">
+//                 <div className="amr-phenotype-label">Plasmid types identified</div>
+//                 <div className="amr-plasmid-chips">
+//                   {PLASMID_TYPES.map(p => (
+//                     <span key={p} className="amr-plasmid-chip">{p}</span>
+//                   ))}
+//                 </div>
+//               </div>
+
+//               <div className="amr-mlst-row">
+//                 <span className="amr-mlst-label">MLST sequence type:</span>
+//                 <span className="amr-mlst-value">ST-162 (ecoli_achtman_4)</span>
+//               </div>
+//             </div>
+//           </div>
+
+//           {/* ── RIGHT COLUMN ── */}
+//           <div className="amr-right-col">
+
+//             {/* River map */}
+//             <div className="amr-map-card">
+//               <div className="amr-card-title" style={{ color: "#1c2f42" }}>
+//                 River Map View
+//               </div>
+//               <div className="amr-map-inner">
+//                 <MapContainer
+//                   center={[-29.0, 24.0]}
+//                   zoom={5}
+//                   zoomControl={false}
+//                   style={{ width: "100%", height: "100%", minHeight: 200 }}
+//                 >
+//                   <TileLayer
+//                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+//                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+//                   />
+//                   <FlyTo coords={[-29.0, 25.5]} />
+//                   {RIVERS.map(river => (
+//                     <CircleMarker
+//                       key={river.name}
+//                       center={river.coords}
+//                       radius={8}
+//                       pathOptions={{
+//                         color: RISK_COLORS[river.risk],
+//                         fillColor: RISK_COLORS[river.risk],
+//                         fillOpacity: 0.85,
+//                         weight: 2,
+//                       }}
+//                     >
+//                       <Popup>
+//                         <strong>{river.name}</strong><br />
+//                         Risk: {river.risk}
+//                       </Popup>
+//                     </CircleMarker>
+//                   ))}
+//                 </MapContainer>
+
+//                 {/* Legend overlay */}
+//                 <div className="amr-map-legend">
+//                   <div className="amr-map-legend-title">Health Status</div>
+//                   <div className="amr-map-legend-row">
+//                     <div className="amr-map-dot" style={{ background: "#4caf82" }}/>
+//                     Low AMR Risk
+//                   </div>
+//                   <div className="amr-map-legend-row">
+//                     <div className="amr-map-dot" style={{ background: "#f0a500" }}/>
+//                     Medium AMR Risk
+//                   </div>
+//                   <div className="amr-map-legend-row">
+//                     <div className="amr-map-dot" style={{ background: "#e04040" }}/>
+//                     High AMR Risk
+//                   </div>
+//                   <div className="amr-map-legend-row">
+//                     <div className="amr-map-dot" style={{ background: "#3a5060" }}/>
+//                     No data
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* Data Analysis card — real Recharts charts with tab switching */}
+//             <DataAnalyticsCard />
+
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+
+// src/pages/AmrProfiles/AmrProfiles.tsx
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import './AmrProfiles.css';
+import DataAnalyticsCard from '../../components/AMRProfiles/Dataanalyticscard';
+import { useIsolates } from '../../context/IsolatesContext';
+import {
+  toAmrProfileData, toMapMarkers, classifyGene,
+  type AmrProfileData, type RiskLevel,
+} from '../../lib/transformers';
+import type { IsolateRow } from '../../lib/api/types';
+
+// ── Pill colour by gene class ──────────────────────────
+const CLASS_PILL: Record<string, string> = {
+  'Beta-lactam':    'pill-blue',
+  'Tetracycline':   'pill-orange',
+  'Sulfonamide':    'pill-purple',
+  'Trimethoprim':   'pill-purple',
+  'Aminoglycoside': 'pill-green',
+  'Colistin':       'pill-red',
+  'Macrolide':      'pill-red',
+  'Quinolone':      'pill-orange',
+  'Fosfomycin':     'pill-teal',
+  'Bleomycin':      'pill-teal',
+  'Phenicol':       'pill-blue',
+  'Other':          'pill-teal',
 };
 
-// ── Static river dataset ───────────────────────────────
-// Replace these records with real API data later.
-const RIVERS: RiverData[] = [
-  {
-    id: 1,
-    name: "Apies River",
-    province: "Pretoria, Gauteng",
-    lat: -25.7479, lng: 28.2293, zoom: 11,
-    healthScore: 93,
-    riskLevel: "high",
-    riskTag: "!! High Risk Area",
-    riskDesc: "Not recommended for drinking,\nfarming or daily activities",
-    organisms: [
-      { name: "E-Coli",              status: "present" },
-      { name: "Helicobacter-pylori", status: "present" },
-      { name: "Salmonella",          status: "absent"  },
-      { name: "Staphylococcus",      status: "trace"   },
-      { name: "Bacillus",            status: "present" },
-      { name: "Lactobacillus",       status: "absent"  },
-    ],
-    waterParams: [
-      { label: "Temperature",  value: 72, color: "green"  },
-      { label: "pH",           value: 55, color: "yellow" },
-      { label: "TDS",          value: 28, color: "red"    },
-      { label: "EC",           value: 22, color: "red"    },
-      { label: "Dissolved O2", value: 65, color: "green"  },
-    ],
-    visits: [
-      { label: "V1", height: 38, color: "#4caf82" },
-      { label: "V2", height: 52, color: "#6dc472" },
-      { label: "V3", height: 62, color: "#c4b44a" },
-      { label: "V4", height: 68, color: "#d4a84a" },
-      { label: "V5", height: 74, color: "#c47a70" },
-      { label: "V6", height: 80, color: "#c46060" },
-      { label: "V7", height: 88, color: "#d45050" },
-    ],
-    groupedBars: [
-      { label: "A", purple: 78, orange: 85 },
-      { label: "B", purple: 58, orange: 62 },
-      { label: "C", purple: 72, orange: 42 },
-      { label: "D", purple: 44, orange: 36 },
-    ],
-    colBars: [
-      { h: 40, color: "#f0a040" }, { h: 70, color: "#e07020" },
-      { h: 90, color: "#f0a040" }, { h: 55, color: "#e07020" },
-      { h: 30, color: "#f0c060" }, { h: 80, color: "#e07020" },
-      { h: 45, color: "#f0a040" },
-    ],
-    pieA: 60, pieB: 30,
-  },
-  {
-    id: 2,
-    name: "Henops River",
-    province: "Centurion, Gauteng",
-    lat: -25.8610, lng: 28.1890, zoom: 12,
-    healthScore: 58,
-    riskLevel: "medium",
-    riskTag: "! Medium Risk Area",
-    riskDesc: "Use with caution.\nMonitor regularly.",
-    organisms: [
-      { name: "E-Coli",              status: "trace"   },
-      { name: "Helicobacter-pylori", status: "absent"  },
-      { name: "Salmonella",          status: "absent"  },
-      { name: "Staphylococcus",      status: "present" },
-      { name: "Bacillus",            status: "trace"   },
-      { name: "Lactobacillus",       status: "present" },
-    ],
-    waterParams: [
-      { label: "Temperature",  value: 60, color: "green"  },
-      { label: "pH",           value: 70, color: "green"  },
-      { label: "TDS",          value: 50, color: "yellow" },
-      { label: "EC",           value: 45, color: "yellow" },
-      { label: "Dissolved O2", value: 75, color: "green"  },
-    ],
-    visits: [
-      { label: "V1", height: 30, color: "#4caf82" },
-      { label: "V2", height: 40, color: "#4caf82" },
-      { label: "V3", height: 50, color: "#6dc472" },
-      { label: "V4", height: 55, color: "#c4b44a" },
-      { label: "V5", height: 60, color: "#d4a84a" },
-      { label: "V6", height: 65, color: "#c47a70" },
-      { label: "V7", height: 70, color: "#c46060" },
-    ],
-    groupedBars: [
-      { label: "A", purple: 55, orange: 60 },
-      { label: "B", purple: 40, orange: 50 },
-      { label: "C", purple: 65, orange: 35 },
-      { label: "D", purple: 30, orange: 45 },
-    ],
-    colBars: [
-      { h: 30, color: "#f0c060" }, { h: 55, color: "#f0a040" },
-      { h: 70, color: "#e07020" }, { h: 40, color: "#f0a040" },
-      { h: 60, color: "#e07020" }, { h: 50, color: "#f0c060" },
-      { h: 35, color: "#f0a040" },
-    ],
-    pieA: 50, pieB: 35,
-  },
-  {
-    id: 3,
-    name: "Limpopo River",
-    province: "Limpopo",
-    lat: -22.9000, lng: 29.4600, zoom: 9,
-    healthScore: 32,
-    riskLevel: "low",
-    riskTag: "✓ Low Risk Area",
-    riskDesc: "Generally safe.\nRegular monitoring advised.",
-    organisms: [
-      { name: "E-Coli",              status: "absent"  },
-      { name: "Helicobacter-pylori", status: "absent"  },
-      { name: "Salmonella",          status: "absent"  },
-      { name: "Staphylococcus",      status: "trace"   },
-      { name: "Bacillus",            status: "absent"  },
-      { name: "Lactobacillus",       status: "present" },
-    ],
-    waterParams: [
-      { label: "Temperature",  value: 50, color: "green"  },
-      { label: "pH",           value: 80, color: "green"  },
-      { label: "TDS",          value: 65, color: "green"  },
-      { label: "EC",           value: 60, color: "green"  },
-      { label: "Dissolved O2", value: 85, color: "green"  },
-    ],
-    visits: [
-      { label: "V1", height: 20, color: "#4caf82" },
-      { label: "V2", height: 25, color: "#4caf82" },
-      { label: "V3", height: 30, color: "#4caf82" },
-      { label: "V4", height: 28, color: "#6dc472" },
-      { label: "V5", height: 35, color: "#6dc472" },
-      { label: "V6", height: 32, color: "#4caf82" },
-      { label: "V7", height: 38, color: "#6dc472" },
-    ],
-    groupedBars: [
-      { label: "A", purple: 30, orange: 25 },
-      { label: "B", purple: 20, orange: 30 },
-      { label: "C", purple: 35, orange: 20 },
-      { label: "D", purple: 15, orange: 22 },
-    ],
-    colBars: [
-      { h: 20, color: "#4caf82" }, { h: 35, color: "#6dc472" },
-      { h: 28, color: "#4caf82" }, { h: 40, color: "#6dc472" },
-      { h: 22, color: "#4caf82" }, { h: 30, color: "#6dc472" },
-      { h: 25, color: "#4caf82" },
-    ],
-    pieA: 70, pieB: 20,
-  },
-];
+const RISK_COLORS: Record<RiskLevel, string> = {
+  low: '#4caf82', medium: '#f0a500', high: '#e04040',
+};
 
-
-
-// ── Map fly-to controller ──────────────────────────────
-function FlyTo({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
+function FlyTo({ coords }: { coords: [number, number] }) {
   const map = useMap();
-  useEffect(() => {
-    map.flyTo([lat, lng], zoom, { duration: 1.4 });
-  }, [lat, lng, zoom, map]);
+  useEffect(() => { map.flyTo(coords, 6, { duration: 1.2 }); }, [coords, map]);
   return null;
 }
 
-// ── Custom coloured marker icon ────────────────────────
-function makeIcon(color: string) {
-  return L.divIcon({
-    className: "",
-    html: `<div style="
-      width:18px;height:18px;border-radius:50%;
-      background:${color};border:3px solid #fff;
-      box-shadow:0 2px 8px rgba(0,0,0,0.4);
-    "></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-  });
+// ── Build groups by sequenceType (camelCase from API) ─
+function buildGroups(isolates: IsolateRow[]): Map<string, IsolateRow[]> {
+  const map = new Map<string, IsolateRow[]>();
+  for (const row of isolates) {
+    const st  = String(row.sequenceType ?? '').trim();
+    const key = st && st !== '-' && st !== 'null' && st !== 'undefined'
+      ? `ST-${st}` : 'Unknown ST';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(row);
+  }
+  return new Map([...map.entries()].sort((a, b) => b[1].length - a[1].length));
 }
 
-// ── Pie chart (SVG) ────────────────────────────────────
-function PieChart({ pctA, pctB }: { pctA: number; pctB: number }) {
-  const pctC = 100 - pctA - pctB;
-  const segments = [
-    { pct: pctA, color: "#3eb99a" },
-    { pct: pctB, color: "#e07040" },
-    { pct: pctC, color: "#7b6cf6" },
-  ];
-  const r = 70; const cx = 80; const cy = 80;
-  let cumulative = 0;
+const PLACEHOLDER_COORDS: Record<string, [number, number]> = {};
+const BASE_COORDS: [number, number][] = [
+  [-25.7479, 28.2293], [-23.9045, 29.4688], [-25.8553, 25.6418], [-33.9249, 18.4241],
+];
 
-  function toXY(pct: number) {
-    const angle = (pct / 100) * 2 * Math.PI - Math.PI / 2;
-    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-  }
+export default function AmrProfiles() {
+  const { isolates, loading, error } = useIsolates();
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  const paths = segments.map((seg) => {
-    const start = toXY(cumulative);
-    cumulative += seg.pct;
-    const end = toXY(cumulative);
-    const large = seg.pct > 50 ? 1 : 0;
-    return {
-      d: `M${cx} ${cy} L${start.x} ${start.y} A${r} ${r} 0 ${large} 1 ${end.x} ${end.y}Z`,
-      color: seg.color,
-    };
+  const groups = buildGroups(isolates);
+  const groupKeys = Array.from(groups.keys());
+
+  // Assign stable placeholder coords to each group
+  groupKeys.forEach((k, i) => {
+    if (!PLACEHOLDER_COORDS[k]) {
+      PLACEHOLDER_COORDS[k] = BASE_COORDS[i % BASE_COORDS.length];
+    }
   });
 
-  return (
-    <div className="amr-pie-wrap">
-      <svg width="160" height="160" viewBox="0 0 160 160">
-        {paths.map((p, i) => (
-          <path key={i} d={p.d} fill={p.color} stroke="#1a2d3f" strokeWidth="1.5" />
-        ))}
-      </svg>
-      <span className="amr-pie-label amr-pie-label--a">{pctA}%</span>
-      <span className="amr-pie-label amr-pie-label--b">{pctB}%</span>
+  useEffect(() => {
+    if (groupKeys.length > 0 && !selectedKey) setSelectedKey(groupKeys[0]);
+  }, [groupKeys.length]);
+
+  if (loading) return (
+    <div className="amr-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: '#5a7a94', fontSize: 14 }}>Loading isolate data…</div>
     </div>
   );
-}
 
-// ── Main Component ─────────────────────────────────────
-export default function AmrProfiles() {
-  const { activeRiverId } = useRiver();
-  const [activeTab,    setActiveTab]    = useState<TabType>("organisms");
-  const [searchQuery,  setSearchQuery]  = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  // Replace the initial useState value:
-  const [selectedRiver, setSelectedRiver] = useState<RiverData>(
-    RIVERS.find(r => r.id === activeRiverId) ?? RIVERS[0]
+  if (error) return (
+    <div className="amr-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: '#e04040', fontSize: 14 }}>Failed to load data: {error}</div>
+    </div>
   );
 
-  // Sync if the context value changes (e.g. user navigates back and forth)
-  useEffect(() => {
-    const match = RIVERS.find(r => r.id === activeRiverId);
-    if (match) setSelectedRiver(match);
-  }, [activeRiverId]);
+  const selectedIsolates = selectedKey ? (groups.get(selectedKey) ?? []) : [];
+  const profile: AmrProfileData | null = selectedIsolates.length > 0
+    ? toAmrProfileData(selectedKey!, selectedIsolates)
+    : null;
 
-  // Filter rivers by search query
-  useMemo(
-    () =>
-      RIVERS.filter(
-        (river) =>
-          river.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          river.province.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    [searchQuery],
-  );
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function selectRiver(river: RiverData) {
-    setSelectedRiver(river);
-    setSearchQuery(river.name);
-    setShowDropdown(false);
-  }
-
-  const r = selectedRiver;
-  const ringColor  = RISK_COLORS[r.riskLevel];
-  // stroke-dasharray 283 = 2πr where r=45
-  const dashOffset = 283 - (r.healthScore / 100) * 283;
-
-
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-      setShowDropdown(false);
-    }
-  }
-
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, []);
+  const mapMarkers  = toMapMarkers(isolates);
+  const mapCenter: [number, number] = selectedKey && PLACEHOLDER_COORDS[selectedKey]
+    ? PLACEHOLDER_COORDS[selectedKey] : [-28.0, 26.0];
 
   return (
     <div className="amr-page">
 
-      {/* ══ LEFT SIDEBAR ══ */}
+      {/* ══ SIDEBAR ══ */}
       <aside className="amr-sidebar">
 
-        {/* Search */}
-        <div className="amr-search-wrap" ref={searchRef}>
-  <div
-    className="amr-search"
-    onClick={() => setShowDropdown(prev => !prev)}
-  >
-    {/* <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8"/>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg> */}
-
-    <span className="amr-search-placeholder">
-      {RIVERS.find(r => r.id === activeRiver)?.name || "Select River"}
-    </span>
-  </div>
-
-  {showDropdown && (
-    <div className="amr-search-dropdown">
-      {RIVERS.map(river => (
-        <div
-          key={river.id}
-          className="amr-search-option"
-          onClick={() => {
-            setActiveRiver(river.id);
-            setShowDropdown(false);
-          }}
-        >
-          <strong>{river.name}</strong>
-          <span>{river.province}</span>
+        {/* Isolate group selector — native select showing all ST groups */}
+        <div className="amr-search-wrap">
+          <div className="amr-select-wrap">
+            {/* <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ color: '#3eb99a', flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg> */}
+            <select
+              className="amr-select"
+              value={selectedKey ?? ''}
+              onChange={e => setSelectedKey(e.target.value)}
+            >
+              {groupKeys.map(k => (
+                <option key={k} value={k}>
+                  {k} ({groups.get(k)?.length} isolates)
+                </option>
+              ))}
+            </select>
+            {/* <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ color: '#5a7a94', flexShrink: 0, pointerEvents: 'none' }}>
+              <polyline points="6 9 12 15 18 9"/>
+            </svg> */}
+          </div>
         </div>
-      ))}
-    </div>
-  )}
-</div>
-        
 
-
-        {/* Site Details */}
+        {/* Site details section */}
         <div className="amr-section-label">Site Details</div>
 
-        <div className="amr-health-block">
-          <div className="amr-score-ring">
-            <svg viewBox="0 0 100 100">
-              <circle className="track" cx="50" cy="50" r="45" />
-              <circle
-                className="progress"
-                cx="50" cy="50" r="45"
-                stroke={ringColor}
-                strokeDashoffset={dashOffset}
-              />
-            </svg>
-            <div className="amr-score-label" style={{ color: ringColor }}>
-              {r.healthScore}%
-            </div>
-          </div>
+        {/* Quality ring — green if ALL isolates passed, red if ANY failed */}
+        {(() => {
+          const allPassed  = profile ? profile.failedCount === 0 : false;
+          const ringColor  = allPassed ? '#4caf82' : '#e04040';
+          const ringLabel  = allPassed ? 'Passed' : 'Failed';
+          const fillRatio  = profile
+            ? profile.passedCount / Math.max(profile.totalIsolates, 1)
+            : 0;
+          const ringOffset = allPassed ? 0 : 283 - fillRatio * 283;
 
-          <div>
-            <div className="amr-risk-tag" style={{ color: ringColor }}>{r.riskTag}</div>
-            <div className="amr-risk-desc">
-              {r.riskDesc.split("\n").map((line, i) => <span key={i}>{line}<br/></span>)}
+          return (
+            <div className="amr-ring-block">
+              <div className="amr-ring-wrap">
+                <svg viewBox="0 0 100 100">
+                  <circle className="track" cx="50" cy="50" r="45" />
+                  <circle
+                    className="progress"
+                    cx="50" cy="50" r="45"
+                    stroke={ringColor}
+                    strokeDashoffset={ringOffset}
+                  />
+                </svg>
+                <div className="amr-ring-label" style={{ color: ringColor, fontSize: 13 }}>
+                  {ringLabel}
+                </div>
+              </div>
+              <p className="amr-ring-desc">
+                Quality status<br/>
+                {profile
+                  ? `${profile.passedCount} passed · ${profile.failedCount} failed`
+                  : '—'}
+              </p>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
-        {/* Organisms */}
+        {/* Organisms Detected */}
         <div className="amr-section-label">Organisms Detected</div>
         <div className="amr-organisms">
-          {r.organisms.map(org => (
+          {[
+            { name: 'Escherichia coli',      present: true  },
+            { name: 'Klebsiella pneumoniae',  present: false },
+            { name: 'Salmonella spp.',        present: false },
+            { name: 'Serratia fonticola',     present: false },
+          ].map(org => (
             <div key={org.name} className="amr-org-row">
               <span className="amr-org-name">{org.name}</span>
-              <span className={`amr-badge amr-badge--${org.status}`}>{org.status}</span>
+              <span className={`amr-badge amr-badge--${org.present ? 'present' : 'absent'}`}>
+                {org.present ? 'present' : 'absent'}
+              </span>
             </div>
           ))}
         </div>
+
+        <button className="amr-collapse-btn" aria-label="Collapse sidebar">
+          <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+            <path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </aside>
 
-      {/* ══ MAIN CONTENT ══ */}
+      {/* ══ MAIN ══ */}
       <main className="amr-main">
 
-        {/* Top row: water quality + Leaflet map */}
-        <div className="amr-top">
+        {/* ── ROW 1: AMR Genes — full width ── */}
+        {profile && profile.genes.length > 0 ? (
+          <div className="amr-card">
+            <div className="amr-card-title">
+              AMR Genes — {selectedKey}
+              <span style={{ fontSize: 10, fontWeight: 400, color: '#5a6b64', marginLeft: 8 }}>
+                {profile.genes.length} gene{profile.genes.length !== 1 ? 's' : ''} across {profile.totalIsolates} isolates
+              </span>
+            </div>
+            <table className="amr-gene-table">
+              <thead>
+                <tr>
+                  <th>Gene symbol</th>
+                  <th>Antibiotic class</th>
+                  <th>Predicted phenotype</th>
+                  <th>% Identity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profile.genes.map(gene => {
+                  const cls = classifyGene(gene.gene_name);
+                  return (
+                    <tr key={gene.gene_name}>
+                      <td style={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                        {gene.gene_name}
+                      </td>
+                      <td>
+                        <span className={`gene-class-pill ${CLASS_PILL[cls] ?? 'pill-teal'}`}
+                          style={{ fontSize: 10, textTransform: 'none' }}>
+                          {cls}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: 11, color: '#5a6b64' }}>
+                        {gene.phenotype || '—'}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 12, minWidth: 38 }}>
+                            {gene.pct_identity}%
+                          </span>
+                          <div className="identity-bar-track">
+                            <div className="identity-bar-fill"
+                              style={{ width: `${gene.pct_identity}%`, background: '#3eb99a' }} />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : profile ? (
+          <div className="amr-card">
+            <div className="amr-card-title">AMR Genes — {selectedKey}</div>
+            <p style={{ color: '#5a6b64', fontSize: 13 }}>
+              No resistance genes detected for this isolate group.
+            </p>
+          </div>
+        ) : null}
 
-          {/* Water Quality Parameters */}
-          <div className="amr-params-card">
-            <div className="amr-card-title">Water Quality Parameters</div>
-            <div className="amr-params-list">
-              {r.waterParams.map(p => (
-                <div key={p.label} className="amr-param-row">
-                  <span className="amr-param-name">{p.label}</span>
-                  <div className="amr-param-bar-track">
-                    <div
-                      className={`amr-param-bar-fill bar--${p.color}`}
-                      style={{ width: `${p.value}%` }}
-                    />
+        {/* ── ROW 2: Quality & Genomic Overview — full width ── */}
+        {profile && (
+          <div className="amr-card">
+            <div className="amr-card-title">Quality &amp; Genomic Overview</div>
+            <div className="amr-integron-grid">
+              {[
+                { label: 'Passed',   value: String(profile.passedCount),      sub: 'quality check',      active: profile.passedCount > 0       },
+                { label: 'Failed',   value: String(profile.failedCount),      sub: 'quality check',      active: false                          },
+                { label: 'Genes',    value: String(profile.genes.length),     sub: 'unique AMR genes',   active: profile.genes.length > 0       },
+                { label: 'Plasmids', value: String(profile.plasmids.length),  sub: 'replicon types',     active: profile.plasmids.length > 0    },
+                { label: 'Total',    value: String(profile.totalIsolates),    sub: 'isolates in group',  active: true                           },
+              ].map(card => (
+                <div key={card.label} className="amr-integron-card">
+                  <div className="amr-integron-label">{card.label}</div>
+                  <div className={`amr-integron-value ${card.active ? 'intval--active' : 'intval--zero'}`}>
+                    {card.value}
                   </div>
+                  <div className="amr-integron-sub">{card.sub}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 10 }}>
+              {[
+                { label: 'Avg genome length', value: profile.genomeStats.avgGenomeLength.toLocaleString() + ' bp' },
+                { label: 'Avg N50',           value: profile.genomeStats.avgN50.toLocaleString()                  },
+                { label: 'Avg contigs',       value: profile.genomeStats.avgContigs.toLocaleString()              },
+              ].map(s => (
+                <div key={s.label} style={{
+                  background: '#162535', borderRadius: 6, padding: '8px 10px', textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 9, color: '#5a7a94', marginBottom: 3 }}>{s.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: '#8aa0b4' }}>{s.value}</div>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Leaflet Map */}
-          <div className="amr-map-card">
+        {/* ── ROW 3: Predicted Phenotypes (left) + Data Analysis (right) ── */}
+        {profile && (
+          <div className="amr-pheno-analytics-row">
+
+            {/* Predicted Phenotypes */}
+            <div className="amr-card">
+              <div className="amr-card-title">Predicted Phenotypes</div>
+              <div className="amr-phenotype-section">
+                <div className="amr-phenotype-label">Predicted antibiotic resistance (StarAMR)</div>
+                {profile.predictedPhenotypes.length > 0 ? (
+                  <div className="amr-pheno-chips">
+                    {profile.predictedPhenotypes.map(p => (
+                      <span key={p} className="amr-pheno-chip chip-resistant">{p}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: '#5a6b64', fontSize: 12 }}>No phenotype data available</p>
+                )}
+              </div>
+              {profile.plasmids.length > 0 && (
+                <div className="amr-phenotype-section" style={{ marginTop: 12 }}>
+                  <div className="amr-phenotype-label">Plasmid replicons identified</div>
+                  <div className="amr-plasmid-chips">
+                    {profile.plasmids.map(p => (
+                      <span key={p.plasmid_name} className="amr-plasmid-chip">
+                        {p.plasmid_name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ marginTop: 10, fontSize: 11, color: '#5a6b64' }}>
+                Sequence type: <strong style={{ color: '#3eb99a' }}>{profile.sequenceType || '—'}</strong>
+              </div>
+            </div>
+
+            {/* Data Analysis */}
+            <DataAnalyticsCard
+              genes={profile.genes}
+              plasmids={profile.plasmids}
+              isolates={selectedIsolates}
+            />
+          </div>
+        )}
+
+        {/* ── ROW 4: Map — full width ── */}
+        <div className="amr-map-card">
+          <div className="amr-card-title" style={{ color: '#1c2f42' }}>
+            Isolate Map View
+            <span style={{ fontSize: 10, fontWeight: 400, color: '#8aa0b4', marginLeft: 8 }}>
+              placeholder locations
+            </span>
+          </div>
+          <div className="amr-map-inner">
             <MapContainer
-              center={[r.lat, r.lng]}
-              zoom={r.zoom}
+              center={[-28.0, 26.0]}
+              zoom={5}
               zoomControl={false}
-              style={{ width: "100%", height: "100%", minHeight: 260 }}
+              style={{ width: '100%', height: '100%', minHeight: 260 }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-
-              {/* Fly map to selected river */}
-              <FlyTo lat={r.lat} lng={r.lng} zoom={r.zoom} />
-
-              {/* Markers for all rivers */}
-              {RIVERS.map(river => (
-                <Marker
-                  key={river.id}
-                  position={[river.lat, river.lng]}
-                  icon={makeIcon(RISK_COLORS[river.riskLevel])}
-                  eventHandlers={{ click: () => selectRiver(river) }}
+              <FlyTo coords={mapCenter} />
+              {mapMarkers.map(m => (
+                <CircleMarker
+                  key={m.id}
+                  center={[m.lat, m.lng]}
+                  radius={8}
+                  pathOptions={{
+                    color: RISK_COLORS[m.risk],
+                    fillColor: RISK_COLORS[m.risk],
+                    fillOpacity: 0.85,
+                    weight: 2,
+                  }}
                 >
                   <Popup>
-                    <strong>{river.name}</strong><br/>
-                    {river.province}<br/>
-                    Health Score: {river.healthScore}%
+                    <strong>{m.label}</strong><br/>
+                    {m.count} isolates
                   </Popup>
-                </Marker>
+                </CircleMarker>
               ))}
             </MapContainer>
-
-            {/* Legend overlay */}
             <div className="amr-map-legend">
-              <div className="amr-map-legend-title">Health Status</div>
-              <div className="amr-legend-row"><span className="amr-dot amr-dot--low"/>Low AMR Risk</div>
-              <div className="amr-legend-row"><span className="amr-dot amr-dot--medium"/>Medium AMR Risk</div>
-              <div className="amr-legend-row"><span className="amr-dot amr-dot--high"/>High AMR Risk</div>
-              <div className="amr-legend-row"><span className="amr-dot amr-dot--none"/>No data</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Visit Timeline */}
-        <div className="amr-timeline-card">
-          <div className="amr-card-title">Visit Timeline</div>
-          <div className="amr-timeline-bars">
-            {r.visits.map((v, i) => (
-              <div key={v.label} className="amr-visit-col">
-                <div
-                  className="amr-visit-bar"
-                  style={{ height: `${v.height}%`, background: v.color, animationDelay: `${i * 0.08}s` }}
-                />
-                <span className="amr-visit-label">{v.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Data Analytics */}
-        <div className="amr-analytics">
-          <div className="amr-analytics-title">Data Analytics</div>
-
-          <div className="amr-charts-row">
-            {/* Grouped bar chart */}
-            <div className="amr-chart-card amr-bar-chart">
-              {r.groupedBars.map((row) => (
-                <div key={row.label} className="amr-grouped-row">
-                  <span className="amr-grouped-label">{row.label}</span>
-                  <div className="amr-grouped-bars">
-                    <div className="amr-mini-bar mini-bar--purple" style={{ width: `${row.purple}%` }} />
-                    <div className="amr-mini-bar mini-bar--orange" style={{ width: `${row.orange}%` }} />
-                  </div>
+              <div className="amr-map-legend-title">Quality pass rate</div>
+              {[
+                { color: '#4caf82', label: 'High (≥60%)' },
+                { color: '#f0a500', label: 'Medium (35–59%)' },
+                { color: '#e04040', label: 'Low (<35%)' },
+              ].map(l => (
+                <div key={l.label} className="amr-map-legend-row">
+                  <div className="amr-map-dot" style={{ background: l.color }} />
+                  {l.label}
                 </div>
               ))}
             </div>
-
-            {/* Pie chart */}
-            <div className="amr-chart-card" style={{ alignItems: "center" }}>
-              <PieChart pctA={r.pieA} pctB={r.pieB} />
-            </div>
-
-            {/* Column chart */}
-            <div className="amr-chart-card">
-              <div className="amr-col-chart">
-                {r.colBars.map((b, i) => (
-                  <div
-                    key={i}
-                    className="amr-col-bar"
-                    style={{ height: `${b.h}%`, background: b.color }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Tab buttons */}
-          <div className="amr-tabs">
-            {(["organisms", "amr", "metagenomics"] as TabType[]).map(tab => (
-              <button
-                key={tab}
-                className={`amr-tab ${activeTab === tab ? "amr-tab--active" : "amr-tab--inactive"}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "organisms"    && "Organisms"}
-                {tab === "amr"          && "AMR Profiles"}
-                {tab === "metagenomics" && "Metagenomics Data"}
-              </button>
-            ))}
           </div>
         </div>
 
