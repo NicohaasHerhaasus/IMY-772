@@ -48,4 +48,24 @@ export class UploadController {
       next(error as Error);
     }
   };
+
+  uploadExampleAmrFinderPlusTsv = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      if (!req.file) {
+        throw new ValidationError(['A .tsv file is required in the "file" field.']);
+      }
+
+      const result = await this.exampleAmrFinderPlusUploadService.ingestTsv(req.file.buffer);
+      res.status(201).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error as Error);
+    }
+  };
 }

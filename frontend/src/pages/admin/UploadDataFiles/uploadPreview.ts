@@ -463,3 +463,57 @@ export function parseExampleAmrFinderPlusXlsxForPreview(buffer: ArrayBuffer): {
 
   return { rows: rows.slice(0, MAX_PREVIEW_ROWS), total: rows.length };
 }
+
+export function parseExampleAmrFinderPlusTsvForPreview(content: string): {
+  rows: ExampleAmrFinderPlusRow[];
+  total: number;
+} {
+  const lines = content
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0);
+  if (lines.length < 2) {
+    throw new Error("TSV must include a header and at least one data row.");
+  }
+
+  const headers = lines[0].split("\t").map((h) => h.trim());
+  const normalizedHeader = headers.map((h) => normalizeLooseHeader(h));
+  const missing = EXAMPLE_AMRFINDER_PLUS_HEADERS.filter(
+    (h) => !normalizedHeader.includes(normalizeLooseHeader(h)),
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required columns: ${missing.join(", ")}`);
+  }
+
+  const idx = (h: string): number => normalizedHeader.indexOf(normalizeLooseHeader(h));
+  const rows: ExampleAmrFinderPlusRow[] = [];
+  for (const line of lines.slice(1)) {
+    const cells = line.split("\t");
+    const get = (h: string): string => String(cells[idx(h)] ?? "").trim();
+    if (!get("SampleID") || !get("Protein identifier")) continue;
+    rows.push({
+      sampleId: get("SampleID"),
+      proteinIdentifier: get("Protein identifier"),
+      geneSymbol: get("Gene symbol"),
+      sequenceName: get("Sequence name"),
+      scope: get("Scope"),
+      elementType: get("Element type"),
+      elementSubtype: get("Element subtype"),
+      className: get("Class"),
+      subclass: get("Subclass"),
+      method: get("Method"),
+      targetLength: get("Target length"),
+      referenceSequenceLength: get("Reference sequence length"),
+      pctCoverageReference: get("% Coverage of reference sequence"),
+      pctIdentityReference: get("% Identity to reference sequence"),
+      alignmentLength: get("Alignment length"),
+      accessionClosestSequence: get("Accession of closest sequence"),
+      nameClosestSequence: get("Name of closest sequence"),
+      hmmId: get("HMM id"),
+      hmmDescription: get("HMM description"),
+    });
+  }
+
+  return { rows: rows.slice(0, MAX_PREVIEW_ROWS), total: rows.length };
+}

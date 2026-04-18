@@ -79,39 +79,19 @@ function findSheet(workbook: XLSX.WorkBook): XLSX.WorkSheet | undefined {
   return undefined;
 }
 
-function parseWorkbook(buffer: Buffer): AmrFinderPlusRow[] {
-  if (!buffer || buffer.length === 0) {
-    throw new ValidationError(['Uploaded file is empty.']);
+function mapRows(records: Record<string, unknown>[]): AmrFinderPlusRow[] {
+  if (!records.length) {
+    throw new ValidationError(['No data rows found in AMRFinderPlus file.']);
   }
 
-  let workbook: XLSX.WorkBook;
-  try {
-    workbook = XLSX.read(buffer, { type: 'buffer' });
-  } catch {
-    throw new ValidationError(['Invalid .xlsx file.']);
-  }
-
-  const sheet = findSheet(workbook);
-  if (!sheet) {
-    throw new ValidationError([
-      'Could not find the AMRFinderPlus sheet. Expected "Sheet 1 - exampleAMRFinderPlus".',
-      `Sheets in file: ${workbook.SheetNames.join(', ') || '(none)'}`,
-    ]);
-  }
-
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
-  if (!rows.length) {
-    throw new ValidationError(['No data rows found in AMRFinderPlus sheet.']);
-  }
-
-  const firstHeaders = Object.keys(rows[0] ?? {});
+  const firstHeaders = Object.keys(records[0] ?? {});
   const normalizedHeaderSet = new Set(firstHeaders.map((h) => normalizeHeader(h)));
   const missing = REQUIRED_HEADERS.filter((h) => !normalizedHeaderSet.has(normalizeHeader(h)));
   if (missing.length > 0) {
     throw new ValidationError([`Missing required columns: ${missing.join(', ')}`]);
   }
 
-  return rows
+  return records
     .map((row) => {
       const get = (name: string): unknown =>
         row[
@@ -149,11 +129,70 @@ function parseWorkbook(buffer: Buffer): AmrFinderPlusRow[] {
     .filter((r): r is AmrFinderPlusRow => r !== null);
 }
 
+function parseWorkbook(buffer: Buffer): AmrFinderPlusRow[] {
+  if (!buffer || buffer.length === 0) {
+    throw new ValidationError(['Uploaded file is empty.']);
+  }
+
+  let workbook: XLSX.WorkBook;
+  try {
+    workbook = XLSX.read(buffer, { type: 'buffer' });
+  } catch {
+    throw new ValidationError(['Invalid .xlsx file.']);
+  }
+
+  const sheet = findSheet(workbook);
+  if (!sheet) {
+    throw new ValidationError([
+      'Could not find the AMRFinderPlus sheet. Expected "Sheet 1 - exampleAMRFinderPlus".',
+      `Sheets in file: ${workbook.SheetNames.join(', ') || '(none)'}`,
+    ]);
+  }
+
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
+  return mapRows(rows);
+}
+
+function parseTsv(buffer: Buffer): AmrFinderPlusRow[] {
+  if (!buffer || buffer.length === 0) {
+    throw new ValidationError(['Uploaded file is empty.']);
+  }
+  const content = buffer.toString('utf-8');
+  const lines = content
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0);
+  if (lines.length < 2) {
+    throw new ValidationError(['TSV must include a header and at least one row.']);
+  }
+
+  const headers = lines[0].split('\t').map((h) => h.trim());
+  const records: Record<string, unknown>[] = lines.slice(1).map((line) => {
+    const cells = line.split('\t');
+    const record: Record<string, unknown> = {};
+    for (let i = 0; i < headers.length; i += 1) {
+      record[headers[i]] = cells[i] ?? '';
+    }
+    return record;
+  });
+  return mapRows(records);
+}
+
 export class ExampleAmrFinderPlusUploadService {
   constructor(private readonly pool: Pool) {}
 
   async ingestWorkbook(buffer: Buffer): Promise<{ insertedCount: number }> {
     const rows = parseWorkbook(buffer);
+    return this.insertRows(rows);
+  }
+
+  async ingestTsv(buffer: Buffer): Promise<{ insertedCount: number }> {
+    const rows = parseTsv(buffer);
+    return this.insertRows(rows);
+  }
+
+  private async insertRows(rows: AmrFinderPlusRow[]): Promise<{ insertedCount: number }> {
     if (rows.length === 0) {
       throw new ValidationError(['No valid rows found. SampleID and Protein identifier are required.']);
     }

@@ -5,6 +5,7 @@ import {
   EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS,
   GENOTYPIC_PREVIEW_COLUMNS,
   MAX_PREVIEW_ROWS,
+  parseExampleAmrFinderPlusTsvForPreview,
   parseExampleAmrFinderPlusXlsxForPreview,
   type ExampleAmrFinderPlusRow,
   type GenotypicUploadRow,
@@ -46,6 +47,7 @@ const UPLOAD_TYPES = [
   "Genotypic Analysis TSV (.tsv)",
   "StarAMR Workbook (.xlsx)",
   "Example AMRFinderPlus Excel (.xlsx)",
+  "Example AMRFinderPlus TSV (.tsv)",
 ] as const;
 
 const GENOTYPIC_TSV_HEADERS = [
@@ -394,6 +396,14 @@ export default function UploadDataFiles() {
           return;
         }
 
+        if (uploadType === "Example AMRFinderPlus TSV (.tsv)") {
+          const data = parseExampleAmrFinderPlusTsvForPreview(await file.text());
+          if (!cancelled) {
+            setFilePreview({ kind: "amrfinderplus", rows: data.rows, total: data.total });
+          }
+          return;
+        }
+
         const buffer = await file.arrayBuffer();
 
         if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
@@ -438,7 +448,7 @@ export default function UploadDataFiles() {
   }, [file, uploadType, isSampleDashboard]);
 
   const accept =
-    uploadType === "Genotypic Analysis TSV (.tsv)"
+    uploadType === "Genotypic Analysis TSV (.tsv)" || uploadType === "Example AMRFinderPlus TSV (.tsv)"
       ? ".tsv,.txt"
       : ".xlsx";
 
@@ -614,6 +624,24 @@ export default function UploadDataFiles() {
         }
         const payload = result as { data?: { insertedCount?: number } } | null;
         setMessage(`Uploaded ${payload?.data?.insertedCount ?? 0} AMRFinderPlus row(s).`);
+      } else if (uploadType === "Example AMRFinderPlus TSV (.tsv)") {
+        if (!file.name.toLowerCase().endsWith(".tsv") && !file.name.toLowerCase().endsWith(".txt")) {
+          throw new Error("Only .tsv or .txt is supported for Example AMRFinderPlus TSV.");
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_BASE_URL}/api/upload/example-amrfinder-plus-tsv`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: formData,
+        });
+        const rawText = await response.text();
+        const result = parseJsonResponse(rawText);
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(response, result, rawText));
+        }
+        const payload = result as { data?: { insertedCount?: number } } | null;
+        setMessage(`Uploaded ${payload?.data?.insertedCount ?? 0} AMRFinderPlus row(s) from TSV.`);
       } else if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
         if (!file.name.toLowerCase().endsWith(".xlsx")) {
           throw new Error("Only .xlsx is supported for genotypic Excel.");
@@ -691,6 +719,8 @@ export default function UploadDataFiles() {
             ? "Dashboard sample workbook upload with strict server-side validator (required fields like geo_loc_name, latitude, and longitude)."
             : uploadType === "StarAMR Workbook (.xlsx)"
             ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel — not here."
+            : uploadType === "Example AMRFinderPlus TSV (.tsv)"
+              ? "TSV must include AMRFinderPlus headers (SampleID, Protein identifier, Gene symbol, ..., HMM description) in tab-separated columns."
             : uploadType === "Example AMRFinderPlus Excel (.xlsx)"
               ? "Requires the sheet 'Sheet 1 - exampleAMRFinderPlus' with columns like SampleID, Protein identifier, Gene symbol, and HMM description."
             : uploadType === "Genotypic Analysis Excel (.xlsx)"

@@ -27,6 +27,26 @@ const upload = multer({
   },
 });
 
+const uploadTsv = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const byName =
+      file.originalname.toLowerCase().endsWith('.tsv') ||
+      file.originalname.toLowerCase().endsWith('.txt');
+    const byMime =
+      file.mimetype === 'text/tab-separated-values' ||
+      file.mimetype === 'text/plain' ||
+      file.mimetype === 'application/octet-stream';
+
+    if (!byName && !byMime) {
+      cb(new ValidationError(['Only .tsv files are supported.']));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
 const pool = getPool();
 const starAmrUploadService = new StarAmrUploadService(pool);
 const exampleAmrFinderPlusUploadService = new ExampleAmrFinderPlusUploadService(pool);
@@ -38,6 +58,12 @@ router.post(
   authMiddleware,
   upload.single('file'),
   uploadController.uploadExampleAmrFinderPlusWorkbook,
+);
+router.post(
+  '/example-amrfinder-plus-tsv',
+  authMiddleware,
+  uploadTsv.single('file'),
+  uploadController.uploadExampleAmrFinderPlusTsv,
 );
 
 export default router;
