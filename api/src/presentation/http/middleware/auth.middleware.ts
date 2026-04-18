@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { UnauthorizedError } from '../../../application/errors/app.errors';
+import { UserRole } from '../../../domain/enums/role.enum';
 
 import 'dotenv/config';
 
@@ -82,9 +83,13 @@ export async function authMiddleware(
     }
 
     req.userId = payload.sub;
+<<<<<<< Updated upstream
     const groups = payload['cognito:groups'];
     req.userRole =
       Array.isArray(groups) && typeof groups[0] === 'string' ? groups[0] : 'user';
+=======
+    req.userRole = UserRole.ADMIN;
+>>>>>>> Stashed changes
 
     next();
   } catch (error) {

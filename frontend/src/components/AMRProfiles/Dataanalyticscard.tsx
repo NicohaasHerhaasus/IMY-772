@@ -230,7 +230,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Cell, Tooltip, ResponsiveContainer,
   PieChart, Pie, Legend,
 } from 'recharts';
-import './DataAnalyticsCard.css';
+import './Dataanalyticscard.css';
 import type { GeneDetail, PlasmidDetail } from '../../lib/api/types';
 import type { IsolateRow } from '../../lib/api/types';
 import { classifyGene } from '../../lib/transformers';
