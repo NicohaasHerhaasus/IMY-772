@@ -15,6 +15,7 @@ import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
 import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
 import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
+import Chatbot from "./pages/admin/Chatbot/Chatbot";
 import CallbackPage from "./pages/CallbackPage";
 
 import { RiverProvider } from "../../frontend/src/layouts/RiverContext";
@@ -41,6 +42,7 @@ function App() {
               <Route path="upload" element={<UploadDatafiles />} />
               <Route path="export" element={<ExportDataFiles />} />
               <Route path="manage" element={<ManageDatafiles />} />
+              <Route path="chatbot" element={<Chatbot />} />
             </Route>
           </Route>
         </Routes>
