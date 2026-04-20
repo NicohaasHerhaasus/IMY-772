@@ -1,0 +1,24 @@
+import { Router } from 'express';
+import multer from 'multer';
+import { getPool } from '../../../infrastructure/database/pool';
+import { MapAttachmentService } from '../../../application/services/map-attachment.service';
+import { MapAttachmentController } from '../controllers/map-attachment.controller';
+import { authMiddleware } from '../middleware/auth.middleware';
+
+const router = Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+});
+
+const pool = getPool();
+const mapAttachmentService = new MapAttachmentService(pool);
+const mapAttachmentController = new MapAttachmentController(mapAttachmentService);
+
+router.get('/markers', authMiddleware, mapAttachmentController.listMarkers);
+router.get('/for-location', authMiddleware, mapAttachmentController.listForLocation);
+router.post('/', authMiddleware, upload.single('file'), mapAttachmentController.upload);
+router.get('/:id/download', authMiddleware, mapAttachmentController.download);
+
+export default router;
