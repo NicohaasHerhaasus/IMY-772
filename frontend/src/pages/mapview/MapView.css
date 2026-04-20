@@ -301,7 +301,7 @@
 
 .mv-pin-modal {
   position: relative;
-  width: min(420px, 100%);
+  width: min(480px, 100%);
   padding: 24px 22px 22px;
   background: #f0f1ea;
   border-radius: 14px;
@@ -351,6 +351,193 @@
   line-height: 1.45;
 }
 
+.mv-pin-modal__admin-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #6a7a85;
+  line-height: 1.45;
+}
+
+.mv-pin-modal__admin-link {
+  color: #2a6b5a;
+  font-weight: 600;
+}
+
+.mv-pin-modal__hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #5a6b72;
+  line-height: 1.45;
+}
+
+.mv-pin-modal__signin {
+  margin-top: 8px;
+}
+
+.mv-pin-modal__signin-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #e07b00;
+  color: #0f1f2e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mv-pin-modal__signin-btn:hover {
+  filter: brightness(1.06);
+}
+
+.mv-pin-modal__section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4a6880;
+  margin: 16px 0 10px;
+}
+.mv-pin-modal__section-label:first-of-type {
+  margin-top: 4px;
+}
+
+.mv-pin-modal__file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.mv-pin-modal__file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid #d8ddd0;
+  border-radius: 8px;
+}
+
+.mv-pin-modal__file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f1f2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.mv-pin-modal__download-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #2a6b5a;
+  background: #fff;
+  color: #1c4d42;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mv-pin-modal__download-btn:hover {
+  background: #e8f5f1;
+}
+
+.mv-pin-modal__field {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.mv-pin-modal__field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a5060;
+  margin-bottom: 6px;
+}
+
+.mv-pin-modal__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #c8d0c0;
+  background: #fff;
+  font-size: 14px;
+  color: #0f1f2e;
+}
+.mv-pin-modal__input:focus {
+  outline: none;
+  border-color: #e07b00;
+}
+
+.mv-pin-modal__dropzone {
+  position: relative;
+  display: block;
+  min-height: 88px;
+  padding: 16px 14px;
+  border-radius: 10px;
+  border: 2px dashed #a8b4a0;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.mv-pin-modal__dropzone--active {
+  border-color: #e07b00;
+  background: rgba(224, 123, 0, 0.08);
+}
+
+.mv-pin-modal__file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mv-pin-modal__dropzone-text {
+  margin: 0;
+  font-size: 13px;
+  color: #5a6b72;
+  line-height: 1.4;
+  pointer-events: none;
+  text-align: center;
+}
+
+.mv-pin-modal__error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #b00020;
+  line-height: 1.35;
+}
+
+.mv-pin-modal__upload-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #2a6b5a;
+  color: #f0f1ea;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+.mv-pin-modal__upload-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.mv-pin-modal__upload-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .mv-map-img {
   width: 100%;
   height: 100%;
@@ -392,6 +579,13 @@
 }
 .mv-legend-item:last-child { margin-bottom: 0; }
 
+.mv-legend-divider {
+  height: 1px;
+  background: #2a3f54;
+  margin: 12px 0 10px;
+  opacity: 0.85;
+}
+
 .mv-dot {
   width: 9px;
   height: 9px;
@@ -402,6 +596,25 @@
 .mv-dot--medium { background: #f0a500; }
 .mv-dot--high   { background: #e04040; }
 .mv-dot--none   { background: #3a5060; }
+.mv-dot--attach {
+  background: #2a9d8f;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.mv-attach-toast {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1001;
+  max-width: min(360px, calc(100% - 200px));
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(176, 0, 32, 0.9);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+}
 
 /* ── RIGHT OVERVIEW PANEL ── */
 .mv-overview {
