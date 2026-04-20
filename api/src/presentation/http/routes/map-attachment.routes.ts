@@ -19,6 +19,7 @@ const mapAttachmentController = new MapAttachmentController(mapAttachmentService
 router.get('/markers', authMiddleware, mapAttachmentController.listMarkers);
 router.get('/for-location', authMiddleware, mapAttachmentController.listForLocation);
 router.post('/', authMiddleware, upload.single('file'), mapAttachmentController.upload);
+router.delete('/:id', authMiddleware, mapAttachmentController.deleteAttachment);
 router.get('/:id/download', authMiddleware, mapAttachmentController.download);
 
 export default router;

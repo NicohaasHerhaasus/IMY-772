@@ -104,6 +104,18 @@ export async function uploadMapAttachment(params: {
   }
 }
 
+export async function deleteMapAttachment(id: string): Promise<void> {
+  const token = await requireBearerToken();
+  const res = await fetch(`${API_BASE_URL}/api/map-attachments/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(getErrorMessage(res.status, text));
+  }
+}
+
 export async function downloadMapAttachment(id: string): Promise<void> {
   const token = await requireBearerToken();
   const res = await fetch(`${API_BASE_URL}/api/map-attachments/${encodeURIComponent(id)}/download`, {

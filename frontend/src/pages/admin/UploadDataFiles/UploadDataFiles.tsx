@@ -40,7 +40,7 @@ function getApiErrorMessage(response: Response, body: unknown, rawText: string):
   return snippet || `Request failed (${response.status}).`;
 }
 
-/** Genotypic options first — StarAMR is a different workbook shape (Summary + Detailed_Summary only). */
+/** Genotypic options first - StarAMR is a different workbook shape (Summary + Detailed_Summary only). */
 const UPLOAD_TYPES = [
   "Sample Dashboard Excel (.xlsx)",
   "Genotypic Analysis Excel (.xlsx)",
@@ -259,7 +259,7 @@ const SAMPLE_PREVIEW_COLUMNS: Array<{ key: keyof SampleRow; label: string }> = [
 ];
 
 function previewCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "-";
   return String(value);
 }
 
@@ -278,7 +278,7 @@ function GenotypicPreviewTable({ rows }: { rows: GenotypicUploadRow[] }) {
           {rows.map((row, ri) => (
             <tr key={ri}>
               {GENOTYPIC_PREVIEW_COLUMNS.map((col) => (
-                <td key={col.key}>{row[col.key] || "—"}</td>
+                <td key={col.key}>{row[col.key] || "-"}</td>
               ))}
             </tr>
           ))}
@@ -331,7 +331,7 @@ function ExampleAmrFinderPlusPreviewTable({ rows }: { rows: ExampleAmrFinderPlus
           {rows.map((row, ri) => (
             <tr key={ri}>
               {EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS.map((col) => (
-                <td key={col.key}>{row[col.key] || "—"}</td>
+                <td key={col.key}>{row[col.key] || "-"}</td>
               ))}
             </tr>
           ))}
@@ -718,7 +718,7 @@ export default function UploadDataFiles() {
           {isSampleDashboard
             ? "Dashboard sample workbook upload with strict server-side validator (required fields like geo_loc_name, latitude, and longitude)."
             : uploadType === "StarAMR Workbook (.xlsx)"
-            ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel — not here."
+            ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel - not here."
             : uploadType === "Example AMRFinderPlus TSV (.tsv)"
               ? "TSV must include AMRFinderPlus headers (SampleID, Protein identifier, Gene symbol, ..., HMM description) in tab-separated columns."
             : uploadType === "Example AMRFinderPlus Excel (.xlsx)"
@@ -888,7 +888,7 @@ export default function UploadDataFiles() {
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              Validation failed — fix the issues below before uploading
+              Validation failed - fix the issues below before uploading
             </div>
             <ul className="sample-upload__error-list">
               {sampleErrors.map((e, i) => {
@@ -912,7 +912,7 @@ export default function UploadDataFiles() {
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              Validation passed —{" "}
+              Validation passed -{" "}
               {validationResult.rowCount} row{validationResult.rowCount !== 1 ? "s" : ""} ready to import
             </div>
             <div className="sample-upload__table-wrapper">

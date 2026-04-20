@@ -180,6 +180,50 @@
 .mv-map-area {
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.mv-map-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mv-map-stack .mv-map {
+  flex: 1;
+  width: 100%;
+  min-height: min(56vh, 600px);
+  height: auto !important;
+}
+
+.mv-map-hint {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a5d6e;
+  background: rgba(15, 31, 46, 0.06);
+  border-top: 1px solid #d8d4c8;
+}
+
+.mv-map-hint strong {
+  color: #1c2f42;
+}
+
+.mv-map-hint__teal {
+  color: #1a7f72;
+  font-weight: 600;
+}
+
+.mv-map-hint__coords {
+  color: #2a6b5a;
+  font-weight: 600;
 }
 
 .mv-map {

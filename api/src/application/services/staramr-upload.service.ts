@@ -63,7 +63,7 @@ function toIsolateName(rawIsolateId: string | null): string | null {
   return rawIsolateId.replace(/_assembly\.fasta$/i, '').trim();
 }
 
-/** DB allows only Passed | Failed — map StarAMR / Excel variants. */
+/** DB allows only Passed | Failed - map StarAMR / Excel variants. */
 function normalizeQualityModule(raw: string | null): 'Passed' | 'Failed' {
   if (!raw) return 'Failed';
   const v = raw.trim().toLowerCase();
@@ -103,7 +103,7 @@ export class StarAmrUploadService {
       throw new ValidationError([
         'StarAMR import expects a StarAMR results workbook: a Summary sheet and a Detailed_Summary sheet.',
         `Sheets in this file: ${have || '(none)'}`,
-        'If this file is the UP genotypic / binary information table (University of Pretoria Culture number, etc.), choose upload type "Genotypic Analysis Excel (.xlsx)" instead — not StarAMR.',
+        'If this file is the UP genotypic / binary information table (University of Pretoria Culture number, etc.), choose upload type "Genotypic Analysis Excel (.xlsx)" instead - not StarAMR.',
       ]);
     }
 

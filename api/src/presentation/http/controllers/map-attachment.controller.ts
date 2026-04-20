@@ -89,6 +89,19 @@ export class MapAttachmentController {
     }
   };
 
+  deleteAttachment = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      if (!id || typeof id !== 'string') {
+        throw new ValidationError(['Invalid attachment id.']);
+      }
+      await this.mapAttachmentService.deleteById(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error as Error);
+    }
+  };
+
   download = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;

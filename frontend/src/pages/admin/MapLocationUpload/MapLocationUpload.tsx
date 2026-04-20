@@ -10,6 +10,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import {
+  deleteMapAttachment,
   downloadMapAttachment,
   fetchMapAttachmentMarkers,
   fetchMapAttachmentsForLocation,
@@ -62,8 +63,6 @@ function MapPinController({
 
 export default function MapLocationUpload() {
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
-  const [manualLat, setManualLat] = useState("");
-  const [manualLng, setManualLng] = useState("");
   const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
   const [markersError, setMarkersError] = useState<string | null>(null);
   const [locationFiles, setLocationFiles] = useState<MapAttachmentListItem[]>([]);
@@ -73,22 +72,13 @@ export default function MapLocationUpload() {
   const [dropActive, setDropActive] = useState(false);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [uploadSaving, setUploadSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updatePinPosition = useCallback((pos: [number, number]) => {
     setPinPosition(pos);
-    setManualLat(formatCoord(pos[0]));
-    setManualLng(formatCoord(pos[1]));
     setPanelError(null);
   }, []);
-
-  const applyManualCoords = useCallback(() => {
-    const lat = parseFloat(manualLat);
-    const lng = parseFloat(manualLng);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      updatePinPosition([lat, lng]);
-    }
-  }, [manualLat, manualLng, updatePinPosition]);
 
   const refreshMarkers = useCallback(async () => {
     try {
@@ -168,6 +158,25 @@ export default function MapLocationUpload() {
     }
   }, []);
 
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!pinPosition) return;
+      setPanelError(null);
+      setDeletingId(id);
+      try {
+        await deleteMapAttachment(id);
+        await refreshMarkers();
+        const list = await fetchMapAttachmentsForLocation(pinPosition[0], pinPosition[1]);
+        setLocationFiles(list);
+      } catch (e) {
+        setPanelError(e instanceof Error ? e.message : "Delete failed.");
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [pinPosition, refreshMarkers],
+  );
+
   const openAttachmentLocation = useCallback(
     (lat: number, lng: number) => {
       updatePinPosition([lat, lng]);
@@ -195,70 +204,64 @@ export default function MapLocationUpload() {
       </header>
 
       <div className="map-location-upload__layout">
-        <div className="map-location-upload__map-wrap">
-          <div className="map-location-upload__toolbar" role="region" aria-label="Pin location">
-            <span className="map-location-upload__toolbar-label">Lat / lng</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              className="map-location-upload__input"
-              placeholder="Latitude"
-              value={manualLat}
-              onChange={(e) => setManualLat(e.target.value)}
-              aria-label="Latitude"
-            />
-            <input
-              type="text"
-              inputMode="decimal"
-              className="map-location-upload__input"
-              placeholder="Longitude"
-              value={manualLng}
-              onChange={(e) => setManualLng(e.target.value)}
-              aria-label="Longitude"
-            />
-            <button type="button" className="map-location-upload__btn" onClick={applyManualCoords}>
-              Place pin
-            </button>
-            <span className="map-location-upload__toolbar-hint">Click the map or drag the pin.</span>
+        <div className="map-location-upload__map-column">
+          <div className="map-location-upload__map-wrap">
+            <MapContainer
+              center={[-29.0, 24.0] as [number, number]}
+              zoom={6}
+              className="map-location-upload__map"
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <MapPinController pinPosition={pinPosition} onPinChange={updatePinPosition} />
+              {mapMarkers.map((m) => (
+                <CircleMarker
+                  key={m.id}
+                  center={[m.latitude, m.longitude]}
+                  radius={9}
+                  pathOptions={{
+                    color: "#1a7f72",
+                    fillColor: "#2a9d8f",
+                    fillOpacity: 0.92,
+                    weight: 2,
+                    bubblingMouseEvents: false,
+                  }}
+                  eventHandlers={{
+                    click: () => {
+                      openAttachmentLocation(m.latitude, m.longitude);
+                    },
+                  }}
+                />
+              ))}
+            </MapContainer>
           </div>
-
-          <MapContainer center={[-29.0, 24.0] as [number, number]} zoom={6} className="map-location-upload__map">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <MapPinController pinPosition={pinPosition} onPinChange={updatePinPosition} />
-            {mapMarkers.map((m) => (
-              <CircleMarker
-                key={m.id}
-                center={[m.latitude, m.longitude]}
-                radius={9}
-                pathOptions={{
-                  color: "#1a7f72",
-                  fillColor: "#2a9d8f",
-                  fillOpacity: 0.92,
-                  weight: 2,
-                  bubblingMouseEvents: false,
-                }}
-                eventHandlers={{
-                  click: () => {
-                    openAttachmentLocation(m.latitude, m.longitude);
-                  },
-                }}
-              />
-            ))}
-          </MapContainer>
+          <p className="map-location-upload__below-map">
+            <strong>Click the map</strong> to drop a pin. Drag the orange pin to fine-tune. Click a{" "}
+            <span className="map-location-upload__teal-note">teal dot</span> to open files already uploaded
+            there.
+            {!pinPosition && (
+              <>
+                {" "}
+                Then use the panel on the right to upload or delete files for that location.
+              </>
+            )}
+            {pinPosition && (
+              <>
+                {" "}
+                Current pin: {formatCoord(pinPosition[0])}°, {formatCoord(pinPosition[1])}°.
+              </>
+            )}
+          </p>
         </div>
 
         <aside className="map-location-upload__panel" aria-label="Location files">
+          <h2 className="map-location-upload__panel-title">Files at selected pin</h2>
           {!pinPosition ? (
-            <p className="map-location-upload__panel-empty">Select a location on the map to manage files.</p>
+            <p className="map-location-upload__panel-lead">
+              Select a location on the map first - click anywhere to place a pin, then manage files here.
+            </p>
           ) : (
             <>
-              <p className="map-location-upload__coords">
-                <strong>Coordinates</strong>
-                <br />
-                {formatCoord(pinPosition[0])}°, {formatCoord(pinPosition[1])}°
-              </p>
-
-              <h2 className="map-location-upload__panel-heading">Files here</h2>
+              <h3 className="map-location-upload__panel-heading">Files here</h3>
               {locationFilesLoading ? (
                 <p className="map-location-upload__muted">Loading…</p>
               ) : locationFiles.length === 0 ? (
@@ -270,19 +273,29 @@ export default function MapLocationUpload() {
                       <span className="map-location-upload__file-name" title={f.originalFilename}>
                         {f.displayName}
                       </span>
-                      <button
-                        type="button"
-                        className="map-location-upload__dl"
-                        onClick={() => void handleDownload(f.id)}
-                      >
-                        Download
-                      </button>
+                      <div className="map-location-upload__file-actions">
+                        <button
+                          type="button"
+                          className="map-location-upload__dl"
+                          onClick={() => void handleDownload(f.id)}
+                        >
+                          Download
+                        </button>
+                        <button
+                          type="button"
+                          className="map-location-upload__del"
+                          disabled={deletingId === f.id}
+                          onClick={() => void handleDelete(f.id)}
+                        >
+                          {deletingId === f.id ? "…" : "Delete"}
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
 
-              <h2 className="map-location-upload__panel-heading">Upload</h2>
+              <h3 className="map-location-upload__panel-heading">Upload</h3>
               <label className="map-location-upload__field">
                 <span className="map-location-upload__field-label">Display name</span>
                 <input

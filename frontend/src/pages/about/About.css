@@ -101,7 +101,7 @@
           transform: translateY(0);
         }
 
-        /* RIGHT COLUMN — image grid */
+        /* RIGHT COLUMN - image grid */
         .about-right {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -143,14 +143,14 @@
         display: block;
         }
 
-        /* Stacked pair — each takes half the column height */
+        /* Stacked pair - each takes half the column height */
         .img-card--top,
         .img-card--bottom {
         flex: 1;
         border-radius: 16px;
         }
 
-        /* Right tall image — full height */
+        /* Right tall image - full height */
         .img-card--tall {
         height: 100%;
         border-radius: 16px;

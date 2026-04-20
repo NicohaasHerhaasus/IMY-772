@@ -140,8 +140,6 @@ export default function MapView() {
   const [riverSearch, setRiverSearch] = useState("");
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [manualLat, setManualLat] = useState("");
-  const [manualLng, setManualLng] = useState("");
   const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
   const [markersLoadError, setMarkersLoadError] = useState<string | null>(null);
   const [locationFiles, setLocationFiles] = useState<MapAttachmentListItem[]>([]);
@@ -169,18 +167,7 @@ useEffect(() => {
 
   const updatePinPosition = useCallback((pos: [number, number]) => {
     setPinPosition(pos);
-    setManualLat(formatCoord(pos[0]));
-    setManualLng(formatCoord(pos[1]));
   }, []);
-
-  const applyManualCoords = useCallback(() => {
-    const lat = parseFloat(manualLat);
-    const lng = parseFloat(manualLng);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      updatePinPosition([lat, lng]);
-      setPinModalOpen(true);
-    }
-  }, [manualLat, manualLng, updatePinPosition]);
 
   const pinCoordsLabel = useMemo(() => {
     if (!pinPosition) return null;
@@ -346,40 +333,7 @@ useEffect(() => {
 
       {/* ── MAP AREA ── */}
       <main className="mv-map-area">
-        <div className="mv-pin-toolbar" role="region" aria-label="Pin location">
-          <span className="mv-pin-toolbar__label">Set pin by lat / lng</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            className="mv-pin-toolbar__input"
-            placeholder="Latitude"
-            value={manualLat}
-            onChange={(e) => setManualLat(e.target.value)}
-            aria-label="Latitude"
-          />
-          <input
-            type="text"
-            inputMode="decimal"
-            className="mv-pin-toolbar__input"
-            placeholder="Longitude"
-            value={manualLng}
-            onChange={(e) => setManualLng(e.target.value)}
-            aria-label="Longitude"
-          />
-          <button type="button" className="mv-pin-toolbar__btn" onClick={applyManualCoords}>
-            Place pin
-          </button>
-          <span className="mv-pin-toolbar__hint">
-            Or left-click the map; drag the pin to adjust.
-          </span>
-        </div>
-
-        {pinCoordsLabel && (
-          <div className="mv-pin-coords-chip" aria-live="polite">
-            Pin: {pinCoordsLabel}
-          </div>
-        )}
-
+        <div className="mv-map-stack">
         <MapContainer
         
           center={[-29.0, 24.0] as [number, number]}
@@ -484,7 +438,17 @@ useEffect(() => {
 
 
 </MapContainer>
-
+        <p className="mv-map-hint" role="note">
+          <strong>Click the map</strong> to drop a pin and open location files. Drag the pin to adjust.{" "}
+          <span className="mv-map-hint__teal">Teal dots</span> mark uploaded files - click one to view downloads.
+          {pinCoordsLabel && (
+            <span className="mv-map-hint__coords" aria-live="polite">
+              {" "}
+              Current pin: {pinCoordsLabel}.
+            </span>
+          )}
+        </p>
+        </div>
 
         {/* Health status legend */}
         <div className="mv-legend">

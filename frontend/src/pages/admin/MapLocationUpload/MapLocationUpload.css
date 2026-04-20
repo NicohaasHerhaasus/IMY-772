@@ -1,9 +1,9 @@
 .map-location-upload {
-  max-width: 1200px;
+  max-width: 1400px;
 }
 
 .map-location-upload__header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .map-location-upload__title {
@@ -38,91 +38,58 @@
   max-width: 52rem;
 }
 
-.map-location-upload__warn code {
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.06);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
 .map-location-upload__layout {
   display: grid;
-  grid-template-columns: 1fr min(360px, 38%);
-  gap: 24px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) min(340px, 32%);
+  gap: 28px;
+  align-items: start;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .map-location-upload__layout {
     grid-template-columns: 1fr;
   }
 }
 
+.map-location-upload__map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
 .map-location-upload__map-wrap {
   position: relative;
-  min-height: 420px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #d8d4c8;
-}
-
-.map-location-upload__toolbar {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 1001;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  max-width: min(480px, calc(100% - 24px));
-  padding: 10px 12px;
-  background: rgba(15, 31, 46, 0.92);
-  border: 1px solid #1c2f42;
-  border-radius: 10px;
-}
-
-.map-location-upload__toolbar-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #4a6880;
-  width: 100%;
-}
-
-.map-location-upload__input {
-  width: 100px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #2a3f54;
-  background: #1c2f42;
-  color: #e8edf2;
-  font-size: 12px;
-  outline: none;
-}
-
-.map-location-upload__btn {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #e07b00;
-  color: #0f1f2e;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.map-location-upload__toolbar-hint {
-  font-size: 11px;
-  color: #8aa0b4;
-  width: 100%;
-  line-height: 1.35;
+  box-shadow: 0 4px 24px rgba(15, 31, 46, 0.08);
 }
 
 .map-location-upload__map {
   width: 100%;
-  height: 420px;
+  height: min(62vh, 640px);
+  min-height: 420px;
+}
+
+.map-location-upload__below-map {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #3a5060;
+  background: #f4f5f0;
+  border: 1px solid #e0ddd4;
+  border-radius: 10px;
+}
+
+.map-location-upload__below-map strong {
+  color: #1c2f42;
+}
+
+.map-location-upload__teal-note {
+  color: #1a7f72;
+  font-weight: 600;
 }
 
 .leaflet-div-icon.mlu-pin-drop {
@@ -147,22 +114,25 @@
   background: #fff;
   border: 1px solid #d8d4c8;
   border-radius: 12px;
-  padding: 20px 18px;
-  align-self: start;
+  padding: 20px 18px 22px;
+  position: sticky;
+  top: 12px;
 }
 
-.map-location-upload__panel-empty {
+.map-location-upload__panel-title {
+  font-family: "Syne", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1c2f42;
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+}
+
+.map-location-upload__panel-lead {
   margin: 0;
   font-size: 14px;
-  color: #5a6b72;
-  line-height: 1.45;
-}
-
-.map-location-upload__coords {
-  margin: 0 0 16px;
-  font-size: 14px;
   line-height: 1.5;
-  color: #1c2f42;
+  color: #5a6b72;
 }
 
 .map-location-upload__panel-heading {
@@ -188,17 +158,17 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 200px;
+  max-height: min(240px, 40vh);
   overflow-y: auto;
 }
 
 .map-location-upload__file-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
+  padding: 10px 10px;
+  margin-bottom: 8px;
   background: #f6f5f0;
   border: 1px solid #e0ddd4;
   border-radius: 8px;
@@ -215,9 +185,16 @@
   flex: 1;
 }
 
-.map-location-upload__dl {
+.map-location-upload__file-actions {
+  display: flex;
   flex-shrink: 0;
-  padding: 6px 12px;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.map-location-upload__dl {
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #2a6b5a;
   background: #fff;
@@ -225,6 +202,30 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.map-location-upload__dl:hover {
+  background: #e8f5f1;
+}
+
+.map-location-upload__del {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #c45c5c;
+  background: #fff;
+  color: #8b2a2a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.map-location-upload__del:hover:not(:disabled) {
+  background: #fdeeee;
+}
+
+.map-location-upload__del:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .map-location-upload__field {

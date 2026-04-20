@@ -106,6 +106,13 @@ export class MapAttachmentService {
     return { id: rows[0]!.id };
   }
 
+  async deleteById(id: string): Promise<void> {
+    const { rowCount } = await this.pool.query(`DELETE FROM map_attachments WHERE id = $1`, [id]);
+    if (!rowCount) {
+      throw new NotFoundError('Attachment');
+    }
+  }
+
   async getForDownload(id: string): Promise<MapAttachmentDownload> {
     const { rows } = await this.pool.query<{
       file_data: Buffer;

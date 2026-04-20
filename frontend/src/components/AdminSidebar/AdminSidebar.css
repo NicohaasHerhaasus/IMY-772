@@ -131,7 +131,7 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Active state — amber/yellow left border like in the design */
+/* Active state - amber/yellow left border like in the design */
 .admin-sidebar__nav-link--active {
   color: #FFC267;
   font-weight: 600;

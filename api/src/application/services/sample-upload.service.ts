@@ -75,7 +75,7 @@ const MANDATORY_COLUMNS: Array<{
   {
     field: 'sampleName',
     label: 'Sample name',
-    // Do not use "sample id" here — that maps to lab_sample_id
+    // Do not use "sample id" here - that maps to lab_sample_id
     aliases: ['samplename', 'sample name', 'sample_name'],
   },
   {
