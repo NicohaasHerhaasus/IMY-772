@@ -2,20 +2,20 @@
 
 ## Setup
 
-Both the frontend and API require their own environment file before you can run them. Neither file is committed — copy the example and fill in your values.
+Both the frontend and API require their own environment file before you can run them. Neither file is committed - copy the example and fill in your values.
 
 **Frontend** (`frontend/.env.local`):
 ```bash
 cd frontend
 cp .env.example .env.local
-# Edit .env.local — see comments inside for where to find each Cognito value
+# Edit .env.local - see comments inside for where to find each Cognito value
 ```
 
 **API** (`api/.env`):
 ```bash
 cd api
 cp .env.example .env
-# Edit .env — fill in DB credentials and the same Cognito User Pool ID + Client ID
+# Edit .env - fill in DB credentials and the same Cognito User Pool ID + Client ID
 ```
 
 ---

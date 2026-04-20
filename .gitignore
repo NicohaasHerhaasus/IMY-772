@@ -26,6 +26,6 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# IDE (optional — uncomment if you do not share editor settings)
+# IDE (optional - uncomment if you do not share editor settings)
 # .vscode/
 .idea/

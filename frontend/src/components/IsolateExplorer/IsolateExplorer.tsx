@@ -34,7 +34,7 @@ type IsolateExplorerItem = {
 };
 
 function formatPercent(value: number | null): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   return `${value.toFixed(2)}%`;
 }
 
@@ -91,7 +91,7 @@ export default function IsolateExplorer({ refreshSignal = 0, showTitle = true }:
         headerName: "Sequence Type",
         flex: 1,
         minWidth: 160,
-        valueGetter: (_v, row) => row.sequenceType ?? "—",
+        valueGetter: (_v, row) => row.sequenceType ?? "-",
       },
       {
         field: "totalGenes",
@@ -111,7 +111,7 @@ export default function IsolateExplorer({ refreshSignal = 0, showTitle = true }:
             .map((p) => p.antibioticName)
             .filter(Boolean);
 
-          if (antibiotics.length === 0) return <span>—</span>;
+          if (antibiotics.length === 0) return <span>-</span>;
 
           return (
             <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
@@ -204,18 +204,18 @@ export default function IsolateExplorer({ refreshSignal = 0, showTitle = true }:
               </div>
               <div className="isolate-explorer__meta-item">
                 <span className="isolate-explorer__meta-label">Sequence Type</span>
-                <div className="isolate-explorer__meta-value">{selected.sequenceType ?? "—"}</div>
+                <div className="isolate-explorer__meta-value">{selected.sequenceType ?? "-"}</div>
               </div>
               <div className="isolate-explorer__meta-item">
                 <span className="isolate-explorer__meta-label">Genome Length</span>
                 <div className="isolate-explorer__meta-value">
-                  {selected.genomeLength?.toLocaleString() ?? "—"}
+                  {selected.genomeLength?.toLocaleString() ?? "-"}
                 </div>
               </div>
               <div className="isolate-explorer__meta-item">
                 <span className="isolate-explorer__meta-label">N50</span>
                 <div className="isolate-explorer__meta-value">
-                  {selected.n50Value?.toLocaleString() ?? "—"}
+                  {selected.n50Value?.toLocaleString() ?? "-"}
                 </div>
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function IsolateExplorer({ refreshSignal = 0, showTitle = true }:
                         <tr key={g.id}>
                           <td>{g.geneName}</td>
                           <td>{formatPercent(g.identityPercentage)}</td>
-                          <td>{g.accessionId ?? "—"}</td>
+                          <td>{g.accessionId ?? "-"}</td>
                         </tr>
                       ))
                     )}

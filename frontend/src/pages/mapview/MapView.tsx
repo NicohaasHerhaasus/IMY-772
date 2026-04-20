@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -12,6 +13,14 @@ import {
 } from "react-leaflet";
 import "./MapView.css";
 import { useRiver } from "../../layouts/RiverContext";
+import { useAuth } from "../../context/AuthContext";
+import {
+  downloadMapAttachment,
+  fetchMapAttachmentMarkers,
+  fetchMapAttachmentsForLocation,
+  type MapAttachmentListItem,
+  type MapAttachmentMarker,
+} from "../../lib/mapAttachmentsApi";
 
 
 interface River {
@@ -124,14 +133,18 @@ function useCountUp(target: number, duration: number = 800) {
 
 
 export default function MapView() {
+  const { user, login } = useAuth();
   const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
   const stats = STATS[activeRiver];
   const [selectedProvince, setSelectedProvince] = useState<string>("All");
   const [riverSearch, setRiverSearch] = useState("");
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [manualLat, setManualLat] = useState("");
-  const [manualLng, setManualLng] = useState("");
+  const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
+  const [markersLoadError, setMarkersLoadError] = useState<string | null>(null);
+  const [locationFiles, setLocationFiles] = useState<MapAttachmentListItem[]>([]);
+  const [locationFilesLoading, setLocationFilesLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const animatedSamplingSites = useCountUp(stats.samplingSites);
   const animatedSitesAtRisk = useCountUp(stats.sitesAtRisk);
   const animatedOrganisms = useCountUp(stats.organismsDetected);
@@ -154,18 +167,7 @@ useEffect(() => {
 
   const updatePinPosition = useCallback((pos: [number, number]) => {
     setPinPosition(pos);
-    setManualLat(formatCoord(pos[0]));
-    setManualLng(formatCoord(pos[1]));
   }, []);
-
-  const applyManualCoords = useCallback(() => {
-    const lat = parseFloat(manualLat);
-    const lng = parseFloat(manualLng);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      updatePinPosition([lat, lng]);
-      setPinModalOpen(true);
-    }
-  }, [manualLat, manualLng, updatePinPosition]);
 
   const pinCoordsLabel = useMemo(() => {
     if (!pinPosition) return null;
@@ -180,6 +182,72 @@ useEffect(() => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [pinModalOpen]);
+
+  useEffect(() => {
+    if (!pinModalOpen) {
+      setModalError(null);
+    }
+  }, [pinModalOpen]);
+
+  const refreshMarkers = useCallback(async () => {
+    if (!user) {
+      setMapMarkers([]);
+      return;
+    }
+    try {
+      const markers = await fetchMapAttachmentMarkers();
+      setMapMarkers(markers);
+      setMarkersLoadError(null);
+    } catch (e) {
+      setMarkersLoadError(e instanceof Error ? e.message : "Failed to load attachments");
+      setMapMarkers([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void refreshMarkers();
+  }, [refreshMarkers]);
+
+  useEffect(() => {
+    if (!pinModalOpen || !pinPosition || !user) {
+      setLocationFiles([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLocationFilesLoading(true);
+      try {
+        const list = await fetchMapAttachmentsForLocation(pinPosition[0], pinPosition[1]);
+        if (!cancelled) setLocationFiles(list);
+      } catch {
+        if (!cancelled) setLocationFiles([]);
+      } finally {
+        if (!cancelled) setLocationFilesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pinModalOpen, pinPosition, user]);
+
+  const handleDownload = useCallback(
+    async (id: string) => {
+      try {
+        await downloadMapAttachment(id);
+      } catch (e) {
+        setModalError(e instanceof Error ? e.message : "Download failed.");
+      }
+    },
+    [],
+  );
+
+  const openAttachmentLocation = useCallback(
+    (lat: number, lng: number) => {
+      updatePinPosition([lat, lng]);
+      setPinModalOpen(true);
+    },
+    [updatePinPosition],
+  );
 
   return (
     <div className="mapview-page">
@@ -265,40 +333,7 @@ useEffect(() => {
 
       {/* ── MAP AREA ── */}
       <main className="mv-map-area">
-        <div className="mv-pin-toolbar" role="region" aria-label="Pin location">
-          <span className="mv-pin-toolbar__label">Set pin by lat / lng</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            className="mv-pin-toolbar__input"
-            placeholder="Latitude"
-            value={manualLat}
-            onChange={(e) => setManualLat(e.target.value)}
-            aria-label="Latitude"
-          />
-          <input
-            type="text"
-            inputMode="decimal"
-            className="mv-pin-toolbar__input"
-            placeholder="Longitude"
-            value={manualLng}
-            onChange={(e) => setManualLng(e.target.value)}
-            aria-label="Longitude"
-          />
-          <button type="button" className="mv-pin-toolbar__btn" onClick={applyManualCoords}>
-            Place pin
-          </button>
-          <span className="mv-pin-toolbar__hint">
-            Or left-click the map; drag the pin to adjust.
-          </span>
-        </div>
-
-        {pinCoordsLabel && (
-          <div className="mv-pin-coords-chip" aria-live="polite">
-            Pin: {pinCoordsLabel}
-          </div>
-        )}
-
+        <div className="mv-map-stack">
         <MapContainer
         
           center={[-29.0, 24.0] as [number, number]}
@@ -381,9 +416,39 @@ useEffect(() => {
   </CircleMarker>
 ))}
 
+        {mapMarkers.map((m) => (
+          <CircleMarker
+            key={m.id}
+            center={[m.latitude, m.longitude]}
+            radius={9}
+            pathOptions={{
+              color: "#1a7f72",
+              fillColor: "#2a9d8f",
+              fillOpacity: 0.92,
+              weight: 2,
+              bubblingMouseEvents: false,
+            }}
+            eventHandlers={{
+              click: () => {
+                openAttachmentLocation(m.latitude, m.longitude);
+              },
+            }}
+          />
+        ))}
+
 
 </MapContainer>
-
+        <p className="mv-map-hint" role="note">
+          <strong>Click the map</strong> to drop a pin and open location files. Drag the pin to adjust.{" "}
+          <span className="mv-map-hint__teal">Teal dots</span> mark uploaded files - click one to view downloads.
+          {pinCoordsLabel && (
+            <span className="mv-map-hint__coords" aria-live="polite">
+              {" "}
+              Current pin: {pinCoordsLabel}.
+            </span>
+          )}
+        </p>
+        </div>
 
         {/* Health status legend */}
         <div className="mv-legend">
@@ -392,7 +457,15 @@ useEffect(() => {
           <div className="mv-legend-item"><span className="mv-dot mv-dot--medium"/>Medium AMR Risk</div>
           <div className="mv-legend-item"><span className="mv-dot mv-dot--high"/>High AMR Risk</div>
           <div className="mv-legend-item"><span className="mv-dot mv-dot--none"/>No data</div>
+          <div className="mv-legend-divider" />
+          <div className="mv-legend-title">Location data</div>
+          <div className="mv-legend-item"><span className="mv-dot mv-dot--attach"/>File uploaded</div>
         </div>
+        {markersLoadError && user && (
+          <div className="mv-attach-toast" role="status">
+            Could not load file markers: {markersLoadError}
+          </div>
+        )}
 
         {/* Sidebar collapse button */}
         <button className="mv-collapse-btn" aria-label="Collapse sidebar">
@@ -423,16 +496,63 @@ useEffect(() => {
                 ×
               </button>
               <h2 id="mv-pin-modal-title" className="mv-pin-modal__title">
-                Add data at this location
+                Location data
               </h2>
               {pinPosition && (
                 <p className="mv-pin-modal__coords">
                   Coordinates: {formatCoord(pinPosition[0])}°, {formatCoord(pinPosition[1])}°
                 </p>
               )}
-              <p className="mv-pin-modal__placeholder">
-                Upload a CSV here, or enter data manually.
-              </p>
+
+              {!user && (
+                <div className="mv-pin-modal__signin">
+                  <p className="mv-pin-modal__hint">Sign in to view files attached to this pin and to download them.</p>
+                  <button type="button" className="mv-pin-modal__signin-btn" onClick={login}>
+                    Sign in
+                  </button>
+                </div>
+              )}
+
+              {user && (
+                <>
+                  <div className="mv-pin-modal__section-label">Files at this location</div>
+                  {locationFilesLoading ? (
+                    <p className="mv-pin-modal__hint">Loading…</p>
+                  ) : locationFiles.length === 0 ? (
+                    <>
+                      <p className="mv-pin-modal__hint">No files uploaded for this location yet.</p>
+                      {user && (
+                        <p className="mv-pin-modal__admin-hint">
+                          To attach files, use{" "}
+                          <Link to="/admin/map-upload" className="mv-pin-modal__admin-link">
+                            Admin → Map location files
+                          </Link>
+                          .
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <ul className="mv-pin-modal__file-list">
+                      {locationFiles.map((f) => (
+                        <li key={f.id} className="mv-pin-modal__file-row">
+                          <span className="mv-pin-modal__file-name" title={f.originalFilename}>
+                            {f.displayName}
+                          </span>
+                          <button
+                            type="button"
+                            className="mv-pin-modal__download-btn"
+                            onClick={() => void handleDownload(f.id)}
+                          >
+                            Download
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {modalError && <p className="mv-pin-modal__error">{modalError}</p>}
+                </>
+              )}
             </div>
           </div>
         )}

@@ -8,7 +8,7 @@ export default function AdminLayout() {
   const sidebarUser = {
     username: userAttributes['email'] ?? user?.username ?? 'Admin',
     role: userAttributes['custom:role'] ?? 'Administrator',
-    contributedSince: userAttributes['custom:contributedSince'] ?? '—',
+    contributedSince: userAttributes['custom:contributedSince'] ?? '-',
   };
 
   return (
