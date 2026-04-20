@@ -3,6 +3,8 @@ import { Button, Card } from "../components/ui";
 import { IsolateExplorer } from "../components/IsolateExplorer";
 import "./DataExplorer.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
 export default function DataExplorer() {
   const [refreshSignal, setRefreshSignal] = useState(0);
 

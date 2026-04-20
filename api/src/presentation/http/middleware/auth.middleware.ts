@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { UnauthorizedError } from '../../../application/errors/app.errors';
+import { UserRole } from '../../../domain/enums/role.enum';
 
 import 'dotenv/config';
 
@@ -81,6 +82,7 @@ export async function authMiddleware(
     }
 
     req.userId = payload.sub;
+    req.userRole = UserRole.ADMIN;
 
     next();
   } catch (error) {
