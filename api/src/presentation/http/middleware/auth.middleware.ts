@@ -60,7 +60,6 @@ async function verifyCognitoJwt(token: string) {
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
-  userRole?: string;
 }
 
 export async function authMiddleware(

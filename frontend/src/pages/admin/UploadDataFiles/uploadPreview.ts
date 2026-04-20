@@ -236,6 +236,53 @@ export type StarAmrPreview = {
   warning: string | null;
 };
 
+export type ExampleAmrFinderPlusRow = {
+  sampleId: string;
+  proteinIdentifier: string;
+  geneSymbol: string;
+  sequenceName: string;
+  scope: string;
+  elementType: string;
+  elementSubtype: string;
+  className: string;
+  subclass: string;
+  method: string;
+  targetLength: string;
+  referenceSequenceLength: string;
+  pctCoverageReference: string;
+  pctIdentityReference: string;
+  alignmentLength: string;
+  accessionClosestSequence: string;
+  nameClosestSequence: string;
+  hmmId: string;
+  hmmDescription: string;
+};
+
+export const EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS: Array<{
+  key: keyof ExampleAmrFinderPlusRow;
+  label: string;
+}> = [
+  { key: "sampleId", label: "SampleID" },
+  { key: "proteinIdentifier", label: "Protein identifier" },
+  { key: "geneSymbol", label: "Gene symbol" },
+  { key: "sequenceName", label: "Sequence name" },
+  { key: "scope", label: "Scope" },
+  { key: "elementType", label: "Element type" },
+  { key: "elementSubtype", label: "Element subtype" },
+  { key: "className", label: "Class" },
+  { key: "subclass", label: "Subclass" },
+  { key: "method", label: "Method" },
+  { key: "targetLength", label: "Target length" },
+  { key: "referenceSequenceLength", label: "Reference sequence length" },
+  { key: "pctCoverageReference", label: "% Coverage ref" },
+  { key: "pctIdentityReference", label: "% Identity ref" },
+  { key: "alignmentLength", label: "Alignment length" },
+  { key: "accessionClosestSequence", label: "Accession of closest sequence" },
+  { key: "nameClosestSequence", label: "Name of closest sequence" },
+  { key: "hmmId", label: "HMM id" },
+  { key: "hmmDescription", label: "HMM description" },
+];
+
 function sheetToStringMatrix(sheet: XLSX.WorkSheet, maxRows: number): { headers: string[]; rows: string[][] } {
   const matrix = XLSX.utils.sheet_to_json<(string | number | null | undefined)[]>(sheet, {
     header: 1,
@@ -307,4 +354,166 @@ export function parseStarAmrXlsxForPreview(buffer: ArrayBuffer): StarAmrPreview 
     : null;
 
   return { sheetNames, summary, detailed, warning };
+}
+
+const EXAMPLE_AMRFINDER_PLUS_HEADERS = [
+  "SampleID",
+  "Protein identifier",
+  "Gene symbol",
+  "Sequence name",
+  "Scope",
+  "Element type",
+  "Element subtype",
+  "Class",
+  "Subclass",
+  "Method",
+  "Target length",
+  "Reference sequence length",
+  "% Coverage of reference sequence",
+  "% Identity to reference sequence",
+  "Alignment length",
+  "Accession of closest sequence",
+  "Name of closest sequence",
+  "HMM id",
+  "HMM description",
+] as const;
+
+function normalizeLooseHeader(value: unknown): string {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function findExampleAmrFinderPlusSheet(workbook: XLSX.WorkBook): XLSX.WorkSheet | undefined {
+  const preferred = normalizeLooseHeader("Sheet 1 - exampleAMRFinderPlus");
+  const fallback = normalizeLooseHeader("exampleAMRFinderPlus");
+  for (const sheetName of workbook.SheetNames) {
+    const key = normalizeLooseHeader(sheetName);
+    if (key === preferred || key.includes(fallback)) {
+      return workbook.Sheets[sheetName];
+    }
+  }
+  return undefined;
+}
+
+export function parseExampleAmrFinderPlusXlsxForPreview(buffer: ArrayBuffer): {
+  rows: ExampleAmrFinderPlusRow[];
+  total: number;
+} {
+  if (!buffer || buffer.byteLength === 0) {
+    throw new Error("File is empty.");
+  }
+
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const sheet = findExampleAmrFinderPlusSheet(workbook);
+  if (!sheet) {
+    throw new Error(
+      `Missing "Sheet 1 - exampleAMRFinderPlus". Sheets: ${workbook.SheetNames.join(", ") || "(none)"}`,
+    );
+  }
+
+  const matrix = XLSX.utils.sheet_to_json<(string | number | null | undefined)[]>(sheet, {
+    header: 1,
+    defval: "",
+    raw: false,
+  }) as unknown[][];
+  if (!matrix.length) {
+    throw new Error("No rows found in exampleAMRFinderPlus sheet.");
+  }
+
+  const headerRow = (matrix[0] ?? []).map((c) => String(c ?? "").trim());
+  const normalizedHeader = headerRow.map((h) => normalizeLooseHeader(h));
+  const missing = EXAMPLE_AMRFINDER_PLUS_HEADERS.filter(
+    (h) => !normalizedHeader.includes(normalizeLooseHeader(h)),
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required columns: ${missing.join(", ")}`);
+  }
+
+  const idx = (h: string): number => normalizedHeader.indexOf(normalizeLooseHeader(h));
+  const rows: ExampleAmrFinderPlusRow[] = [];
+  for (let r = 1; r < matrix.length; r += 1) {
+    const row = (matrix[r] ?? []) as unknown[];
+    const get = (h: string): string => String(row[idx(h)] ?? "").trim();
+    if (!get("SampleID") || !get("Protein identifier")) continue;
+    rows.push({
+      sampleId: get("SampleID"),
+      proteinIdentifier: get("Protein identifier"),
+      geneSymbol: get("Gene symbol"),
+      sequenceName: get("Sequence name"),
+      scope: get("Scope"),
+      elementType: get("Element type"),
+      elementSubtype: get("Element subtype"),
+      className: get("Class"),
+      subclass: get("Subclass"),
+      method: get("Method"),
+      targetLength: get("Target length"),
+      referenceSequenceLength: get("Reference sequence length"),
+      pctCoverageReference: get("% Coverage of reference sequence"),
+      pctIdentityReference: get("% Identity to reference sequence"),
+      alignmentLength: get("Alignment length"),
+      accessionClosestSequence: get("Accession of closest sequence"),
+      nameClosestSequence: get("Name of closest sequence"),
+      hmmId: get("HMM id"),
+      hmmDescription: get("HMM description"),
+    });
+  }
+
+  return { rows: rows.slice(0, MAX_PREVIEW_ROWS), total: rows.length };
+}
+
+export function parseExampleAmrFinderPlusTsvForPreview(content: string): {
+  rows: ExampleAmrFinderPlusRow[];
+  total: number;
+} {
+  const lines = content
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0);
+  if (lines.length < 2) {
+    throw new Error("TSV must include a header and at least one data row.");
+  }
+
+  const headers = lines[0].split("\t").map((h) => h.trim());
+  const normalizedHeader = headers.map((h) => normalizeLooseHeader(h));
+  const missing = EXAMPLE_AMRFINDER_PLUS_HEADERS.filter(
+    (h) => !normalizedHeader.includes(normalizeLooseHeader(h)),
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required columns: ${missing.join(", ")}`);
+  }
+
+  const idx = (h: string): number => normalizedHeader.indexOf(normalizeLooseHeader(h));
+  const rows: ExampleAmrFinderPlusRow[] = [];
+  for (const line of lines.slice(1)) {
+    const cells = line.split("\t");
+    const get = (h: string): string => String(cells[idx(h)] ?? "").trim();
+    if (!get("SampleID") || !get("Protein identifier")) continue;
+    rows.push({
+      sampleId: get("SampleID"),
+      proteinIdentifier: get("Protein identifier"),
+      geneSymbol: get("Gene symbol"),
+      sequenceName: get("Sequence name"),
+      scope: get("Scope"),
+      elementType: get("Element type"),
+      elementSubtype: get("Element subtype"),
+      className: get("Class"),
+      subclass: get("Subclass"),
+      method: get("Method"),
+      targetLength: get("Target length"),
+      referenceSequenceLength: get("Reference sequence length"),
+      pctCoverageReference: get("% Coverage of reference sequence"),
+      pctIdentityReference: get("% Identity to reference sequence"),
+      alignmentLength: get("Alignment length"),
+      accessionClosestSequence: get("Accession of closest sequence"),
+      nameClosestSequence: get("Name of closest sequence"),
+      hmmId: get("HMM id"),
+      hmmDescription: get("HMM description"),
+    });
+  }
+
+  return { rows: rows.slice(0, MAX_PREVIEW_ROWS), total: rows.length };
 }

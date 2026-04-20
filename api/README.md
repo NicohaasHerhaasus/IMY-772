@@ -1,4 +1,4 @@
-# IMY-772 API — Backend overview
+# IMY-772 API - Backend overview
 
 
 ## Quick start
@@ -58,7 +58,7 @@ You do **not** have to use those exact classic names in folders; the **important
 
 | Layer | Path | What lives here |
 |-------|------|------------------|
-| **Domain** | `src/domain/` | **User** shape, **roles**, and the **repository port** (`IUserRepository`) — contracts only, no Express/`pg`. |
+| **Domain** | `src/domain/` | **User** shape, **roles**, and the **repository port** (`IUserRepository`) - contracts only, no Express/`pg`. |
 | **Application** | `src/application/` | **Auth service** (register / login / profile), **DTOs** + validation helpers, **typed errors** for HTTP mapping. |
 | **Infrastructure** | `src/infrastructure/` | **PostgreSQL** user repository, **connection pool**, **migrations**, **bcrypt** and **JWT** helpers. |
 | **Presentation** | `src/presentation/http/` | **Routes**, **controllers**, **middleware** (auth, validation, errors). |
@@ -82,7 +82,7 @@ You do **not** have to use those exact classic names in folders; the **important
 **Avoid:**
 
 - `domain` importing `application`, `infrastructure`, or `presentation` (the core should stay framework-free).
-- Putting SQL, `pg`, or Express `req`/`res` inside `AuthService` — keep that in infrastructure and presentation.
+- Putting SQL, `pg`, or Express `req`/`res` inside `AuthService` - keep that in infrastructure and presentation.
 
 **Normal pattern:** `infrastructure` **does** import from `domain` (to implement `IUserRepository` and map rows to your `User` type). That direction is correct.
 
@@ -99,19 +99,19 @@ src/
     database.config.ts   # Builds DB config from environment variables
 
   domain/
-    entities/            # user.entity.ts — core User type
-    enums/               # role.enum.ts — admin / user
-    ports/               # user.repository.port.ts — IUserRepository interface
+    entities/            # user.entity.ts - core User type
+    enums/               # role.enum.ts - admin / user
+    ports/               # user.repository.port.ts - IUserRepository interface
 
   application/
-    dtos/                # register.dto.ts, login.dto.ts — request shapes + validate* functions
-    errors/              # app.errors.ts — AppError, ValidationError, etc.
-    services/            # auth.service.ts — register, login, getProfile
+    dtos/                # register.dto.ts, login.dto.ts - request shapes + validate* functions
+    errors/              # app.errors.ts - AppError, ValidationError, etc.
+    services/            # auth.service.ts - register, login, getProfile
 
   infrastructure/
     database/
       pool.ts            # Singleton pg Pool (reused DB connections)
-      migrations/        # 001_create_users.ts — schema setup
+      migrations/        # 001_create_users.ts - schema setup
     persistence/
       postgres-user.repository.ts  # IUserRepository for PostgreSQL
     security/
@@ -119,8 +119,8 @@ src/
       token.service.ts             # JWT sign/verify
 
   presentation/http/
-    controllers/         # auth.controller.ts — maps HTTP ↔ AuthService
-    routes/              # auth.routes.ts — paths + middleware + wiring
+    controllers/         # auth.controller.ts - maps HTTP ↔ AuthService
+    routes/              # auth.routes.ts - paths + middleware + wiring
     middleware/          # auth, validation, error handling
 ```
 
@@ -136,13 +136,13 @@ This section walks from **the moment the request hits the machine** down to **th
 2. **`server.ts`** loads **`app.ts`**, connects to PostgreSQL, runs migrations, then calls **`app.listen(PORT)`**.
 3. Node’s HTTP server opens a **listening socket** (e.g. port `3000`). It is now waiting for TCP connections from clients (browser, Postman, the frontend, etc.).
 
-Nothing in “clean architecture” runs yet — this is just **boot + network setup**.
+Nothing in “clean architecture” runs yet - this is just **boot + network setup**.
 
 ### 2. The request arrives at the server
 
 1. The client sends an HTTP message (e.g. `POST /api/auth/register`) over **TCP** to your host and port.
 2. Node accepts the connection and hands the raw HTTP stream to **Express**.
-3. Express builds a **`req`** (incoming request: method, URL, headers, body stream) and a **`res`** (object used to write status, headers, body back). This is still **inside the framework** — not your domain code.
+3. Express builds a **`req`** (incoming request: method, URL, headers, body stream) and a **`res`** (object used to write status, headers, body back). This is still **inside the framework** - not your domain code.
 
 ### 3. Global middleware in `app.ts` (every request, in this order)
 
@@ -160,7 +160,7 @@ Then Express **matches the path**:
 
 So for auth routes, the request has already passed **JSON parsing** and **CORS** before it reaches your routes file.
 
-### 4. Auth router (`auth.routes.ts`) — path + per-route middleware
+### 4. Auth router (`auth.routes.ts`) - path + per-route middleware
 
 The router is mounted at **`/api/auth`**, so:
 
@@ -177,18 +177,18 @@ Express matches **method + path** and runs the **middleware chain for that route
 
 The router file is also where **dependency injection** happens: it constructs **`PostgresUserRepository`**, **`AuthService`**, **`AuthController`** once at startup. Each request reuses those instances.
 
-### 5. Controller (`auth.controller.ts`) — HTTP ↔ application
+### 5. Controller (`auth.controller.ts`) - HTTP ↔ application
 
 The controller is a **thin adapter**:
 
 - It takes **`req`** / **`res`** / **`next`** (Express).
 - It calls **`authService.register(req.body)`** (or login / getProfile) with **plain data**, not HTTP objects.
 - On success it sets **status code** and **JSON shape** (`{ status: 'success', data: ... }`).
-- On failure it does **`next(error)`** so it does not send HTML or inconsistent JSON — the **error middleware** does that.
+- On failure it does **`next(error)`** so it does not send HTML or inconsistent JSON - the **error middleware** does that.
 
 At this point you cross from **presentation** into **application** (`AuthService`).
 
-### 6. Application service (`auth.service.ts`) — use case
+### 6. Application service (`auth.service.ts`) - use case
 
 This is the **orchestration** step (no Express here):
 
@@ -198,7 +198,7 @@ This is the **orchestration** step (no Express here):
 
 If something is wrong it **throws** `ConflictError`, `UnauthorizedError`, `NotFoundError`, etc. The controller catches and forwards with **`next(error)`**.
 
-### 7. Infrastructure — database and crypto
+### 7. Infrastructure - database and crypto
 
 - **`PostgresUserRepository`** runs **SQL** via the shared **`Pool`**. PostgreSQL executes the query and returns rows; the repository maps rows to your **`User`** type.
 - **`PasswordService`** / **`TokenService`** call **bcrypt** and **jsonwebtoken**.
@@ -242,7 +242,7 @@ Client (sends Cognito access token as Bearer header)
 
 ## Authentication
 
-This API uses **AWS Cognito** for authentication. There is no local login or registration — all sign-in is handled by the Cognito Hosted UI on the frontend.
+This API uses **AWS Cognito** for authentication. There is no local login or registration - all sign-in is handled by the Cognito Hosted UI on the frontend.
 
 ### How it works
 
@@ -293,7 +293,7 @@ The middleware also sets two properties on `req` for use in your controller:
 
 | Property | Value |
 |----------|-------|
-| `req.userId` | Cognito `sub` — stable unique ID for the user |
+| `req.userId` | Cognito `sub` - stable unique ID for the user |
 | `req.userRole` | First entry from the user's Cognito groups, or `'user'` if ungrouped |
 
 ```ts
@@ -323,7 +323,7 @@ getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => 
 ## Adding a new feature
 
 1. **Domain:** Add or extend **entities**, **enums**, and **ports** (interfaces) in `src/domain/` if the core model or persistence contract changes.
-2. **Application:** Add **DTOs** + validators, **errors** if needed, and a **service** (use case) that only talks to **ports** and plain types—not to `pg` or Express.
+2. **Application:** Add **DTOs** + validators, **errors** if needed, and a **service** (use case) that only talks to **ports** and plain types-not to `pg` or Express.
 3. **Infrastructure:** Implement new or updated ports (e.g. new repository methods, new migration file if the schema changes).
 4. **Presentation:** Add **routes**, **middleware** if shared, **controller** handlers (or inline handlers), and register the router in **`app.ts`**.
 5. **Errors:** Throw **`AppError`** subclasses (or `ValidationError`) so **`errorMiddleware`** returns consistent responses.

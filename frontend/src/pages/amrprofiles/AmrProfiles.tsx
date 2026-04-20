@@ -328,7 +328,7 @@
 //               </div>
 //             </div>
 
-//             {/* Data Analysis card — real Recharts charts with tab switching */}
+//             {/* Data Analysis card - real Recharts charts with tab switching */}
 //             <DataAnalyticsCard />
 
 //           </div>
@@ -440,7 +440,7 @@ export default function AmrProfiles() {
       {/* ══ SIDEBAR ══ */}
       <aside className="amr-sidebar">
 
-        {/* Isolate group selector — native select showing all ST groups */}
+        {/* Isolate group selector - native select showing all ST groups */}
         <div className="amr-search-wrap">
           <div className="amr-select-wrap">
             {/* <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -471,7 +471,7 @@ export default function AmrProfiles() {
         {/* Site details section */}
         <div className="amr-section-label">Site Details</div>
 
-        {/* Quality ring — green if ALL isolates passed, red if ANY failed */}
+        {/* Quality ring - green if ALL isolates passed, red if ANY failed */}
         {(() => {
           const allPassed  = profile ? profile.failedCount === 0 : false;
           const ringColor  = allPassed ? '#4caf82' : '#e04040';
@@ -501,7 +501,7 @@ export default function AmrProfiles() {
                 Quality status<br/>
                 {profile
                   ? `${profile.passedCount} passed · ${profile.failedCount} failed`
-                  : '—'}
+                  : '-'}
               </p>
             </div>
           );
@@ -536,11 +536,11 @@ export default function AmrProfiles() {
       {/* ══ MAIN ══ */}
       <main className="amr-main">
 
-        {/* ── ROW 1: AMR Genes — full width ── */}
+        {/* ── ROW 1: AMR Genes - full width ── */}
         {profile && profile.genes.length > 0 ? (
           <div className="amr-card">
             <div className="amr-card-title">
-              AMR Genes — {selectedKey}
+              AMR Genes - {selectedKey}
               <span style={{ fontSize: 10, fontWeight: 400, color: '#5a6b64', marginLeft: 8 }}>
                 {profile.genes.length} gene{profile.genes.length !== 1 ? 's' : ''} across {profile.totalIsolates} isolates
               </span>
@@ -569,7 +569,7 @@ export default function AmrProfiles() {
                         </span>
                       </td>
                       <td style={{ fontSize: 11, color: '#5a6b64' }}>
-                        {gene.phenotype || '—'}
+                        {gene.phenotype || '-'}
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -590,14 +590,14 @@ export default function AmrProfiles() {
           </div>
         ) : profile ? (
           <div className="amr-card">
-            <div className="amr-card-title">AMR Genes — {selectedKey}</div>
+            <div className="amr-card-title">AMR Genes - {selectedKey}</div>
             <p style={{ color: '#5a6b64', fontSize: 13 }}>
               No resistance genes detected for this isolate group.
             </p>
           </div>
         ) : null}
 
-        {/* ── ROW 2: Quality & Genomic Overview — full width ── */}
+        {/* ── ROW 2: Quality & Genomic Overview - full width ── */}
         {profile && (
           <div className="amr-card">
             <div className="amr-card-title">Quality &amp; Genomic Overview</div>
@@ -667,7 +667,7 @@ export default function AmrProfiles() {
                 </div>
               )}
               <div style={{ marginTop: 10, fontSize: 11, color: '#5a6b64' }}>
-                Sequence type: <strong style={{ color: '#3eb99a' }}>{profile.sequenceType || '—'}</strong>
+                Sequence type: <strong style={{ color: '#3eb99a' }}>{profile.sequenceType || '-'}</strong>
               </div>
             </div>
 
@@ -680,7 +680,7 @@ export default function AmrProfiles() {
           </div>
         )}
 
-        {/* ── ROW 4: Map — full width ── */}
+        {/* ── ROW 4: Map - full width ── */}
         <div className="amr-map-card">
           <div className="amr-card-title" style={{ color: '#1c2f42' }}>
             Isolate Map View

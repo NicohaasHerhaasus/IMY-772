@@ -38,12 +38,12 @@
 //   message?: string;
 // }
 // src/lib/api/types.ts
-// Matches GET /api/isolates — StarAMR Summary rows
+// Matches GET /api/isolates - StarAMR Summary rows
 // Column names vary by backend: handles both snake_case and Title Case
 
 // src/lib/api/types.ts
 // Matches the EXACT JSON shape returned by GET /api/isolates
-// Source: IsolateExplorerItem from isolate.service.ts — all keys are camelCase
+// Source: IsolateExplorerItem from isolate.service.ts - all keys are camelCase
 
 export interface IsolateGenotype {
   id:                 string;

@@ -12,6 +12,7 @@ interface AdminSidebarProps {
 
 const NAV_ITEMS = [
   { label: "Upload Datafiles", path: "/admin/upload" },
+  { label: "Map location files", path: "/admin/map-upload" },
   { label: "Export Datafiles", path: "/admin/export" },
   { label: "Manage Datafiles", path: "/admin/manage" },
   { label: "AMR Assistant", path: "/admin/chatbot" },

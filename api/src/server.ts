@@ -7,6 +7,8 @@ import { runMigration as runGenotypicAnalysisMigration } from './infrastructure/
 import { runMigration as runIsolatesMigration } from './infrastructure/database/migrations/003_create_isolates';
 import { runMigration as runSamplesMigration } from './infrastructure/database/migrations/004_create_samples';
 import { runMigration as runSamplesUniqueConstraintMigration } from './infrastructure/database/migrations/005_samples_unique_constraint';
+import { runMigration as runExampleAmrFinderPlusMigration } from './infrastructure/database/migrations/006_create_example_amrfinder_plus';
+import { runMigration as runMapAttachmentsMigration } from './infrastructure/database/migrations/007_create_map_attachments';
 
 const PORT = process.env.PORT || 3000;
 
@@ -92,6 +94,8 @@ const startServer = async () => {
     await runIsolatesMigration(pool);
     await runSamplesMigration(pool);
     await runSamplesUniqueConstraintMigration(pool);
+    await runExampleAmrFinderPlusMigration(pool);
+    await runMapAttachmentsMigration(pool);
 
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);

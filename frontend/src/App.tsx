@@ -15,6 +15,7 @@ import AdminLayout from "./layouts/AdminLayout/AdminLayout";
 import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
 import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
 import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
+import MapLocationUpload from "./pages/admin/MapLocationUpload/MapLocationUpload";
 import Chatbot from "./pages/admin/Chatbot/Chatbot";
 import CallbackPage from "./pages/CallbackPage";
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="upload" />} />
               <Route path="upload" element={<UploadDatafiles />} />
+              <Route path="map-upload" element={<MapLocationUpload />} />
               <Route path="export" element={<ExportDataFiles />} />
               <Route path="manage" element={<ManageDatafiles />} />
               <Route path="chatbot" element={<Chatbot />} />

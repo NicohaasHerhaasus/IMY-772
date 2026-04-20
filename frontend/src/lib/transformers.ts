@@ -1,6 +1,6 @@
 // // src/lib/transformers.ts
 // // Pure functions that convert IsolateRow[] → page-specific data shapes.
-// // No fetch calls here — just data mapping.
+// // No fetch calls here - just data mapping.
 
 // import type { IsolateRow } from './api/types';
 
@@ -91,7 +91,7 @@
 //     totalIsolates:   isolates.length,
 //     esblProducers:   isolates.filter(r => r.class === 'BETA-LACTAM').length,
 //     resistanceGenes: allGenes.size,
-//     lastUpdated:     dates[dates.length - 1] ?? '—',
+//     lastUpdated:     dates[dates.length - 1] ?? '-',
 //     totalVisits:     uniqueDates.size,
 //   };
 // }
@@ -143,7 +143,7 @@
 //   virulenceGenes:   string[];
 //   // Water quality
 //   waterQuality:     WaterQuality;
-//   // Integrons / ESBL — from binary info embedded in isolate if available
+//   // Integrons / ESBL - from binary info embedded in isolate if available
 //   intI1:            boolean;
 //   intI2:            boolean;
 //   intI3:            boolean;
@@ -175,12 +175,12 @@
 //     g => g.symbol,
 //   );
 
-//   // SIR — all predicted phenotypes across isolates, deduplicated
+//   // SIR - all predicted phenotypes across isolates, deduplicated
 //   const allPhenotypes = [
 //     ...new Set(isolates.flatMap(r => splitList(r.predicted_sir))),
 //   ];
 
-//   // We don't have explicit S/I/R classification — we classify heuristically:
+//   // We don't have explicit S/I/R classification - we classify heuristically:
 //   // Phenotypes = predicted resistant. No I or S data in the current schema.
 //   const sirProfile: SirProfile = {
 //     resistant:    allPhenotypes,
@@ -202,7 +202,7 @@
 //   const withGenes = isolates.filter(r => splitList(r.amr_resistance_genes).length > 0);
 //   const resistanceRatePct = Math.round((withGenes.length / isolates.length) * 100);
 
-//   // Water quality — average across isolates at location (may be null)
+//   // Water quality - average across isolates at location (may be null)
 //   const avg = (field: (r: IsolateRow) => number | null): number | null => {
 //     const vals = isolates.map(field).filter((v): v is number => v !== null);
 //     return vals.length ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) : null;
@@ -231,7 +231,7 @@
 //       tdsMgl:           avg(r => r.tds_mg_l),
 //       dissolvedOxygenMgl: avg(r => r.dissolved_oxygen_mg_l),
 //     },
-//     // These fields are not yet in the dashboard template — default false until
+//     // These fields are not yet in the dashboard template - default false until
 //     // the backend exposes them from the BINARY_INFO table.
 //     intI1:        false,
 //     intI2:        false,
@@ -485,8 +485,8 @@ export function toAmrProfileData(groupLabel: string, isolates: IsolateRow[]): Am
 
   return {
     groupLabel,
-    sequenceType:   String(isolates[0].sequenceType ?? '—'),
-    scheme:         '—',
+    sequenceType:   String(isolates[0].sequenceType ?? '-'),
+    scheme:         '-',
     totalIsolates:  isolates.length,
     passedCount:    passed,
     failedCount:    failed,
@@ -567,7 +567,7 @@ const RIVER_NAMES = [
 ];
 
 export function toRiverFlows(isolates: IsolateRow[]): RiverFlowData[] {
-  // Group by sequenceType — each ST = one river/location cluster
+  // Group by sequenceType - each ST = one river/location cluster
   const groups = new Map<string, IsolateRow[]>();
   for (const row of isolates) {
     const st  = String(row.sequenceType ?? '').trim();

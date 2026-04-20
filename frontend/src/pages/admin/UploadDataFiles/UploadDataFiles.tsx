@@ -2,8 +2,12 @@ import { useState, useRef, useCallback, useEffect, type ChangeEvent } from "reac
 import { Button, Card, FormField, Select } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
 import {
+  EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS,
   GENOTYPIC_PREVIEW_COLUMNS,
   MAX_PREVIEW_ROWS,
+  parseExampleAmrFinderPlusTsvForPreview,
+  parseExampleAmrFinderPlusXlsxForPreview,
+  type ExampleAmrFinderPlusRow,
   type GenotypicUploadRow,
   parseGenotypicXlsxForPreview,
   parseStarAmrXlsxForPreview,
@@ -36,12 +40,14 @@ function getApiErrorMessage(response: Response, body: unknown, rawText: string):
   return snippet || `Request failed (${response.status}).`;
 }
 
-/** Genotypic options first — StarAMR is a different workbook shape (Summary + Detailed_Summary only). */
+/** Genotypic options first - StarAMR is a different workbook shape (Summary + Detailed_Summary only). */
 const UPLOAD_TYPES = [
   "Sample Dashboard Excel (.xlsx)",
   "Genotypic Analysis Excel (.xlsx)",
   "Genotypic Analysis TSV (.tsv)",
   "StarAMR Workbook (.xlsx)",
+  "Example AMRFinderPlus Excel (.xlsx)",
+  "Example AMRFinderPlus TSV (.tsv)",
 ] as const;
 
 const GENOTYPIC_TSV_HEADERS = [
@@ -137,7 +143,8 @@ type FilePreviewState =
       total: number;
       sheetName?: string;
     }
-  | { kind: "staramr"; data: StarAmrPreview };
+  | { kind: "staramr"; data: StarAmrPreview }
+  | { kind: "amrfinderplus"; rows: ExampleAmrFinderPlusRow[]; total: number };
 
 type SampleUploadPhase = "idle" | "validating" | "validated" | "uploading" | "done" | "error";
 
@@ -252,7 +259,7 @@ const SAMPLE_PREVIEW_COLUMNS: Array<{ key: keyof SampleRow; label: string }> = [
 ];
 
 function previewCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "-";
   return String(value);
 }
 
@@ -271,7 +278,7 @@ function GenotypicPreviewTable({ rows }: { rows: GenotypicUploadRow[] }) {
           {rows.map((row, ri) => (
             <tr key={ri}>
               {GENOTYPIC_PREVIEW_COLUMNS.map((col) => (
-                <td key={col.key}>{row[col.key] || "—"}</td>
+                <td key={col.key}>{row[col.key] || "-"}</td>
               ))}
             </tr>
           ))}
@@ -300,6 +307,31 @@ function StarAmrSheetPreview({ headers, rows }: { headers: string[]; rows: strin
             <tr key={ri}>
               {headers.map((_, ci) => (
                 <td key={ci}>{cells[ci] ?? ""}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ExampleAmrFinderPlusPreviewTable({ rows }: { rows: ExampleAmrFinderPlusRow[] }) {
+  return (
+    <div className="upload-preview__scroll">
+      <table className="upload-preview-table">
+        <thead>
+          <tr>
+            {EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS.map((col) => (
+              <th key={col.key}>{col.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri}>
+              {EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS.map((col) => (
+                <td key={col.key}>{row[col.key] || "-"}</td>
               ))}
             </tr>
           ))}
@@ -364,6 +396,14 @@ export default function UploadDataFiles() {
           return;
         }
 
+        if (uploadType === "Example AMRFinderPlus TSV (.tsv)") {
+          const data = parseExampleAmrFinderPlusTsvForPreview(await file.text());
+          if (!cancelled) {
+            setFilePreview({ kind: "amrfinderplus", rows: data.rows, total: data.total });
+          }
+          return;
+        }
+
         const buffer = await file.arrayBuffer();
 
         if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
@@ -376,6 +416,14 @@ export default function UploadDataFiles() {
             total: rows.length,
             sheetName,
           });
+          return;
+        }
+
+        if (uploadType === "Example AMRFinderPlus Excel (.xlsx)") {
+          const data = parseExampleAmrFinderPlusXlsxForPreview(buffer);
+          if (!cancelled) {
+            setFilePreview({ kind: "amrfinderplus", rows: data.rows, total: data.total });
+          }
           return;
         }
 
@@ -400,7 +448,7 @@ export default function UploadDataFiles() {
   }, [file, uploadType, isSampleDashboard]);
 
   const accept =
-    uploadType === "Genotypic Analysis TSV (.tsv)"
+    uploadType === "Genotypic Analysis TSV (.tsv)" || uploadType === "Example AMRFinderPlus TSV (.tsv)"
       ? ".tsv,.txt"
       : ".xlsx";
 
@@ -558,6 +606,42 @@ export default function UploadDataFiles() {
           `Import successful. Isolates: ${isolatesCount ?? 0}, Genotypes: ${genotypesCount ?? 0}, ` +
             `Phenotypes: ${phenotypesCount ?? 0}, Plasmids: ${plasmidsCount ?? 0}.`,
         );
+      } else if (uploadType === "Example AMRFinderPlus Excel (.xlsx)") {
+        if (!file.name.toLowerCase().endsWith(".xlsx")) {
+          throw new Error("Only .xlsx is supported for Example AMRFinderPlus.");
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_BASE_URL}/api/upload/example-amrfinder-plus`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: formData,
+        });
+        const rawText = await response.text();
+        const result = parseJsonResponse(rawText);
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(response, result, rawText));
+        }
+        const payload = result as { data?: { insertedCount?: number } } | null;
+        setMessage(`Uploaded ${payload?.data?.insertedCount ?? 0} AMRFinderPlus row(s).`);
+      } else if (uploadType === "Example AMRFinderPlus TSV (.tsv)") {
+        if (!file.name.toLowerCase().endsWith(".tsv") && !file.name.toLowerCase().endsWith(".txt")) {
+          throw new Error("Only .tsv or .txt is supported for Example AMRFinderPlus TSV.");
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_BASE_URL}/api/upload/example-amrfinder-plus-tsv`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: formData,
+        });
+        const rawText = await response.text();
+        const result = parseJsonResponse(rawText);
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(response, result, rawText));
+        }
+        const payload = result as { data?: { insertedCount?: number } } | null;
+        setMessage(`Uploaded ${payload?.data?.insertedCount ?? 0} AMRFinderPlus row(s) from TSV.`);
       } else if (uploadType === "Genotypic Analysis Excel (.xlsx)") {
         if (!file.name.toLowerCase().endsWith(".xlsx")) {
           throw new Error("Only .xlsx is supported for genotypic Excel.");
@@ -634,7 +718,11 @@ export default function UploadDataFiles() {
           {isSampleDashboard
             ? "Dashboard sample workbook upload with strict server-side validator (required fields like geo_loc_name, latitude, and longitude)."
             : uploadType === "StarAMR Workbook (.xlsx)"
-            ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel — not here."
+            ? "Only for StarAMR pipeline output: requires Summary and Detailed_Summary sheets. UP culture / genotypic tables belong under Genotypic Analysis Excel - not here."
+            : uploadType === "Example AMRFinderPlus TSV (.tsv)"
+              ? "TSV must include AMRFinderPlus headers (SampleID, Protein identifier, Gene symbol, ..., HMM description) in tab-separated columns."
+            : uploadType === "Example AMRFinderPlus Excel (.xlsx)"
+              ? "Requires the sheet 'Sheet 1 - exampleAMRFinderPlus' with columns like SampleID, Protein identifier, Gene symbol, and HMM description."
             : uploadType === "Genotypic Analysis Excel (.xlsx)"
               ? "Any .xlsx file or sheet name is fine. One row must contain the UP genotypic column headers in order (we scan the first 15 rows); data rows follow below that row."
               : "TSV must use the required column headers in order (tabs; empty cells allowed)."}
@@ -753,6 +841,19 @@ export default function UploadDataFiles() {
                 )}
               </div>
             )}
+            {filePreview.kind === "amrfinderplus" && (
+              <div className="upload-preview">
+                <div className="upload-preview__head">
+                  <h2 className="upload-preview__title">Preview</h2>
+                  <p className="upload-preview__meta">
+                    Showing {filePreview.rows.length} of {filePreview.total} data row
+                    {filePreview.total === 1 ? "" : "s"}
+                    {filePreview.total > MAX_PREVIEW_ROWS ? ` (first ${MAX_PREVIEW_ROWS})` : ""}
+                  </p>
+                </div>
+                <ExampleAmrFinderPlusPreviewTable rows={filePreview.rows} />
+              </div>
+            )}
           </section>
         )}
 
@@ -787,7 +888,7 @@ export default function UploadDataFiles() {
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              Validation failed — fix the issues below before uploading
+              Validation failed - fix the issues below before uploading
             </div>
             <ul className="sample-upload__error-list">
               {sampleErrors.map((e, i) => {
@@ -811,7 +912,7 @@ export default function UploadDataFiles() {
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              Validation passed —{" "}
+              Validation passed -{" "}
               {validationResult.rowCount} row{validationResult.rowCount !== 1 ? "s" : ""} ready to import
             </div>
             <div className="sample-upload__table-wrapper">
