@@ -9,6 +9,8 @@ import sampleUploadRoutes from './presentation/http/routes/sample-upload.routes'
 import mapAttachmentRoutes from './presentation/http/routes/map-attachment.routes';
 import chatbotRoutes from './presentation/http/routes/chatbot.routes';
 import { errorMiddleware } from './presentation/http/middleware/error.middleware';
+import queryBuilderRouter from './presentation/http/routes/query-builder.routes';
+
 
 dotenv.config();
 
@@ -28,6 +30,7 @@ app.use('/api/isolates', isolatesRoutes);
 app.use('/api/samples', sampleUploadRoutes);
 app.use('/api/map-attachments', mapAttachmentRoutes);
 app.use('/api/admin/chatbot', chatbotRoutes);
+app.use('/api/query-builder', queryBuilderRouter);
 
 app.use(errorMiddleware);
 
