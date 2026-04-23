@@ -582,6 +582,10 @@
   text-overflow: ellipsis;
 }
 
+.upload-preview-table td {
+  color: #0f172a;
+}
+
 .upload-preview-table th {
   position: sticky;
   top: 0;

@@ -674,7 +674,7 @@ export default function UploadDataFiles() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ rows }),
+          body: JSON.stringify({ rows, uploadedFileName: file.name }),
         });
         const rawText = await response.text();
         const result = parseJsonResponse(rawText);
