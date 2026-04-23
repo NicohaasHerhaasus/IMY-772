@@ -1,64 +1,116 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Modal } from "../../../components/ui";
-
-interface Datafile {
-  id: number;
-  riverName: string;
-  date: string;
-}
-
-const MOCK_DATAFILES: Datafile[] = [
-  { id: 1, riverName: "Apies River", date: "02/03/2024" },
-  { id: 2, riverName: "Hennops River", date: "02/03/2024" },
-  { id: 3, riverName: "Crocodile River", date: "02/03/2024" },
-];
+import {
+  deleteManagedDatafile,
+  fetchManagedDatafiles,
+  renameManagedDatafile,
+  type ManagedDatafile,
+} from "../../../lib/datafilesApi";
 
 type ModalMode = "edit" | "delete" | null;
 
+function fmtDate(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString();
+}
+
 export default function ManageDatafiles() {
-  const [datafiles, setDatafiles] = useState<Datafile[]>(MOCK_DATAFILES);
+  const [datafiles, setDatafiles] = useState<ManagedDatafile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selected, setSelected] = useState<Datafile | null>(null);
-  const [editValues, setEditValues] = useState({ riverName: "", date: "" });
+  const [selected, setSelected] = useState<ManagedDatafile | null>(null);
+  const [editName, setEditName] = useState("");
 
-  const filtered = datafiles.filter((d) =>
-    d.riverName.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const list = await fetchManagedDatafiles();
+        if (!cancelled) {
+          setDatafiles(list);
+          setError("");
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load datafiles.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filtered = useMemo(
+    () =>
+      datafiles.filter((d) =>
+        [d.displayName, d.originalFilename, d.uploadChannel].some((value) =>
+          value.toLowerCase().includes(search.toLowerCase()),
+        ),
+      ),
+    [datafiles, search],
   );
 
-  const openEdit = (file: Datafile) => {
+  const openEdit = (file: ManagedDatafile) => {
     setSelected(file);
-    setEditValues({ riverName: file.riverName, date: file.date });
+    setEditName(file.displayName);
+    setActionError("");
     setModalMode("edit");
   };
 
-  const openDelete = (file: Datafile) => {
+  const openDelete = (file: ManagedDatafile) => {
     setSelected(file);
+    setActionError("");
     setModalMode("delete");
   };
 
   const closeModal = () => {
     setModalMode(null);
     setSelected(null);
+    setActionError("");
+    setSaving(false);
   };
 
-  const handleSaveEdit = () => {
-    if (!editValues.riverName || !editValues.date) return;
-    setDatafiles((prev) =>
-      prev.map((d) =>
-        d.id === selected?.id
-          ? { ...d, riverName: editValues.riverName, date: editValues.date }
-          : d
-      )
-    );
-    // TODO: PATCH /api/datafiles/:id
-    closeModal();
+  const handleSaveEdit = async () => {
+    if (!selected) return;
+    if (!editName.trim()) {
+      setActionError("File name is required.");
+      return;
+    }
+    setSaving(true);
+    setActionError("");
+    try {
+      await renameManagedDatafile(selected.id, editName.trim());
+      setDatafiles((prev) =>
+        prev.map((d) => (d.id === selected.id ? { ...d, displayName: editName.trim() } : d)),
+      );
+      closeModal();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Rename failed.");
+      setSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    setDatafiles((prev) => prev.filter((d) => d.id !== selected?.id));
-    // TODO: DELETE /api/datafiles/:id
-    closeModal();
+  const handleDelete = async () => {
+    if (!selected) return;
+    setSaving(true);
+    setActionError("");
+    try {
+      await deleteManagedDatafile(selected.id);
+      setDatafiles((prev) => prev.filter((d) => d.id !== selected.id));
+      closeModal();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Delete failed.");
+      setSaving(false);
+    }
   };
 
   return (
@@ -76,7 +128,7 @@ export default function ManageDatafiles() {
           </svg>
           <input
             type="text"
-            placeholder="Search datafiles..."
+            placeholder="Search by name, file, source..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border-none outline-none text-[0.875rem] text-text-dark bg-transparent flex-1 min-w-0 placeholder:text-text-light"
@@ -93,7 +145,11 @@ export default function ManageDatafiles() {
       </div>
 
       <Card className="p-6 min-h-[200px]">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="m-0 text-text-muted">Loading datafiles...</p>
+        ) : error ? (
+          <p className="m-0 text-danger">{error}</p>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-text-muted text-[0.9rem]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={32} height={32} className="opacity-40">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -110,14 +166,23 @@ export default function ManageDatafiles() {
               >
                 <div className="w-[5px] self-stretch bg-accent shrink-0" />
                 <div className="flex-1 px-5 py-[18px] flex flex-col gap-1">
-                  <span className="text-[1rem] font-semibold text-primary">{file.riverName}</span>
-                  <span className="text-[0.8rem] text-text-muted">{file.date}</span>
+                  <span className="text-[1rem] font-semibold text-primary">{file.displayName}</span>
+                  <span className="text-[0.8rem] text-text-muted">
+                    {file.sourceType === "map_pin" ? "Map pin upload" : "Structured upload"} -{" "}
+                    {file.uploadChannel}
+                  </span>
+                  <span className="text-[0.78rem] text-text-muted">
+                    {file.originalFilename} - {fmtDate(file.createdAt)}
+                    {file.latitude !== null && file.longitude !== null
+                      ? ` - ${file.latitude.toFixed(5)}, ${file.longitude.toFixed(5)}`
+                      : ""}
+                  </span>
                 </div>
                 <div className="flex gap-1 px-4">
                   <button
                     className="flex items-center justify-center w-9 h-9 rounded-lg border-none cursor-pointer transition-[background,color] duration-150 bg-transparent text-[#4b5563] hover:bg-accent/10 hover:text-accent"
                     onClick={() => openEdit(file)}
-                    aria-label={`Edit ${file.riverName}`}
+                    aria-label={`Edit ${file.displayName}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={18} height={18}>
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -127,7 +192,7 @@ export default function ManageDatafiles() {
                   <button
                     className="flex items-center justify-center w-9 h-9 rounded-lg border-none cursor-pointer transition-[background,color] duration-150 bg-transparent text-text-light hover:bg-danger/[0.08] hover:text-danger"
                     onClick={() => openDelete(file)}
-                    aria-label={`Delete ${file.riverName}`}
+                    aria-label={`Delete ${file.displayName}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={18} height={18}>
                       <polyline points="3 6 5 6 21 6" />
@@ -154,7 +219,7 @@ export default function ManageDatafiles() {
                 Cancel
               </Button>
               <Button variant="danger" size="sm" onClick={handleDelete}>
-                Delete
+                {saving ? "Deleting..." : "Delete"}
               </Button>
             </>
           }
@@ -167,10 +232,13 @@ export default function ManageDatafiles() {
             </svg>
           </div>
           <p className="text-center text-[0.9rem] text-[#374151] m-0 leading-relaxed">
-            Are you sure you want to delete <strong>{selected.riverName}</strong>?
+            Are you sure you want to delete <strong>{selected.displayName}</strong>?
             <br />
-            <span className="text-[0.8rem] text-text-light">This action cannot be undone.</span>
+            <span className="text-[0.8rem] text-text-light">
+              This removes it from the managed list. For map-pin files, it also removes the file itself.
+            </span>
           </p>
+          {actionError && <p className="text-danger text-center m-0 mt-2">{actionError}</p>}
         </Modal>
       )}
 
@@ -184,31 +252,24 @@ export default function ManageDatafiles() {
               <Button variant="secondary" size="sm" onClick={closeModal}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSaveEdit}>
-                Save
+              <Button size="sm" onClick={() => void handleSaveEdit()}>
+                {saving ? "Saving..." : "Save"}
               </Button>
             </>
           }
         >
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.85rem] font-semibold text-text-dark">River Name</label>
+              <label className="text-[0.85rem] font-semibold text-text-dark">Display name</label>
               <input
                 className="px-3.5 py-[10px] bg-white border-[1.5px] border-black/10 rounded-lg text-[0.9rem] text-text-dark outline-none transition-[border-color,box-shadow] duration-150 focus:border-accent focus:shadow-[0_0_0_3px_rgba(26,158,122,0.1)]"
-                value={editValues.riverName}
-                onChange={(e) => setEditValues((v) => ({ ...v, riverName: e.target.value }))}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[0.85rem] font-semibold text-text-dark">Date</label>
-              <input
-                type="date"
-                className="px-3.5 py-[10px] bg-white border-[1.5px] border-black/10 rounded-lg text-[0.9rem] text-text-dark outline-none transition-[border-color,box-shadow] duration-150 focus:border-accent focus:shadow-[0_0_0_3px_rgba(26,158,122,0.1)]"
-                value={editValues.date}
-                onChange={(e) => setEditValues((v) => ({ ...v, date: e.target.value }))}
-              />
-            </div>
+            <p className="m-0 text-[0.8rem] text-text-muted">Original file: {selected.originalFilename}</p>
           </div>
+          {actionError && <p className="text-danger m-0 mt-3 text-[0.85rem]">{actionError}</p>}
         </Modal>
       )}
     </div>
