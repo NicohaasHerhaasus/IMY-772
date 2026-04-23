@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { MapAttachmentService, normalizeCoord } from '../../../application/services/map-attachment.service';
+import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 
 function parseCoord(raw: unknown, label: string): number {
@@ -15,7 +16,10 @@ function parseCoord(raw: unknown, label: string): number {
 }
 
 export class MapAttachmentController {
-  constructor(private readonly mapAttachmentService: MapAttachmentService) {}
+  constructor(
+    private readonly mapAttachmentService: MapAttachmentService,
+    private readonly uploadedDatafileService: UploadedDatafileService,
+  ) {}
 
   listMarkers = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -73,6 +77,13 @@ export class MapAttachmentController {
         originalFilename: req.file.originalname || 'upload.bin',
         mimeType,
         fileBuffer: req.file.buffer,
+        uploadedBy: userId,
+      });
+      await this.uploadedDatafileService.createMapPinRecord({
+        sourceRefId: result.id,
+        displayName: displayRaw,
+        originalFilename: req.file.originalname || 'upload.bin',
+        mimeType,
         uploadedBy: userId,
       });
 
