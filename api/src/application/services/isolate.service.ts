@@ -40,41 +40,37 @@ export class IsolateService {
         i.n50_value AS "n50Value",
         i.contigs AS "contigs",
         COALESCE(
-          jsonb_agg(
-            DISTINCT jsonb_build_object(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
               'id', g.id,
               'geneName', g.gene_name,
               'identityPercentage', g.identity_percentage,
               'overlapPercentage', g.overlap_percentage,
               'accessionId', g.accession_id
             )
-          ) FILTER (WHERE g.id IS NOT NULL),
+          ) FROM isolate_genotypes g WHERE g.isolate_id = i.id),
           '[]'::jsonb
         ) AS "genotypes",
         COALESCE(
-          jsonb_agg(
-            DISTINCT jsonb_build_object(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
               'id', p.id,
               'antibioticName', p.antibiotic_name
             )
-          ) FILTER (WHERE p.id IS NOT NULL),
+          ) FROM isolate_phenotypes p WHERE p.isolate_id = i.id),
           '[]'::jsonb
         ) AS "phenotypes",
         COALESCE(
-          jsonb_agg(
-            DISTINCT jsonb_build_object(
+          (SELECT jsonb_agg(
+            jsonb_build_object(
               'id', pl.id,
               'plasmidName', pl.plasmid_name,
               'identityPercentage', pl.identity_percentage
             )
-          ) FILTER (WHERE pl.id IS NOT NULL),
+          ) FROM isolate_plasmids pl WHERE pl.isolate_id = i.id),
           '[]'::jsonb
         ) AS "plasmids"
       FROM isolates i
-      LEFT JOIN isolate_genotypes g ON g.isolate_id = i.id
-      LEFT JOIN isolate_phenotypes p ON p.isolate_id = i.id
-      LEFT JOIN isolate_plasmids pl ON pl.isolate_id = i.id
-      GROUP BY i.id
       ORDER BY i.isolate_name ASC;
     `);
 

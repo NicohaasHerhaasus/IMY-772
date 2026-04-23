@@ -7,6 +7,7 @@ import uploadRoutes from './presentation/http/routes/upload.routes';
 import isolatesRoutes from './presentation/http/routes/isolates.routes';
 import sampleUploadRoutes from './presentation/http/routes/sample-upload.routes';
 import mapAttachmentRoutes from './presentation/http/routes/map-attachment.routes';
+import datasetsRoutes from './presentation/http/routes/datasets.routes';
 import chatbotRoutes from './presentation/http/routes/chatbot.routes';
 import { errorMiddleware } from './presentation/http/middleware/error.middleware';
 
@@ -27,6 +28,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/isolates', isolatesRoutes);
 app.use('/api/samples', sampleUploadRoutes);
 app.use('/api/map-attachments', mapAttachmentRoutes);
+app.use('/api/datasets', datasetsRoutes);
 app.use('/api/admin/chatbot', chatbotRoutes);
 
 app.use(errorMiddleware);

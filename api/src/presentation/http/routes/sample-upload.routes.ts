@@ -4,6 +4,8 @@ import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { SampleUploadService } from '../../../application/services/sample-upload.service';
 import { SampleUploadController } from '../controllers/sample-upload.controller';
+import { DatasetsService } from '../../../application/services/datasets.service';
+import { PostgresDatasetsRepository } from '../../../infrastructure/persistence/postgres-datasets.repository';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -27,7 +29,9 @@ const upload = multer({
 
 const pool = getPool();
 const sampleUploadService = new SampleUploadService(pool);
-const sampleUploadController = new SampleUploadController(sampleUploadService);
+const datasetsRepository = new PostgresDatasetsRepository(pool);
+const datasetsService = new DatasetsService(datasetsRepository);
+const sampleUploadController = new SampleUploadController(sampleUploadService, datasetsService);
 
 router.post('/validate', authMiddleware, upload.single('file'), sampleUploadController.validateWorkbook);
 router.post('/upload', authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
