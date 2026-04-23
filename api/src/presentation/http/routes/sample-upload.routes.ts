@@ -3,6 +3,7 @@ import multer from 'multer';
 import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { SampleUploadService } from '../../../application/services/sample-upload.service';
+import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { SampleUploadController } from '../controllers/sample-upload.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -27,7 +28,8 @@ const upload = multer({
 
 const pool = getPool();
 const sampleUploadService = new SampleUploadService(pool);
-const sampleUploadController = new SampleUploadController(sampleUploadService);
+const uploadedDatafileService = new UploadedDatafileService(pool);
+const sampleUploadController = new SampleUploadController(sampleUploadService, uploadedDatafileService);
 
 router.post('/validate', authMiddleware, upload.single('file'), sampleUploadController.validateWorkbook);
 router.post('/upload', authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);

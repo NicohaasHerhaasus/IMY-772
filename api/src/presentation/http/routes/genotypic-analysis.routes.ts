@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { getPool } from '../../../infrastructure/database/pool';
 import { GenotypicAnalysisService } from '../../../application/services/genotypic-analysis.service';
+import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { GenotypicAnalysisController } from '../controllers/genotypic-analysis.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { ValidationError } from '../../../application/errors/app.errors';
@@ -25,7 +26,11 @@ const uploadXlsx = multer({
 
 const pool = getPool();
 const genotypicAnalysisService = new GenotypicAnalysisService(pool);
-const genotypicAnalysisController = new GenotypicAnalysisController(genotypicAnalysisService);
+const uploadedDatafileService = new UploadedDatafileService(pool);
+const genotypicAnalysisController = new GenotypicAnalysisController(
+  genotypicAnalysisService,
+  uploadedDatafileService,
+);
 
 router.post('/upload-tsv', authMiddleware, genotypicAnalysisController.uploadTsvRows);
 router.post(

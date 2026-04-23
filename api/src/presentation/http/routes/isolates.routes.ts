@@ -10,6 +10,7 @@ const isolateService = new IsolateService(pool);
 const isolatesController = new IsolatesController(isolateService);
 
 router.get('/', isolatesController.listAll);
+router.get('/export', isolatesController.exportAll);
 
 export default router;
 
