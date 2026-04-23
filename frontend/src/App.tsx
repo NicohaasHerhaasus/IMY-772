@@ -12,7 +12,6 @@ import RiverFlows from "./pages/riverflows/RiverFlows";
 import DataExplorer from "./pages/DataExplorer";
 import IsolateExplorerPage from "./pages/IsolateExplorerPage";
 import AdminLayout from "./layouts/AdminLayout/AdminLayout";
-import ExportDataFiles from "./pages/admin/ExportDataFiles/ExportDataFiles";
 import UploadDatafiles from "./pages/admin/UploadDataFiles/UploadDataFiles";
 import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
 import MapLocationUpload from "./pages/admin/MapLocationUpload/MapLocationUpload";
@@ -42,7 +41,6 @@ function App() {
               <Route index element={<Navigate to="upload" />} />
               <Route path="upload" element={<UploadDatafiles />} />
               <Route path="map-upload" element={<MapLocationUpload />} />
-              <Route path="export" element={<ExportDataFiles />} />
               <Route path="manage" element={<ManageDatafiles />} />
               <Route path="chatbot" element={<Chatbot />} />
             </Route>
