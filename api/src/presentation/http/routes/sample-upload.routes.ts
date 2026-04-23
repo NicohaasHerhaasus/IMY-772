@@ -31,9 +31,15 @@ const pool = getPool();
 const sampleUploadService = new SampleUploadService(pool);
 const datasetsRepository = new PostgresDatasetsRepository(pool);
 const datasetsService = new DatasetsService(datasetsRepository);
-const sampleUploadController = new SampleUploadController(sampleUploadService, datasetsService);
-
+const sampleUploadController = new SampleUploadController(sampleUploadService, datasetsService, pool);
+// ── Upload routes (POST) ───────────────────────────────────────────────────────
 router.post('/validate', authMiddleware, upload.single('file'), sampleUploadController.validateWorkbook);
-router.post('/upload', authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
+router.post('/upload',   authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
+ 
+// ── Query routes (GET) ────────────────────────────────────────────────────────
+// GET /api/samples          — list all, supports ?region= ?organism= ?q= ?limit= ?offset=
+// GET /api/samples/:id      — single sample by UUID
+router.get('/',    authMiddleware, sampleUploadController.listSamples);
+router.get('/:id', authMiddleware, sampleUploadController.getSample);
 
 export default router;
