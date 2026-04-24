@@ -6,6 +6,7 @@ import genotypicAnalysisRoutes from './presentation/http/routes/genotypic-analys
 import uploadRoutes from './presentation/http/routes/upload.routes';
 import isolatesRoutes from './presentation/http/routes/isolates.routes';
 import sampleUploadRoutes from './presentation/http/routes/sample-upload.routes';
+import samplesRoutes from './presentation/http/routes/Samples.routes';
 import mapAttachmentRoutes from './presentation/http/routes/map-attachment.routes';
 import datafilesRoutes from './presentation/http/routes/datafiles.routes';
 import datasetsRoutes from './presentation/http/routes/datasets.routes';
@@ -30,6 +31,7 @@ app.use('/api/genotypic-analysis', genotypicAnalysisRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/isolates', isolatesRoutes);
 app.use('/api/samples', sampleUploadRoutes);
+app.use('/api/samples', samplesRoutes);
 app.use('/api/map-attachments', mapAttachmentRoutes);
 app.use('/api/datafiles', datafilesRoutes);
 app.use('/api/datasets', datasetsRoutes);

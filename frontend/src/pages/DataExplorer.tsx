@@ -120,22 +120,46 @@ export default function DataExplorer() {
           filtered.map((file) => (
             <Card key={file.id} className="explorer-file-card">
               <div className="explorer-file-top">
-                <h3 className="explorer-file-title">{file.displayName}</h3>
+                <div className="explorer-file-heading">
+                  <span className="explorer-file-icon" aria-hidden="true">
+                    {file.sourceType === "map_pin" ? "P" : "F"}
+                  </span>
+                  <h3 className="explorer-file-title">{file.displayName}</h3>
+                </div>
                 <span className="explorer-pill">
-                  {file.sourceType === "map_pin" ? "Map pin" : "Structured"}
+                  {file.sourceType === "map_pin" ? "Map pin" : "Structured upload"}
                 </span>
               </div>
-              <p className="explorer-file-meta">Original: {file.originalFilename}</p>
-              <p className="explorer-file-meta">Type: {file.mimeType}</p>
-              <p className="explorer-file-meta">Channel: {file.uploadChannel}</p>
-              {file.latitude !== null && file.longitude !== null && (
+              <div className="explorer-file-meta-grid">
                 <p className="explorer-file-meta">
-                  Coordinates: {file.latitude.toFixed(5)}, {file.longitude.toFixed(5)}
+                  <span className="explorer-meta-label">Original</span>
+                  <span className="explorer-meta-value">{file.originalFilename}</span>
+                </p>
+                <p className="explorer-file-meta">
+                  <span className="explorer-meta-label">Type</span>
+                  <span className="explorer-meta-value">{file.mimeType}</span>
+                </p>
+                <p className="explorer-file-meta">
+                  <span className="explorer-meta-label">Channel</span>
+                  <span className="explorer-meta-value">{file.uploadChannel}</span>
+                </p>
+              </div>
+              {file.latitude !== null && file.longitude !== null && (
+                <p className="explorer-file-meta explorer-file-meta--coords">
+                  <span className="explorer-meta-label">Coordinates</span>
+                  <span className="explorer-meta-value">
+                    {file.latitude.toFixed(5)}, {file.longitude.toFixed(5)}
+                  </span>
                 </p>
               )}
-              <p className="explorer-file-meta">Uploaded: {formatDate(file.createdAt)}</p>
+              <p className="explorer-file-meta">
+                <span className="explorer-meta-label">Uploaded</span>
+                <span className="explorer-meta-value">{formatDate(file.createdAt)}</span>
+              </p>
               <div className="explorer-file-actions">
-                <Button
+                <button
+                  type="button"
+                  className="explorer-download-btn"
                   onClick={() => void handleDownload(file)}
                   disabled={!file.downloadable || downloadingId === file.id}
                 >
@@ -144,7 +168,7 @@ export default function DataExplorer() {
                     : downloadingId === file.id
                       ? "Downloading..."
                       : "Export / Download"}
-                </Button>
+                </button>
               </div>
             </Card>
           ))
