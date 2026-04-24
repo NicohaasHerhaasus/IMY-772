@@ -105,9 +105,9 @@ function chipMatchesType(chip: FilterChip, type: DatasetType): boolean {
 }
 
 function fileIconStyle(type: DatasetType) {
-  if (type === "amrfinder-plus-tsv") return { bg: "#E6F1FB", stroke: "#185FA5" };
-  if (type === "staramr") return { bg: "#EAF3DE", stroke: "#3B6D11" };
-  return { bg: "#FAEEDA", stroke: "#854F0B" };
+  if (type === "amrfinder-plus-tsv") return { bg: "#0c2d45", stroke: "#60a5fa" };
+  if (type === "staramr")            return { bg: "#0a2d1a", stroke: "#4ade80" };
+  return                                    { bg: "#2a1f0a", stroke: "#fbbf24" };
 }
 
 function fmtDate(iso: string) {
@@ -676,17 +676,17 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
   return (
     <>
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        .file-row-hover:hover { background: #f8f8f5 !important; }
-        .icon-btn-hover:hover { background: #f5f5f0 !important; }
-        .pg-btn-hover:hover:not(:disabled) { background: #f5f5f0 !important; }
-        .upload-btn-hover:hover { background: #e6f7f0 !important; }
-        .gt tbody tr:hover td { background: #f8f8f5; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
-        button:disabled { opacity: 0.4; cursor: not-allowed; }
-      `}</style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .file-row-hover:hover { background: #0a2a35 !important; }
+  .icon-btn-hover:hover { background: #f5f5f0 !important; }
+  .pg-btn-hover:hover:not(:disabled) { background: #f5f5f0 !important; }
+  .upload-btn-hover:hover { background: #0a2a35 !important; }
+  .gt tbody tr:hover td { background: #f8f8f5; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: #1e3545; border-radius: 3px; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+`}</style>
 
       {isAdmin && showModal && (
         <UploadModal
@@ -744,12 +744,27 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
 
           {/* Refresh button */}
           <button
-            className="upload-btn-hover"
-            style={{ ...S.uploadBtn, color: "#666", background: "#f5f5f0", borderColor: "#e0e0db", marginTop: 0 }}
-            onClick={fetchDatasets}
-          >
-            <IconRefresh /> Refresh
-          </button>
+  className="upload-btn-hover"
+  style={{
+    margin: "6px 12px 4px",
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 10,
+    fontWeight: 500,
+    color: "#4a7a8a",
+    background: "transparent",
+    border: "0.5px solid #1e3545",
+    borderRadius: 7,
+    padding: "5px 10px",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    width: "calc(100% - 24px)",
+  }}
+  onClick={fetchDatasets}
+>
+  <IconRefresh /> Refresh datasets
+</button>
 
           {/* File list */}
           <div style={{ flex: 1, overflowY: "auto" }}>
@@ -791,7 +806,7 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
                               <div
                                 style={{
                                   ...S.fileName,
-                                  ...(isSel ? { color: "#085041" } : {}),
+                                  ...(isSel ? { color: "#3eb99a" } : {}),
                                 }}
                               >
                                 {file.name}
@@ -803,7 +818,6 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
                                 {fmtDate(file.uploadedAt)}
                               </div>
                             </div>
-                            <StatusBadge status={file.status} />
                           </div>
                         );
                       })}
@@ -968,34 +982,122 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
 const S: Record<string, React.CSSProperties> = {
   pageBody: {
     display: "flex",
-    height: "100%",
+    height: "100vh",
     overflow: "hidden",
-    background: "#f5f5f0",
+    background: "#f0f1ea",
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
 
   // Left panel
-  leftPanel: { width: 268, minWidth: 268, background: "#fff", borderRight: "1px solid #e5e5e0", display: "flex", flexDirection: "column", overflow: "hidden" },
-  lpHead: { padding: "16px 16px 10px", borderBottom: "1px solid #f0f0eb" },
-  lpTitle: { fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 2 },
-  lpSub: { fontSize: 10, color: "#888" },
-  lpSearch: { padding: "10px 12px", borderBottom: "1px solid #f0f0eb" },
-  lpSearchBox: { display: "flex", alignItems: "center", gap: 7, background: "#f5f5f0", border: "1px solid #e5e5e0", borderRadius: 8, padding: "7px 10px" },
-  lpSearchInput: { border: "none", background: "transparent", fontSize: 11, color: "#1a1a1a", outline: "none", flex: 1, fontFamily: "inherit" },
-  lpFilterRow: { display: "flex", gap: 4, padding: "8px 12px", borderBottom: "1px solid #f0f0eb", flexWrap: "wrap" },
-  lpChip: { fontSize: 9, fontWeight: 600, padding: "3px 8px", borderRadius: 99, border: "1px solid #e0e0db", color: "#888", cursor: "pointer", background: "transparent", fontFamily: "inherit" },
-  lpChipActive: { background: "#E1F5EE", borderColor: "#5DCAA5", color: "#085041" },
-  lpSectionHd: { fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", color: "#bbb", textTransform: "uppercase", padding: "10px 14px 4px" },
-  uploadBtn: { margin: "8px 12px 4px", display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 600, color: "#0F6E56", background: "#f0faf5", border: "1px solid #9FE1CB", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "inherit" },
-  fileRow: { display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", cursor: "pointer", borderLeft: "3px solid transparent", transition: "background 0.1s" },
-  fileRowSelected: { background: "#E1F5EE", borderLeftColor: "#1D9E75" },
-  fileIcon: { width: 30, height: 30, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  fileInfo: { flex: 1, minWidth: 0 },
-  fileName: { fontSize: 11, fontWeight: 500, color: "#1a1a1a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  fileMeta: { fontSize: 9, color: "#999", marginTop: 1 },
-  fbadge: { fontSize: 8, fontWeight: 600, padding: "2px 6px", borderRadius: 3, flexShrink: 0, textTransform: "lowercase", display: "flex", alignItems: "center", gap: 3 },
-  lpFooter: { padding: "10px 14px", borderTop: "1px solid #f0f0eb" },
-  lpFooterStat: { fontSize: 10, color: "#999" },
+  leftPanel: { width: 268, minWidth: 268, background: "#0d1f2d", borderRight: "1px solid #e5e5e0", display: "flex", flexDirection: "column", overflow: "hidden" },
+  lpHead: {
+  padding: "16px 16px 10px",
+  borderBottom: "1px solid #1e3545",   // ← was #f0f0eb
+},
+lpTitle: {
+  fontSize: 12,
+  fontWeight: 600,
+  color: "#ffffff",                     // ← was #1a1a1a
+  marginBottom: 2,
+},
+lpSub: {
+  fontSize: 10,
+  color: "#4a7a8a",                     // ← was #888
+},
+lpSearch: {
+  padding: "10px 12px",
+  borderBottom: "1px solid #1e3545",   // ← was #f0f0eb
+},
+lpSearchBox: {
+  display: "flex",
+  alignItems: "center",
+  gap: 7,
+  background: "#122a3a",               // ← was #f5f5f0
+  border: "1px solid #1e3545",         // ← was #e5e5e0
+  borderRadius: 8,
+  padding: "7px 10px",
+},
+lpSearchInput: {
+  border: "none",
+  background: "transparent",
+  fontSize: 11,
+  color: "#ffffff",                     // ← was #1a1a1a
+  outline: "none",
+  flex: 1,
+  fontFamily: "inherit",
+},
+lpFilterRow: {
+  display: "flex",
+  gap: 4,
+  padding: "8px 12px",
+  borderBottom: "1px solid #1e3545",   // ← was #f0f0eb
+  flexWrap: "wrap",
+},
+lpChip: {
+  fontSize: 9,
+  fontWeight: 600,
+  padding: "3px 8px",
+  borderRadius: 99,
+  border: "1px solid #1e3545",         // ← was #e0e0db
+  color: "#4a7a8a",                    // ← was #888
+  cursor: "pointer",
+  background: "transparent",
+  fontFamily: "inherit",
+},
+lpSectionHd: {
+  fontSize: 9,
+  fontWeight: 600,
+  letterSpacing: "0.08em",
+  color: "#5a9aaa",                    // ← was #bbb
+  textTransform: "uppercase",
+  padding: "10px 14px 4px",
+},
+fileName: {
+  fontSize: 11,
+  fontWeight: 500,
+  color: "#e0e8ee",                    // ← was #1a1a1a
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+},
+fileMeta: {
+  fontSize: 9,
+  color: "#4a7a8a",                    // ← was #999
+  marginTop: 1,
+},
+lpFooter: {
+  padding: "10px 14px",
+  borderTop: "1px solid #1e3545",     // ← was #f0f0eb
+},
+lpFooterStat: {
+  fontSize: 10,
+  color: "#4a7a8a",                   // ← was #999
+},
+fileRowSelected: {
+  background: "#0a2a35",              // ← was #E1F5EE
+  borderLeftColor: "#3eb99a",
+},
+fileRow: {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "8px 12px",
+  cursor: "pointer",
+  borderLeft: "3px solid transparent",
+  transition: "background 0.1s",
+  background: "transparent",   // ← add this so rows don't inherit light bg
+},
+
+fileIcon: {
+  width: 30,
+  height: 30,
+  borderRadius: 7,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  background: "#122a3a",       // ← override the per-type colour on dark bg
+},
 
   // Right panel
   rightPanel: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0, background: "#f5f5f0" },

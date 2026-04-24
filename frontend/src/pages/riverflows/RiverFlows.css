@@ -6,7 +6,7 @@
   display: flex;
   height: 100%;
   overflow: hidden;
-  background: #edeae3;
+  background: #f0f1ea;
   font-family: 'DM Sans', sans-serif;
 }
 
@@ -14,7 +14,7 @@
 .sd-sidebar {
   width: 280px;
   min-width: 280px;
-  background: #1a2e3a;
+  background: #0f1f2e;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -230,10 +230,10 @@
   text-align: center;
   flex: 1;
 }
-.sd-tile--teal  { background: #1a4a5a; }
-.sd-tile--amber { background: #1a4a5a; }
-.sd-tile--dark  { background: #1a3a4a; }
-.sd-tile--teal2 { background: #1a4a4a; }
+.sd-tile--teal  { background: #0f1f2e; }
+.sd-tile--amber { background: #0f1f2e; }
+.sd-tile--dark  { background: #0f1f2e; }
+.sd-tile--teal2 { background: #0f1f2e; }
 
 .sd-tile-val {
   font-size: 22px;
@@ -242,8 +242,8 @@
 }
 .sd-tile--teal  .sd-tile-val { color: #3eb99a; }
 .sd-tile--amber .sd-tile-val { color: #f0a500; }
-.sd-tile--dark  .sd-tile-val { color: #3eb99a; }
-.sd-tile--teal2 .sd-tile-val { color: #3eb99a; }
+.sd-tile--dark  .sd-tile-val { color: #d5ee34; }
+.sd-tile--teal2 .sd-tile-val { color: hsl(111, 63%, 50%); }
 
 .sd-tile-lbl {
   font-size: 9px;
