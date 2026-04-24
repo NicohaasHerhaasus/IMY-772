@@ -481,7 +481,6 @@
 //     </div>
 //   );
 // }
-
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import './DataExplorer.css';
@@ -583,7 +582,6 @@ async function triggerDownload(
   endpoint: '/export/csv' | '/export/xlsx',
   filters: Filters,
   filename: string,
-  mimeType: string,
 ) {
   const headers = await getAuthHeaders();
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -688,6 +686,74 @@ function validate(f: Filters): ValidationErrors {
   return errs;
 }
 
+// ── Example query (used in empty state) ──────────────────────────────────────
+
+const EXAMPLE_QUERY: Filters = {
+  geo: 'South Africa: Gauteng',
+  dateFrom: '2024-01-01',
+  dateTo: '2024-12-31',
+  collectedBy: '',
+  amrGene: "aph(3')-Ia",
+  sir: 'kanamycin',
+  organism: 'Escherichia coli',
+  source: '',
+  amrClass: 'AMINOGLYCOSIDE',
+  amrSubclass: '',
+};
+
+interface ExampleQueryCardProps {
+  onUseExample: (f: Filters) => void;
+}
+
+function ExampleQueryCard({ onUseExample }: ExampleQueryCardProps) {
+  const rows: { label: string; value: string; color: 'green' | 'blue' | 'amber' }[] = [
+    { label: 'Geographic location', value: 'South Africa: Gauteng',  color: 'green' },
+    { label: 'Collection date',     value: '2024-01-01 → 2024-12-31', color: 'green' },
+    { label: "AMR resistance gene", value: "aph(3')-Ia",             color: 'green' },
+    { label: 'Predicted SIR',       value: 'kanamycin',              color: 'green' },
+    { label: 'Organism',            value: 'Escherichia coli',        color: 'blue'  },
+    { label: 'AMR class',           value: 'AMINOGLYCOSIDE',          color: 'amber' },
+  ];
+
+  const dotBg: Record<string, string> = {
+    green: '#22c55e',
+    blue:  '#3b82f6',
+    amber: '#eab308',
+  };
+
+  return (
+    <div className="de-example-card">
+      <div className="de-example-header">
+        <div className="de-example-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+          </svg>
+        </div>
+        <div>
+          <div className="de-example-title">Example query</div>
+          <div className="de-example-sub">
+            E. coli aminoglycoside resistance · Gauteng · 2024
+          </div>
+        </div>
+      </div>
+
+      <div className="de-example-filters">
+        {rows.map((r) => (
+          <div key={r.label} className="de-example-row">
+            <span
+              className="de-example-dot"
+              style={{ background: dotBg[r.color] }}
+            />
+            <span className="de-example-key">{r.label}</span>
+            <span className={`de-example-val de-example-val--${r.color}`}>{r.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function DataExplorer() {
@@ -708,6 +774,15 @@ export default function DataExplorer() {
 
   // Persist last valid filters used for export
   const lastFiltersRef = useRef<Filters>(EMPTY_FILTERS);
+
+  // Load example query into filter state
+  const loadExample = useCallback((f: Filters) => {
+    setFilters(f);
+    setValidationErrors({});
+    setQueryErrors([]);
+    setResult(null);
+    setHasQueried(false);
+  }, []);
 
   // ── Load dropdown options on mount ────────────────────────────────────────
 
@@ -799,7 +874,6 @@ export default function DataExplorer() {
         '/export/csv',
         lastFiltersRef.current,
         `query_results_${Date.now()}.csv`,
-        'text/csv',
       );
     } catch (err) {
       setExportError(err instanceof Error ? err.message : 'CSV export failed.');
@@ -816,7 +890,6 @@ export default function DataExplorer() {
         '/export/xlsx',
         lastFiltersRef.current,
         `query_results_${Date.now()}.xlsx`,
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
     } catch (err) {
       setExportError(err instanceof Error ? err.message : 'XLSX export failed.');
@@ -858,26 +931,18 @@ export default function DataExplorer() {
 
   const canExport = hasQueried && result !== null && result.rows.length > 0 && !queryLoading;
 
+  // ── Example queries ───────────────────────────────────────────────────────
+  // NOTE: EXAMPLE_QUERIES was removed as it's no longer used; use loadExample callback instead
+
+
+  // NOTE: loadAndRun was removed as it's no longer used; use loadExample callback instead
+
   return (
     <div className="de-page">
       {/* ══ SIDEBAR ══ */}
       <aside className="de-sidebar">
         <div className="de-sidebar-head">
-          <div className="de-sidebar-title">Query builder</div>
-          <div className="de-legend">
-            <div className="de-legend-item">
-              <span className="de-dot de-dot--green" />
-              Mandatory
-            </div>
-            <div className="de-legend-item">
-              <span className="de-dot de-dot--blue" />
-              At least one required
-            </div>
-            <div className="de-legend-item">
-              <span className="de-dot de-dot--amber" />
-              Optional
-            </div>
-          </div>
+          <div className="de-sidebar-title" style={{ fontFamily: "'Syne', sans-serif" }}>Query builder</div>            
         </div>
 
         <div className="de-sidebar-body">
@@ -1040,7 +1105,7 @@ export default function DataExplorer() {
         {/* Top bar */}
         <div className="de-topbar">
           <div className="de-topbar-left">
-            <div className="de-page-title">Data explorer</div>
+            <div className="de-page-title" style={{ fontFamily: "'Syne', sans-serif" }}>DATA EXPLORER</div>
             {result !== null && (
               <div className="de-page-meta">
                 {result.isolatesReturned} record
@@ -1170,26 +1235,31 @@ export default function DataExplorer() {
 
           {/* Empty state: no query run yet */}
           {!hasQueried && !queryLoading && (
-            <div className="de-empty">
-              <div className="de-empty-icon">
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="M21 21l-4.35-4.35" />
-                </svg>
+            <div className="de-empty de-empty--start">
+              <div className="de-empty-top">
+                <div className="de-empty-icon">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="M21 21l-4.35-4.35" />
+                  </svg>
+                </div>
+                <div className="de-empty-title">No query run yet</div>
+                <div className="de-empty-sub">
+                  Set your filters on the left and click Generate →
+                  <br />
+                  Or load the example below to get started immediately.
+                </div>
               </div>
-              <div className="de-empty-title">No query run yet</div>
-              <div className="de-empty-sub">
-                Set your filters on the left and click Generate →
-              </div>
+              <ExampleQueryCard onUseExample={loadExample} />
             </div>
           )}
 
