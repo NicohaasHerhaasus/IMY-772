@@ -1,0 +1,377 @@
+/* src/pages/SampleDetail/SampleDetail.css */
+/* Dark navy sidebar + warm beige/mint right panel — matches Figma design. */
+
+/* ── Page shell ───────────────────────────────────────────────────────────── */
+.sd-page {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: #f0f1ea;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sd-sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: #0f1f2e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: width 0.25s ease, min-width 0.25s ease;
+  flex-shrink: 0;
+}
+.sd-sidebar--collapsed {
+  width: 38px;
+  min-width: 38px;
+}
+
+/* Search */
+.sd-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 14px 14px;
+  background: #243a4a;
+  border: 1px solid #2e4a5a;
+  border-radius: 99px;
+  padding: 8px 14px;
+}
+.sd-search-inp {
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #e8f0f4;
+  outline: none;
+  flex: 1;
+}
+.sd-search-inp::placeholder { color: #4a7a8a; }
+
+/* Section label */
+.sd-sb-section {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: #4a7a8a;
+  text-transform: uppercase;
+  padding: 0 16px 4px;
+}
+
+/* Divider */
+.sd-sb-divider {
+  height: 1px;
+  background: #243a4a;
+  margin: 0 16px 4px;
+}
+
+/* Sidebar items (regions / organisms) */
+.sd-sb-item {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #c8dae4;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.sd-sb-item:hover { background: #243a4a; }
+.sd-sb-item--active {
+  color: #3eb99a;
+  border-left-color: #1D9E75;
+  background: #1d3a4a;
+}
+
+/* Filtered sample list items */
+.sd-sb-sample {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.sd-sb-sample:hover { background: #243a4a; }
+.sd-sb-sample--active {
+  background: #1d3a4a;
+  border-left-color: #1D9E75;
+}
+.sd-sb-sample-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #c8dae4;
+}
+.sd-sb-sample-meta {
+  font-size: 10px;
+  color: #4a7a8a;
+  margin-top: 1px;
+}
+
+/* Collapse button */
+.sd-collapse-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 0;
+  transform: translateX(50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #1a2e3a;
+  border: 1px solid #2e4a5a;
+  color: #4a7a8a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.15s, border-color 0.15s;
+}
+.sd-collapse-btn:hover { color: #3eb99a; border-color: #3eb99a; }
+
+/* ── Main panel ──────────────────────────────────────────────────────────── */
+.sd-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #d5d2ca transparent;
+}
+.sd-main::-webkit-scrollbar { width: 5px; }
+.sd-main::-webkit-scrollbar-thumb { background: #d5d2ca; border-radius: 3px; }
+
+/* Header */
+.sd-header { margin-bottom: 20px; }
+.sd-heading {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1a2e3a;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+.sd-coords {
+  font-size: 13px;
+  color: #5a7a8a;
+}
+
+/* Two-column content grid */
+.sd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* Left and right columns */
+.sd-left  { display: flex; flex-direction: column; gap: 14px; }
+.sd-right { display: flex; flex-direction: column; gap: 14px; }
+
+/* Top row inside left column (info card + tiles side by side) */
+.sd-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.sd-card {
+  background: #dde8e0;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.sd-card-title {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #4a7a6a;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Info card rows */
+.sd-info-card { padding: 14px 16px; }
+.sd-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 9px;
+}
+.sd-info-row:last-child { margin-bottom: 0; }
+.sd-info-key {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  color: #5a8a74;
+  text-transform: uppercase;
+}
+.sd-info-val {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a2e3a;
+}
+.sd-mono { font-family: 'DM Mono', monospace; font-size: 11px; }
+
+/* ── Stat tiles 2×2 ────────────────────────────────────────────────────────── */
+.sd-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.sd-tile {
+  border-radius: 12px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  flex: 1;
+}
+.sd-tile--teal  { background: #0f1f2e; }
+.sd-tile--amber { background: #0f1f2e; }
+.sd-tile--dark  { background: #0f1f2e; }
+.sd-tile--teal2 { background: #0f1f2e; }
+
+.sd-tile-val {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.sd-tile--teal  .sd-tile-val { color: #3eb99a; }
+.sd-tile--amber .sd-tile-val { color: #f0a500; }
+.sd-tile--dark  .sd-tile-val { color: #d5ee34; }
+.sd-tile--teal2 .sd-tile-val { color: hsl(111, 63%, 50%); }
+
+.sd-tile-lbl {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #7aaaba;
+  line-height: 1.3;
+}
+
+/* ── Activity safety (right column) ── */
+.rf-activity-col {}
+.rf-activity-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #8aa0b4;
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.rf-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.rf-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.rf-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 14px;
+  border-right: 1px solid #1a3a54;
+}
+.rf-stat:first-child { padding-left: 0; }
+.rf-stat:last-child  { border-right: none; }
+.rf-stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rf-stat-label { font-size: 11px; color: #5a7a94; }
+
+/* ── Resistance bar ── */
+.rf-resist-block {}
+.rf-resist-label { font-size: 11px; color: #5a7a94; margin-bottom: 7px; }
+.rf-resist-row   { display: flex; align-items: center; gap: 10px; }
+.rf-resist-track {
+  flex: 1;
+  height: 10px;
+  background: #1a3a2a;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sd-env-fill {
+  height: 10px;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+.sd-env-value {
+  font-size: 11px;
+  font-weight: 500;
+  color: #1a2e3a;
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Map ───────────────────────────────────────────────────────────────────── */
+.sd-map-card { padding: 14px 16px; }
+
+.sd-map-container {
+  width: 100%;
+  height: 240px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.sd-map-meta {
+  font-size: 10px;
+  color: #5a8a74;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+/* Fix Leaflet popup z-index inside the card */
+.sd-map-container .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Gene / SIR pills ─────────────────────────────────────────────────────── */
+.sd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.sd-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 400;
+  color: #1a4a3a;
+  background: transparent;
+  border: 1px solid #4a9a7a;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.sd-pill:hover { background: rgba(62,185,154,0.12); }
+
+/* ── Responsive: stack columns on narrow viewports ─────────────────────────── */
+@media (max-width: 1100px) {
+  .sd-grid     { grid-template-columns: 1fr; }
+  .sd-top-row  { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+  .sd-top-row { grid-template-columns: 1fr; }
+  .sd-tiles   { flex-direction: column; }
+}

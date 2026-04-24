@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+@theme {
+  /* Brand colors */
+  --color-primary: #0d3d3d;
+  --color-primary-dark: #0a2e2e;
+  --color-accent: #1a9e7a;
+  --color-accent-dark: #158a6a;
+  --color-accent-muted: rgba(26, 158, 122, 0.1);
+  --color-mint: #d6ece4;
+  --color-mint-light: #e8f5f0;
+  --color-mint-lighter: #f0faf6;
+  --color-cream: #F1F3E8;
+
+  /* Sidebar */
+  --color-sidebar: #0A2942;
+  --color-sidebar-card: #004F52;
+  --color-sidebar-amber: #FFC267;
+
+  /* Text */
+  --color-text-dark: #1a2e3b;
+  --color-text-muted: #6b7280;
+  --color-text-light: #9ca3af;
+
+  /* Semantic */
+  --color-danger: #dc2626;
+  --color-danger-dark: #b91c1c;
+  --color-required: #e53e3e;
+  --color-surface: #ffffff;
+
+  /* Animations */
+  --animate-dropdown-in: dropdown-in 140ms ease forwards;
+  --animate-fade-in: fade-in 200ms ease forwards;
+  --animate-row-in: row-in 300ms ease both;
+  --animate-overlay-in: overlay-in 150ms ease forwards;
+  --animate-modal-in: modal-in 180ms ease forwards;
+}
+
+/* =============================================
+   SHARED KEYFRAME ANIMATIONS
+   (previously duplicated across component files)
+   ============================================= */
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* =============================================
+   BASE
+   ============================================= */
+:root {
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

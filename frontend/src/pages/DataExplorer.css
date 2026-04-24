@@ -1,0 +1,207 @@
+.explorer-page {
+  padding: 2rem 1.5rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  background: #f5f7fb;
+  min-height: calc(100vh - 64px);
+}
+
+.explorer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.explorer-title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.explorer-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.explorer-upload-card {
+  max-width: 1080px;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.explorer-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.explorer-search {
+  border: 1px solid #cbd5e1;
+  border-radius: 11px;
+  background: #ffffff;
+  padding: 0.62rem 0.8rem;
+  font-size: 0.92rem;
+  color: #0f172a;
+  min-width: 300px;
+  flex: 1;
+}
+
+.explorer-search:focus {
+  outline: 2px solid #bfdbfe;
+  border-color: #60a5fa;
+}
+
+.explorer-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.explorer-banner {
+  margin: 0.8rem 0 0;
+  font-size: 0.86rem;
+  border-radius: 10px;
+  padding: 0.66rem 0.8rem;
+  border: 1px solid transparent;
+}
+
+.explorer-banner--error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.explorer-files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.explorer-file-card {
+  border: 1px solid #d8e1ef;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+  background: #ffffff;
+  padding: 1rem 1rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.explorer-file-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.explorer-file-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.explorer-file-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0c4a6e;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  flex-shrink: 0;
+}
+
+.explorer-file-title {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.explorer-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.56rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #ecfeff;
+  color: #155e75;
+  border: 1px solid #a5f3fc;
+  white-space: nowrap;
+}
+
+.explorer-file-meta-grid {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.explorer-file-meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 0.45rem;
+  align-items: start;
+}
+
+.explorer-meta-label {
+  font-size: 0.74rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.explorer-meta-value {
+  font-size: 0.84rem;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.explorer-file-meta--coords .explorer-meta-value {
+  font-family: "DM Mono", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.79rem;
+}
+
+.explorer-file-actions {
+  margin-top: 0.1rem;
+}
+
+.explorer-download-btn {
+  width: 100%;
+  border: none;
+  border-radius: 11px;
+  padding: 0.66rem 0.8rem;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.28);
+}
+
+.explorer-download-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 118, 110, 0.34);
+}
+
+.explorer-download-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
