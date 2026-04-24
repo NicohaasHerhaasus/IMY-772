@@ -390,7 +390,6 @@ function buildGroups(isolates: IsolateRow[]): Map<string, IsolateRow[]> {
   return new Map([...map.entries()].sort((a, b) => b[1].length - a[1].length));
 }
 
-const PLACEHOLDER_COORDS: Record<string, [number, number]> = {};
 const BASE_COORDS: [number, number][] = [
   [-25.7479, 28.2293], [-23.9045, 29.4688], [-25.8553, 25.6418], [-33.9249, 18.4241],
 ];
@@ -401,13 +400,10 @@ export default function AmrProfiles() {
 
   const groups = buildGroups(isolates);
   const groupKeys = Array.from(groups.keys());
-
-  // Assign stable placeholder coords to each group
-  groupKeys.forEach((k, i) => {
-    if (!PLACEHOLDER_COORDS[k]) {
-      PLACEHOLDER_COORDS[k] = BASE_COORDS[i % BASE_COORDS.length];
-    }
-  });
+  const placeholderCoords = groupKeys.reduce<Record<string, [number, number]>>((acc, k, i) => {
+    acc[k] = BASE_COORDS[i % BASE_COORDS.length];
+    return acc;
+  }, {});
 
   useEffect(() => {
     if (groupKeys.length > 0 && !selectedKey) setSelectedKey(groupKeys[0]);
@@ -431,8 +427,8 @@ export default function AmrProfiles() {
     : null;
 
   const mapMarkers  = toMapMarkers(isolates);
-  const mapCenter: [number, number] = selectedKey && PLACEHOLDER_COORDS[selectedKey]
-    ? PLACEHOLDER_COORDS[selectedKey] : [-28.0, 26.0];
+  const mapCenter: [number, number] = selectedKey && placeholderCoords[selectedKey]
+    ? placeholderCoords[selectedKey] : [-28.0, 26.0];
 
   return (
     <div className="amr-page">

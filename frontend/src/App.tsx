@@ -27,24 +27,6 @@ function AppContent() {
 
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Navbar />
-        <Routes>
-          <Route path="/about" element={<About />} />
-          <Route path="/map-view" element={<MapView />} />
-          <Route path="/amr-profiles" element={<AmrProfiles />} />
-          <Route path="/river-flows" element={<RiverFlows />} />
-          <Route path="/data-explorer" element={<DataExplorer />} />
-          <Route path="/isolates" element={<IsolateExplorerPage />} />
-          <Route path="/admin/callback" element={<CallbackPage />} />
-          <Route element={<RequireAuth />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="upload" />} />
-              <Route path="upload" element={<UploadDatafiles />} />
-              <Route path="map-upload" element={<MapLocationUpload />} />
-              <Route path="manage" element={<ManageDatafiles />} />
-              <Route path="chatbot" element={<Chatbot />} />
-            </Route>
       <Navbar />
       <Routes>
         <Route path="/" element={<Navigate to="/about" replace />} />
@@ -61,7 +43,6 @@ function AppContent() {
             <Route index element={<Navigate to="upload" />} />
             <Route path="upload" element={<UploadDatafiles />} />
             <Route path="map-upload" element={<MapLocationUpload />} />
-            <Route path="export" element={<ExportDataFiles />} />
             <Route path="manage" element={<ManageDatafiles />} />
             <Route path="chatbot" element={<Chatbot />} />
           </Route>

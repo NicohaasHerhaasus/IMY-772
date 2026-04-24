@@ -203,23 +203,6 @@ const IconSpinner = ({ size = 10 }: { size?: number }) => (
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
-const STATUS_MAP: Record<FileStatus, { bg: string; color: string; label: string }> = {
-  loaded:     { bg: "#E1F5EE", color: "#085041", label: "loaded" },
-  processing: { bg: "#FAEEDA", color: "#633806", label: "processing" },
-  error:      { bg: "#FCEBEB", color: "#501313", label: "error" },
-  validating: { bg: "#E6F1FB", color: "#042C53", label: "validating" },
-};
-
-const StatusBadge = ({ status }: { status: FileStatus }) => {
-  const s = STATUS_MAP[status];
-  return (
-    <div style={{ ...S.fbadge, background: s.bg, color: s.color }}>
-      {(status === "processing" || status === "validating") && <IconSpinner />}
-      {s.label}
-    </div>
-  );
-};
-
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 const StatCard = ({
@@ -397,9 +380,6 @@ function GenericTable({
   tableSearch: string;
 }) {
   const [page, setPage] = useState(0);
-
-  // Reset page when file or search changes
-  useEffect(() => setPage(0), [file.id, tableSearch]);
 
   const rows = file.rows ?? [];
   const filtered = tableSearch
@@ -597,16 +577,16 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
       const res = await fetch(`${API_BASE}/datasets`);
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const json = await res.json();
-      const records: any[] = json.data ?? json;
+      const records: Array<Record<string, unknown>> = (json.data ?? json) as Array<Record<string, unknown>>;
       // Map API response fields to frontend interface
       const mappedRecords: UploadedFileRecord[] = records.map((r) => ({
-        id: r.id,
-        name: r.filename,
-        type: r.file_type,
-        status: r.status,
-        rowCount: r.row_count,
-        uploadedAt: r.uploaded_at,
-        error: r.error_message,
+        id: String(r.id ?? ''),
+        name: String(r.filename ?? ''),
+        type: r.file_type as DatasetType,
+        status: r.status as FileStatus,
+        rowCount: typeof r.row_count === 'number' ? r.row_count : undefined,
+        uploadedAt: String(r.uploaded_at ?? new Date().toISOString()),
+        error: typeof r.error_message === 'string' ? r.error_message : undefined,
       }));
       setFiles(dedupeFiles(mappedRecords).map((r) => ({ ...r, rowsFetched: false })));
     } catch (e) {

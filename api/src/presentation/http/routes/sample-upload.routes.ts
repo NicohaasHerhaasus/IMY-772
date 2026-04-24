@@ -5,8 +5,6 @@ import { ValidationError } from '../../../application/errors/app.errors';
 import { SampleUploadService } from '../../../application/services/sample-upload.service';
 import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { SampleUploadController } from '../controllers/sample-upload.controller';
-import { DatasetsService } from '../../../application/services/datasets.service';
-import { PostgresDatasetsRepository } from '../../../infrastructure/persistence/postgres-datasets.repository';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -35,11 +33,5 @@ const sampleUploadController = new SampleUploadController(sampleUploadService, u
 
 router.post('/validate', authMiddleware, upload.single('file'), sampleUploadController.validateWorkbook);
 router.post('/upload',   authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
- 
-// ── Query routes (GET) ────────────────────────────────────────────────────────
-// GET /api/samples          — list all, supports ?region= ?organism= ?q= ?limit= ?offset=
-// GET /api/samples/:id      — single sample by UUID
-router.get('/',    authMiddleware, sampleUploadController.listSamples);
-router.get('/:id', authMiddleware, sampleUploadController.getSample);
 
 export default router;

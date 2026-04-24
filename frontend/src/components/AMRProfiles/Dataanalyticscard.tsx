@@ -225,7 +225,7 @@
 
 
 // src/pages/AmrProfiles/DataAnalyticsCard.tsx
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Cell, Tooltip, ResponsiveContainer,
   PieChart, Pie, Legend,
@@ -280,7 +280,7 @@ function GenesChart({ genes }: { genes: GeneDetail[] }) {
           <YAxis type="category" dataKey="name" tick={{ fill: '#8aa0b4', fontSize: 10 }}
             axisLine={false} tickLine={false} width={84} />
           <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-            formatter={(val: any) => [val ?? 0, 'Genes']} />
+            formatter={(val) => [val ?? 0, 'Genes']} />
           <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={14}>
             {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
           </Bar>
@@ -310,33 +310,19 @@ function ClassesChart({ genes }: { genes: GeneDetail[] }) {
     </div>
   );
 
-  const renderLabel = useCallback(({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    const RADIAN = Math.PI / 180;
-    const r = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + r * Math.cos(-midAngle * RADIAN);
-    const y = cy + r * Math.sin(-midAngle * RADIAN);
-    if (percent < 0.08) return null;
-    return (
-      <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central"
-        fontSize={10} fontWeight={600}>
-        {`${Math.round(percent * 100)}%`}
-      </text>
-    );
-  }, []);
-
   return (
     <div className="dac-chart-wrap">
       <div className="dac-chart-title">AMR class distribution</div>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie data={data} cx="50%" cy="45%" outerRadius={70} dataKey="value"
-            labelLine={false} label={renderLabel} strokeWidth={2} stroke="#1a2d3f">
+            labelLine={false} label={false} strokeWidth={2} stroke="#1a2d3f">
             {data.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
           </Pie>
           <Legend iconType="circle" iconSize={7}
             wrapperStyle={{ fontSize: 9, color: '#8aa0b4', paddingTop: 4 }} />
           <Tooltip contentStyle={tooltipStyle}
-            formatter={(val: any, name: any) => [val ?? 0, name]} />
+            formatter={(val, name) => [val ?? 0, name]} />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -380,7 +366,8 @@ function PlasidsChart({ plasmids, isolates }: { plasmids: PlasmidDetail[]; isola
           <YAxis allowDecimals={false} tick={{ fill: '#4a6880', fontSize: 9 }}
             axisLine={false} tickLine={false} />
           <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-            formatter={(val: any, _name: any, props: any) => [`${val ?? 0} isolates`, props?.payload?.fullName]} />
+            formatter={(val, _name, props) => [`${val ?? 0} isolates`, props?.payload?.fullName ?? "Plasmid"]}
+          />
           <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={36}>
             {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
           </Bar>

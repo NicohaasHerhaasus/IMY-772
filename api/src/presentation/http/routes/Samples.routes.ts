@@ -1,7 +1,7 @@
 // src/api/http/routes/samples.routes.ts
 import { Router } from 'express';
 import { getPool } from '../../../infrastructure/database/pool';
-import { SamplesController } from '../controllers/samples.controller';
+import { SamplesController } from '../controllers/Samples.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
