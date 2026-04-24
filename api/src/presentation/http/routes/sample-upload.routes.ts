@@ -4,6 +4,8 @@ import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { SampleUploadService } from '../../../application/services/sample-upload.service';
 import { SampleUploadController } from '../controllers/sample-upload.controller';
+import { DatasetsService } from '../../../application/services/datasets.service';
+import { PostgresDatasetsRepository } from '../../../infrastructure/persistence/postgres-datasets.repository';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -27,9 +29,17 @@ const upload = multer({
 
 const pool = getPool();
 const sampleUploadService = new SampleUploadService(pool);
-const sampleUploadController = new SampleUploadController(sampleUploadService);
-
+const datasetsRepository = new PostgresDatasetsRepository(pool);
+const datasetsService = new DatasetsService(datasetsRepository);
+const sampleUploadController = new SampleUploadController(sampleUploadService, datasetsService, pool);
+// ── Upload routes (POST) ───────────────────────────────────────────────────────
 router.post('/validate', authMiddleware, upload.single('file'), sampleUploadController.validateWorkbook);
-router.post('/upload', authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
+router.post('/upload',   authMiddleware, upload.single('file'), sampleUploadController.ingestWorkbook);
+ 
+// ── Query routes (GET) ────────────────────────────────────────────────────────
+// GET /api/samples          — list all, supports ?region= ?organism= ?q= ?limit= ?offset=
+// GET /api/samples/:id      — single sample by UUID
+router.get('/',    authMiddleware, sampleUploadController.listSamples);
+router.get('/:id', authMiddleware, sampleUploadController.getSample);
 
 export default router;
