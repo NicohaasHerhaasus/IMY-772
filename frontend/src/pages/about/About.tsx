@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./About.css";
 import handswater from "../../assets/hands_holding_water.png"
 import rockpool from "../../assets/rockpool.png"
@@ -6,6 +7,7 @@ import mountains from "../../assets/mountains.png"
 
 export default function About() {
   const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
@@ -30,7 +32,10 @@ export default function About() {
               We are committed to protecting and celebrating the world's most vital river ecosystems.
             </p>
 
-            <button className="about-cta">
+            <button
+              className="about-cta"
+              onClick={() => navigate("/about/learn-more")}
+            >
               Learn More
               <svg width="20" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>

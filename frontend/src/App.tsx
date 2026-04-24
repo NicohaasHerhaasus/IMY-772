@@ -18,6 +18,7 @@ import ManageDatafiles from "./pages/admin/ManageDataFiles/ManageDataFiles";
 import MapLocationUpload from "./pages/admin/MapLocationUpload/MapLocationUpload";
 import Chatbot from "./pages/admin/Chatbot/Chatbot";
 import CallbackPage from "./pages/CallbackPage";
+import AboutLearnMore from "./pages/about/AboutLearnMore";
 
 import { RiverProvider } from "./layouts/RiverContext";
 
@@ -29,7 +30,9 @@ function AppContent() {
     <BrowserRouter>
       <Navbar />
       <Routes>
+        <Route path="/" element={<Navigate to="/about" replace />} />
         <Route path="/about" element={<About />} />
+        <Route path="/about/learn-more" element={<AboutLearnMore />} />
         <Route path="/map-view" element={<MapView />} />
         <Route path="/amr-profiles" element={<AmrProfiles />} />
         <Route path="/river-flows" element={<RiverFlows />} />
@@ -46,6 +49,7 @@ function AppContent() {
             <Route path="chatbot" element={<Chatbot />} />
           </Route>
         </Route>
+        <Route path="*" element={<Navigate to="/about" replace />} />
       </Routes>
     </BrowserRouter>
   );
