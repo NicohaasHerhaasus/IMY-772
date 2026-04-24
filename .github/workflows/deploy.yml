@@ -22,18 +22,20 @@ jobs:
 
             cd /home/ubuntu/app
 
-            echo "==> Pulling latest changes"
-            git pull origin main
+            echo "==> Resetting repo"
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
 
             echo "==> Installing and building API"
             cd api
-            npm install --omit=dev
+            npm install
             npm run build
             cd ..
 
             echo "==> Installing and building frontend"
             cd frontend
-            npm install --omit=dev
+            npm install
             npm run build
             cd ..
 
