@@ -7,6 +7,7 @@ import {
   TileLayer,
   CircleMarker,
   Marker,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import {
@@ -61,8 +62,19 @@ function MapPinController({
   );
 }
 
+function MapCenterSync({ pinPosition }: { pinPosition: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!pinPosition) return;
+    map.flyTo(pinPosition, Math.max(map.getZoom(), 8), { duration: 0.45 });
+  }, [map, pinPosition]);
+  return null;
+}
+
 export default function MapLocationUpload() {
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
+  const [latInput, setLatInput] = useState("");
+  const [lngInput, setLngInput] = useState("");
   const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
   const [markersError, setMarkersError] = useState<string | null>(null);
   const [locationFiles, setLocationFiles] = useState<MapAttachmentListItem[]>([]);
@@ -77,6 +89,8 @@ export default function MapLocationUpload() {
 
   const updatePinPosition = useCallback((pos: [number, number]) => {
     setPinPosition(pos);
+    setLatInput(String(pos[0]));
+    setLngInput(String(pos[1]));
     setPanelError(null);
   }, []);
 
@@ -122,6 +136,20 @@ export default function MapLocationUpload() {
     if (!file) return;
     setPendingFile(file);
   }, []);
+
+  const handleSetPinFromInputs = useCallback(() => {
+    const lat = parseFloat(latInput);
+    const lng = parseFloat(lngInput);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      setPanelError("Latitude and longitude must be valid numbers.");
+      return;
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setPanelError("Latitude must be between -90 and 90, longitude between -180 and 180.");
+      return;
+    }
+    updatePinPosition([lat, lng]);
+  }, [latInput, lngInput, updatePinPosition]);
 
   const handleUploadSubmit = useCallback(async () => {
     if (!pinPosition || !pendingFile || !uploadDisplayName.trim()) {
@@ -213,6 +241,7 @@ export default function MapLocationUpload() {
             >
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <MapPinController pinPosition={pinPosition} onPinChange={updatePinPosition} />
+              <MapCenterSync pinPosition={pinPosition} />
               {mapMarkers.map((m) => (
                 <CircleMarker
                   key={m.id}
@@ -310,6 +339,39 @@ export default function MapLocationUpload() {
                   autoComplete="off"
                 />
               </label>
+              <div className="flex gap-2">
+                <label className="map-location-upload__field flex-1">
+                  <span className="map-location-upload__field-label">Latitude</span>
+                  <input
+                    type="number"
+                    step="any"
+                    className="map-location-upload__text-input"
+                    placeholder="-25.7479"
+                    value={latInput}
+                    onChange={(e) => {
+                      setLatInput(e.target.value);
+                      setPanelError(null);
+                    }}
+                  />
+                </label>
+                <label className="map-location-upload__field flex-1">
+                  <span className="map-location-upload__field-label">Longitude</span>
+                  <input
+                    type="number"
+                    step="any"
+                    className="map-location-upload__text-input"
+                    placeholder="28.2293"
+                    value={lngInput}
+                    onChange={(e) => {
+                      setLngInput(e.target.value);
+                      setPanelError(null);
+                    }}
+                  />
+                </label>
+              </div>
+              <button type="button" className="map-location-upload__dl" onClick={handleSetPinFromInputs}>
+                Set pin from coordinates
+              </button>
 
               <label
                 htmlFor="mlu-file-input"

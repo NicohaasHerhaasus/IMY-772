@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { getPool } from '../../../infrastructure/database/pool';
 import { MapAttachmentService } from '../../../application/services/map-attachment.service';
+import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { MapAttachmentController } from '../controllers/map-attachment.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -14,7 +15,8 @@ const upload = multer({
 
 const pool = getPool();
 const mapAttachmentService = new MapAttachmentService(pool);
-const mapAttachmentController = new MapAttachmentController(mapAttachmentService);
+const uploadedDatafileService = new UploadedDatafileService(pool);
+const mapAttachmentController = new MapAttachmentController(mapAttachmentService, uploadedDatafileService);
 
 router.get('/markers', authMiddleware, mapAttachmentController.listMarkers);
 router.get('/for-location', authMiddleware, mapAttachmentController.listForLocation);

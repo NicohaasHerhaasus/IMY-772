@@ -4,8 +4,7 @@ import { getPool } from '../../../infrastructure/database/pool';
 import { ValidationError } from '../../../application/errors/app.errors';
 import { StarAmrUploadService } from '../../../application/services/staramr-upload.service';
 import { ExampleAmrFinderPlusUploadService } from '../../../application/services/example-amrfinder-plus-upload.service';
-import { DatasetsService } from '../../../application/services/datasets.service';
-import { PostgresDatasetsRepository } from '../../../infrastructure/persistence/postgres-datasets.repository';
+import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { UploadController } from '../controllers/upload.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
@@ -52,12 +51,11 @@ const uploadTsv = multer({
 const pool = getPool();
 const starAmrUploadService = new StarAmrUploadService(pool);
 const exampleAmrFinderPlusUploadService = new ExampleAmrFinderPlusUploadService(pool);
-const datasetsRepository = new PostgresDatasetsRepository(pool);
-const datasetsService = new DatasetsService(datasetsRepository);
+const uploadedDatafileService = new UploadedDatafileService(pool);
 const uploadController = new UploadController(
   starAmrUploadService,
   exampleAmrFinderPlusUploadService,
-  datasetsService,
+  uploadedDatafileService,
 );
 
 router.post('/staramr', authMiddleware, upload.single('file'), uploadController.uploadStarAmrWorkbook);
