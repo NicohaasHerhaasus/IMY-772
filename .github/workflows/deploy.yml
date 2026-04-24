@@ -29,13 +29,13 @@ jobs:
 
             echo "==> Installing and building API"
             cd api
-            npm install --omit=dev
+            npm install
             npm run build
             cd ..
 
             echo "==> Installing and building frontend"
             cd frontend
-            npm install --omit=dev
+            npm install
             npm run build
             cd ..
 
