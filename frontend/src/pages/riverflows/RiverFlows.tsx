@@ -74,27 +74,26 @@ function useSamples() {
     setLoading(true);
     setError(null);
     try {
-      // Get Cognito access token (same pattern as the rest of the app)
+      // Get Cognito access token if available (optional for public access)
       let accessToken: string | undefined;
       try {
         const { tokens } = await fetchAuthSession();
         accessToken = tokens?.accessToken?.toString();
-        console.log('[useSamples] fetchAuthSession tokens:', tokens);
-        console.log('[useSamples] accessToken:', accessToken ? accessToken.slice(0, 30) + '...' : 'MISSING');
+        if (accessToken) {
+          console.log('[useSamples] fetchAuthSession tokens available');
+        }
       } catch (sessionErr) {
-        console.error('[useSamples] fetchAuthSession threw:', sessionErr);
-        throw new Error(`Could not retrieve auth session: ${String(sessionErr)}`);
-      }
-
-      if (!accessToken) {
-        throw new Error('No access token in session. Please sign out and sign in again.');
+        // Auth session not available — that's OK for public access
+        console.log('[useSamples] No auth session (public access)', sessionErr);
       }
 
       let res: Response;
       try {
-        res = await fetch('/api/samples', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        const headers: Record<string, string> = {};
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+        res = await fetch('/api/samples', { headers });
         console.log('[useSamples] fetch status:', res.status);
       } catch (networkErr) {
         throw new Error(`Network error — is the API server running? (${String(networkErr)})`);

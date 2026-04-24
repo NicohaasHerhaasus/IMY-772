@@ -11,13 +11,13 @@ const queryBuilderService = new QueryBuilderService(pool);
 const queryBuilderController = new QueryBuilderController(queryBuilderService);
 
 // Populate all dropdowns in one call
-router.get('/options', authMiddleware, queryBuilderController.getDropdownOptions);
+router.get('/options', queryBuilderController.getDropdownOptions);
 
 // Run a query, return rows + summary stats
-router.post('/query', authMiddleware, queryBuilderController.runQuery);
+router.post('/query', queryBuilderController.runQuery);
 
 // Export the same query as CSV or XLSX
-router.post('/export/csv', authMiddleware, queryBuilderController.exportCsv);
-router.post('/export/xlsx', authMiddleware, queryBuilderController.exportXlsx);
+router.post('/export/csv', queryBuilderController.exportCsv);
+router.post('/export/xlsx', queryBuilderController.exportXlsx);
 
 export default router;

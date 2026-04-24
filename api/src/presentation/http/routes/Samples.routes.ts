@@ -9,9 +9,9 @@ const router = Router();
 const pool = getPool();
 const samplesController = new SamplesController(pool);
 
-// GET /api/samples          — list all samples (with optional filters)
-// GET /api/samples/:id      — single sample by UUID
-router.get('/',    authMiddleware, samplesController.listSamples);
-router.get('/:id', authMiddleware, samplesController.getSample);
+// GET /api/samples          — list all samples (with optional filters) — PUBLIC
+// GET /api/samples/:id      — single sample by UUID — PUBLIC
+router.get('/',    samplesController.listSamples);
+router.get('/:id', samplesController.getSample);
 
 export default router;

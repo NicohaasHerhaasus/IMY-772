@@ -293,9 +293,9 @@
 
 /* ── Resistance bar ── */
 .rf-resist-block {}
-.rf-resist-label { font-size: 11px; color: #5a7a94; margin-bottom: 7px; }
-.rf-resist-row   { display: flex; align-items: center; gap: 10px; }
-.rf-resist-track {
+.sd-env-label { font-size: 11px; color: #5a7a94; margin-bottom: 7px; }
+.sd-env-row   { display: flex; align-items: center; gap: 10px; }
+.sd-env-track {
   flex: 1;
   height: 10px;
   background: #1a3a2a;
