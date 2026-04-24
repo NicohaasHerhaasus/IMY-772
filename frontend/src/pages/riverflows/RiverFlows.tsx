@@ -1,610 +1,554 @@
-// import { useState } from "react";
-// import "./RiverFlows.css";
-
-// // ── Types ──────────────────────────────────────────────
-// type RiskLevel    = "high" | "medium" | "low";
-// type SafetyStatus = "safe" | "caution" | "unsafe";
-// type SafetyFilter = "all" | "high" | "medium" | "low";
-// type IconType     = "swimming" | "drinking" | "fishing" | "farming" | "irrigation" | "kayaking";
-
-// interface VisitDot     { visit: string; color: string; }
-// interface ActivityItem { name: string; status: SafetyStatus; icon: IconType; }
-
-// interface River {
-//   id: number;
-//   name: string;
-//   location: string;
-//   risk: RiskLevel;
-//   visits: VisitDot[];
-//   resistanceRate: number;
-//   isolatesTested: number;
-//   resistanceGenes: number;
-//   visitsCompleted: number;
-//   activities: ActivityItem[];
-// }
-
-// // ── Constants ──────────────────────────────────────────
-// const RISK_COLOR: Record<RiskLevel, string> = {
-//   high:   "#e04040",
-//   medium: "#f0a500",
-//   low:    "#4caf82",
-// };
-
-// const RISK_LABEL: Record<RiskLevel, string> = {
-//   high:   "HIGH RESISTANCE",
-//   medium: "MODERATE RESISTANCE",
-//   low:    "LOW RESISTANCE",
-// };
-
-// const SAFETY_COLOR: Record<SafetyStatus, string> = {
-//   safe:    "#4caf82",
-//   caution: "#f0a500",
-//   unsafe:  "#e04040",
-// };
-
-// // ── River data ─────────────────────────────────────────
-// const ALL_RIVERS: River[] = [
-//   {
-//     id: 1,
-//     name: "Apies River",
-//     location: "Pretoria · Gauteng",
-//     risk: "high",
-//     visits: [
-//       { visit: "V1", color: "#4caf82" },
-//       { visit: "V2", color: "#4caf82" },
-//       { visit: "V3", color: "#d4c840" },
-//       { visit: "V4", color: "#d4a84a" },
-//       { visit: "V5", color: "#c47a70" },
-//       { visit: "V6", color: "#c46060" },
-//       { visit: "V7", color: "#d45050" },
-//     ],
-//     resistanceRate: 83,
-//     isolatesTested: 14,
-//     resistanceGenes: 28,
-//     visitsCompleted: 7,
-//     activities: [
-//       { name: "Swimming",   status: "unsafe",  icon: "swimming"   },
-//       { name: "Irrigation", status: "unsafe",  icon: "irrigation" },
-//       { name: "Drinking",   status: "unsafe",  icon: "drinking"   },
-//       { name: "Fishing",    status: "unsafe",  icon: "fishing"    },
-//       { name: "Farming",    status: "unsafe",  icon: "farming"    },
-//       { name: "Kayaking",   status: "unsafe",  icon: "kayaking"   },
-//     ],
-//   },
-//   {
-//     id: 2,
-//     name: "Henops River",
-//     location: "Centurion · Gauteng",
-//     risk: "medium",
-//     visits: [
-//       { visit: "V1", color: "#4caf82" },
-//       { visit: "V2", color: "#4caf82" },
-//       { visit: "V3", color: "#6dc472" },
-//       { visit: "V4", color: "#d4b44a" },
-//       { visit: "V5", color: "#d4a84a" },
-//       { visit: "V6", color: "#c47a70" },
-//       { visit: "V7", color: "#c46060" },
-//     ],
-//     resistanceRate: 64,
-//     isolatesTested: 8,
-//     resistanceGenes: 17,
-//     visitsCompleted: 7,
-//     activities: [
-//       { name: "Swimming",   status: "caution", icon: "swimming"   },
-//       { name: "Irrigation", status: "caution", icon: "irrigation" },
-//       { name: "Drinking",   status: "unsafe",  icon: "drinking"   },
-//       { name: "Fishing",    status: "caution", icon: "fishing"    },
-//       { name: "Farming",    status: "caution", icon: "farming"    },
-//       { name: "Kayaking",   status: "safe",    icon: "kayaking"   },
-//     ],
-//   },
-//   {
-//     id: 3,
-//     name: "Limpopo River",
-//     location: "Limpopo · Limpopo",
-//     risk: "low",
-//     visits: [
-//       { visit: "V1", color: "#4caf82" },
-//       { visit: "V2", color: "#4caf82" },
-//       { visit: "V3", color: "#4caf82" },
-//       { visit: "V4", color: "#6dc472" },
-//       { visit: "V5", color: "#6dc472" },
-//       { visit: "V6", color: "#d4b44a" },
-//       { visit: "V7", color: "#d4b44a" },
-//     ],
-//     resistanceRate: 28,
-//     isolatesTested: 10,
-//     resistanceGenes: 12,
-//     visitsCompleted: 7,
-//     activities: [
-//       { name: "Swimming",   status: "safe",    icon: "swimming"   },
-//       { name: "Irrigation", status: "safe",    icon: "irrigation" },
-//       { name: "Drinking",   status: "caution", icon: "drinking"   },
-//       { name: "Fishing",    status: "safe",    icon: "fishing"    },
-//       { name: "Farming",    status: "safe",    icon: "farming"    },
-//       { name: "Kayaking",   status: "safe",    icon: "kayaking"   },
-//     ],
-//   },
-//   {
-//     id: 4,
-//     name: "Lotus River",
-//     location: "Cape Town · Western Cape",
-//     risk: "high",
-//     visits: [
-//       { visit: "V1", color: "#4caf82" },
-//       { visit: "V2", color: "#d4b44a" },
-//       { visit: "V3", color: "#d4a84a" },
-//       { visit: "V4", color: "#c47a70" },
-//       { visit: "V5", color: "#c46060" },
-//       { visit: "V6", color: "#d45050" },
-//       { visit: "V7", color: "#e04040" },
-//     ],
-//     resistanceRate: 76,
-//     isolatesTested: 6,
-//     resistanceGenes: 21,
-//     visitsCompleted: 7,
-//     activities: [
-//       { name: "Swimming",   status: "unsafe",  icon: "swimming"   },
-//       { name: "Irrigation", status: "caution", icon: "irrigation" },
-//       { name: "Drinking",   status: "unsafe",  icon: "drinking"   },
-//       { name: "Fishing",    status: "unsafe",  icon: "fishing"    },
-//       { name: "Farming",    status: "caution", icon: "farming"    },
-//       { name: "Kayaking",   status: "caution", icon: "kayaking"   },
-//     ],
-//   },
-// ];
-
-// // ── SVG Icons ──────────────────────────────────────────
-// const Icons: Record<IconType, JSX.Element> = {
-//   swimming: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <circle cx="12" cy="5" r="2"/>
-//       <path d="M6 11l2-4h8l2 4"/>
-//       <path d="M2 16c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/>
-//       <path d="M2 20c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/>
-//     </svg>
-//   ),
-//   drinking: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <path d="M8 2h8l-1 11H9L8 2z"/>
-//       <path d="M9 13v5a3 3 0 006 0v-5"/>
-//       <path d="M6 22h12"/>
-//     </svg>
-//   ),
-//   fishing: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <path d="M4 5v6"/>
-//       <path d="M4 8h12"/>
-//       <path d="M16 8c0-2 2.5-3.5 3.5-3.5S21 7 16 8"/>
-//       <path d="M4 19c3.5 0 6-3 6-6"/>
-//       <circle cx="8" cy="16" r="2"/>
-//     </svg>
-//   ),
-//   farming: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-//       <polyline points="9 22 9 12 15 12 15 22"/>
-//     </svg>
-//   ),
-//   irrigation: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <path d="M12 3v5M7 8l5 3 5-3M7 13l5 3 5-3M7 18l5 3 5-3"/>
-//     </svg>
-//   ),
-//   kayaking: (
-//     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-//       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//       <circle cx="9" cy="6" r="2"/>
-//       <path d="M2 17c4-5 8-5 12 0"/>
-//       <line x1="3" y1="12" x2="21" y2="12"/>
-//       <path d="M9 8l2 4"/>
-//     </svg>
-//   ),
-// };
-
-// // ── Unified River Card ─────────────────────────────────
-// function RiverCard({ river }: { river: River }) {
-//   return (
-//     <div className="rf-card">
-
-//       {/* Top row: left = name/location/visits, right = activity safety */}
-//       <div className="rf-card-top">
-
-//         {/* Left: header + visit dots */}
-//         <div className="rf-card-header-block">
-//           <div className="rf-card-name-row">
-//             <div className="rf-card-name">{river.name}</div>
-//           </div>
-//           <div className="rf-card-location">{river.location}</div>
-//           <div className="rf-visits-row">
-//             <span className="rf-visits-label">Visits →</span>
-//             {river.visits.map(v => (
-//               <div key={v.visit} className="rf-visit-col">
-//                 <div className="rf-visit-dot" style={{ background: v.color }} />
-//                 <span className="rf-visit-dot-label">{v.visit}</span>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Right: Daily Activity Safety + badge */}
-//         <div className="rf-activity-col">
-//           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-//             <div className="rf-activity-title" style={{ marginBottom: 0 }}>
-//               Daily Activity Safety
-//             </div>
-//             <span className={`rf-badge rf-badge--${river.risk}`}>
-//               {RISK_LABEL[river.risk]}
-//             </span>
-//           </div>
-//           <div className="rf-activity-grid">
-//             {river.activities.map(act => (
-//               <div key={act.name} className="rf-activity-item">
-//                 <div className="rf-activity-icon">{Icons[act.icon]}</div>
-//                 <span className="rf-activity-name">{act.name}</span>
-//                 <div
-//                   className="rf-activity-dot"
-//                   style={{ background: SAFETY_COLOR[act.status] }}
-//                 />
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Stats row */}
-//       <div className="rf-stats-row">
-//         <div className="rf-stat">
-//           <div className="rf-stat-value" style={{ color: RISK_COLOR[river.risk] }}>
-//             {river.resistanceRate}%
-//           </div>
-//           <div className="rf-stat-label">Resistance rate</div>
-//         </div>
-//         <div className="rf-stat">
-//           <div className="rf-stat-value" style={{ color: "#3eb99a" }}>
-//             {river.isolatesTested}
-//           </div>
-//           <div className="rf-stat-label">Isolates tested</div>
-//         </div>
-//         <div className="rf-stat">
-//           <div className="rf-stat-value" style={{ color: "#f0a500" }}>
-//             {river.resistanceGenes}
-//           </div>
-//           <div className="rf-stat-label">Resistance genes</div>
-//         </div>
-//         <div className="rf-stat">
-//           <div className="rf-stat-value" style={{ color: "#e8edf2" }}>
-//             {river.visitsCompleted}
-//           </div>
-//           <div className="rf-stat-label">Visits completed</div>
-//         </div>
-//       </div>
-
-//       {/* Resistance bar */}
-//       <div className="rf-resist-block">
-//         <div className="rf-resist-label">Overall resistance rate across visits</div>
-//         <div className="rf-resist-row">
-//           <div className="rf-resist-track">
-//             <div
-//               className="rf-resist-fill"
-//               style={{
-//                 width: `${river.resistanceRate}%`,
-//                 background: RISK_COLOR[river.risk],
-//               }}
-//             />
-//           </div>
-//           <span className="rf-resist-pct">{river.resistanceRate}%</span>
-//         </div>
-//       </div>
-
-//     </div>
-//   );
-// }
-
-// // ── Page ───────────────────────────────────────────────
-// export default function RiverFlows() {
-//   const [searchQuery,   setSearchQuery]   = useState("");
-//   const [activeRiverId, setActiveRiverId] = useState<number | "all">("all");
-//   const [activeSafety,  setActiveSafety]  = useState<SafetyFilter>("all");
-
-//   const visibleRivers = ALL_RIVERS.filter(r => {
-//     const matchRiver  = activeRiverId === "all" || r.id === activeRiverId;
-//     const matchSafety = activeSafety  === "all" || r.risk === activeSafety;
-//     const matchSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase());
-//     return matchRiver && matchSafety && matchSearch;
-//   });
-
-//   const sidebarRivers = ALL_RIVERS.filter(r =>
-//     r.name.toLowerCase().includes(searchQuery.toLowerCase())
-//   );
-
-//   return (
-//     <div className="rf-page">
-
-//       {/* ── Sidebar ── */}
-//       <aside className="rf-sidebar">
-//         <div className="rf-search-wrap">
-//           <div className="rf-search">
-//             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-//               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//               <circle cx="11" cy="11" r="8"/>
-//               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-//             </svg>
-//             <input
-//               type="text"
-//               placeholder="Search River"
-//               value={searchQuery}
-//               onChange={e => setSearchQuery(e.target.value)}
-//             />
-//           </div>
-//         </div>
-
-//         <div className="rf-section-label">Filter by River</div>
-//         <div className="rf-river-list">
-//           <div
-//             className={`rf-river-item ${activeRiverId === "all" ? "active" : ""}`}
-//             onClick={() => setActiveRiverId("all")}
-//           >
-//             <div className="rf-river-name">All Rivers</div>
-//           </div>
-//           {sidebarRivers.map(r => (
-//             <div
-//               key={r.id}
-//               className={`rf-river-item ${activeRiverId === r.id ? "active" : ""}`}
-//               onClick={() => setActiveRiverId(r.id)}
-//             >
-//               <div className="rf-river-name">{r.name}</div>
-//               <div className="rf-river-meta">{r.location}</div>
-//             </div>
-//           ))}
-//         </div>
-
-//         <div className="rf-section-label">Filter by Safety</div>
-//         <div className="rf-safety-list">
-//           {(["all", "high", "medium", "low"] as SafetyFilter[]).map(f => (
-//             <div
-//               key={f}
-//               className={`rf-safety-item ${activeSafety === f ? "active" : ""}`}
-//               onClick={() => setActiveSafety(f)}
-//             >
-//               {f === "all"    && "All"}
-//               {f === "high"   && "High Risk Rivers"}
-//               {f === "medium" && "Moderate Risk Rivers"}
-//               {f === "low"    && "Safe Rivers"}
-//             </div>
-//           ))}
-//         </div>
-
-//         <button className="rf-collapse-btn" aria-label="Collapse sidebar">
-//           <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
-//             <path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2"
-//               strokeLinecap="round" strokeLinejoin="round"/>
-//           </svg>
-//         </button>
-//       </aside>
-
-//       {/* ── Main ── */}
-//       <main className="rf-main">
-//         <div className="rf-page-title">All River Flows</div>
-
-//         {visibleRivers.length === 0 && (
-//           <p style={{ color: "#5a7a94", fontSize: 14, marginTop: 8 }}>
-//             No rivers match the current filters.
-//           </p>
-//         )}
-
-//         {visibleRivers.map(river => (
-//           <RiverCard key={river.id} river={river} />
-//         ))}
-//       </main>
-//     </div>
-//   );
-// }
-
-
 // src/pages/RiverFlows/RiverFlows.tsx
-import { useState } from 'react';
-import type React from 'react';
+// Integrated with backend — fetches from GET /api/samples
+
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './RiverFlows.css';
-import { useIsolates } from '../../context/IsolatesContext';
-import { toRiverFlows, type RiverFlowData, type RiskLevel } from '../../lib/transformers';
 
-const RISK_COLOR: Record<RiskLevel, string> = {
-  high: '#e04040', medium: '#f0a500', low: '#4caf82',
-};
-const RISK_LABEL: Record<RiskLevel, string> = {
-  high: 'HIGH RESISTANCE', medium: 'MODERATE RESISTANCE', low: 'LOW RESISTANCE',
-};
-const SAFETY_COLOR = { safe: '#4caf82', caution: '#f0a500', unsafe: '#e04040' };
+// Fix Leaflet default icon path broken by Vite
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
-type IconType = 'swimming' | 'drinking' | 'fishing' | 'farming' | 'irrigation' | 'kayaking';
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const Icons: Record<IconType, React.JSX.Element> = {
-  swimming:   (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="M6 11l2-4h8l2 4"/><path d="M2 16c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/><path d="M2 20c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/></svg>),
-  drinking:   (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l-1 11H9L8 2z"/><path d="M9 13v5a3 3 0 006 0v-5"/><path d="M6 22h12"/></svg>),
-  fishing:    (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5v6"/><path d="M4 8h12"/><path d="M16 8c0-2 2.5-3.5 3.5-3.5S21 7 16 8"/><path d="M4 19c3.5 0 6-3 6-6"/><circle cx="8" cy="16" r="2"/></svg>),
-  farming:    (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>),
-  irrigation: (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v5M7 8l5 3 5-3M7 13l5 3 5-3M7 18l5 3 5-3"/></svg>),
-  kayaking:   (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="6" r="2"/><path d="M2 17c4-5 8-5 12 0"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M9 8l2 4"/></svg>),
-};
-
-function RiskBadge({ risk }: { risk: RiskLevel }) {
-  return <span className={`rf-badge rf-badge--${risk}`}>{RISK_LABEL[risk]}</span>;
+/** Shape returned by GET /api/samples after controller transforms */
+export interface Sample {
+  id:                   string;
+  sampleName:           string;
+  analysisType:         string | null;
+  isolateId:            string | null;
+  organism:             string | null;
+  /** lab_sample_id from DB */
+  sampleId:             string | null;
+  isolationSource:      string;
+  collectionDate:       string;
+  geoLocName:           string;
+  /** Parsed from geoLocName ("South Africa: Gauteng" → "Gauteng") */
+  region:               string;
+  latitude:             number;
+  longitude:            number;
+  collectedBy:          string | null;
+  /** Split from amr_resistance_genes string */
+  amrGenes:             string[];
+  sequenceName:         string | null;
+  elementType:          string | null;
+  amrClass:             string | null;
+  subclass:             string | null;
+  pctCoverage:          number | null;
+  pctIdentity:          number | null;
+  alignmentLength:      number | null;
+  refSeqLength:         number | null;
+  accession:            string | null;
+  /** Split from virulence_genes string */
+  virulenceGenes:       string[];
+  /** Split from plasmid_replicons string */
+  plasmidReplicons:     string[];
+  /** Split from predicted_sir_profile string */
+  predictedSir:         string[];
+  ph:                   number | null;
+  tempWaterC:           number | null;
+  tdsMgL:               number | null;
+  dissolvedOxygenMgL:   number | null;
 }
 
-function RiverCard({ river }: { river: RiverFlowData }) {
+interface ApiResponse {
+  status: 'success' | 'error';
+  data:   { samples: Sample[]; count: number };
+}
+
+// ── Fetch hook ────────────────────────────────────────────────────────────────
+
+function useSamples() {
+  const [samples,  setSamples]  = useState<Sample[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState<string | null>(null);
+
+  const fetchSamples = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Get Cognito access token (same pattern as the rest of the app)
+      let accessToken: string | undefined;
+      try {
+        const { tokens } = await fetchAuthSession();
+        accessToken = tokens?.accessToken?.toString();
+        console.log('[useSamples] fetchAuthSession tokens:', tokens);
+        console.log('[useSamples] accessToken:', accessToken ? accessToken.slice(0, 30) + '...' : 'MISSING');
+      } catch (sessionErr) {
+        console.error('[useSamples] fetchAuthSession threw:', sessionErr);
+        throw new Error(`Could not retrieve auth session: ${String(sessionErr)}`);
+      }
+
+      if (!accessToken) {
+        throw new Error('No access token in session. Please sign out and sign in again.');
+      }
+
+      let res: Response;
+      try {
+        res = await fetch('/api/samples', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        console.log('[useSamples] fetch status:', res.status);
+      } catch (networkErr) {
+        throw new Error(`Network error — is the API server running? (${String(networkErr)})`);
+      }
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '(no body)');
+        throw new Error(`API returned ${res.status} ${res.statusText}: ${text}`);
+      }
+
+      const rawText = await res.text();
+      console.log('[useSamples] raw response:', rawText.slice(0, 300));
+
+      let json: ApiResponse;
+      try {
+        json = JSON.parse(rawText);
+      } catch {
+        throw new Error(`API response was not valid JSON (status ${res.status}). Body: ${rawText.slice(0, 200)}`);
+      }
+
+      setSamples(json.data.samples);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchSamples(); }, [fetchSamples]);
+
+  return { samples, loading, error, refetch: fetchSamples };
+}
+
+// ── Derived lists for filter sidebar ─────────────────────────────────────────
+
+function uniqueSorted(arr: string[]): string[] {
+  return [...new Set(arr)].sort();
+}
+
+// ── Map fly-to helper ─────────────────────────────────────────────────────────
+
+function FlyTo({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  map.flyTo([lat, lng], 10, { animate: true, duration: 1.2 });
+  return null;
+}
+
+// ── Environmental parameter bar ────────────────────────────────────────────────
+
+interface EnvBarProps {
+  label: string;
+  value: number | null;
+  max:   number;
+  unit:  string;
+  color: string;
+}
+
+function EnvBar({ label, value, max, unit, color }: EnvBarProps) {
+  if (value == null) return null;
+  const pct = Math.min(Math.round((value / max) * 100), 100);
   return (
-    <div className="rf-card">
-      <div className="rf-card-top">
-
-        {/* Left: name, location, visit dots */}
-        <div className="rf-card-header-block">
-          <div className="rf-card-name">{river.name}</div>
-          <div className="rf-card-location">{river.location}</div>
-          <div className="rf-visits-row">
-            <span className="rf-visits-label">Visits →</span>
-            {river.visits.map(v => (
-              <div key={v.visit} className="rf-visit-col">
-                <div className="rf-visit-dot" style={{ background: v.color }} />
-                <span className="rf-visit-dot-label">{v.visit}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: activity safety + badge */}
-        <div className="rf-activity-col">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div className="rf-activity-title" style={{ marginBottom: 0 }}>Daily Activity Safety</div>
-            <RiskBadge risk={river.risk} />
-          </div>
-          <div className="rf-activity-grid">
-            {river.activities.map(act => (
-              <div key={act.name} className="rf-activity-item">
-                <div className="rf-activity-icon">{Icons[act.icon as IconType]}</div>
-                <span className="rf-activity-name">{act.name}</span>
-                <div className="rf-activity-dot" style={{ background: SAFETY_COLOR[act.status] }} />
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="sd-env-row">
+      <div className="sd-env-label">{label}</div>
+      <div className="sd-env-track">
+        <div className="sd-env-fill" style={{ width: `${pct}%`, background: color }} />
       </div>
+      <div className="sd-env-value">{value}{unit}</div>
+    </div>
+  );
+}
 
-      {/* Stats */}
-      <div className="rf-stats-row">
-        <div className="rf-stat">
-          <div className="rf-stat-value" style={{ color: RISK_COLOR[river.risk] }}>
-            {river.resistanceRate}%
-          </div>
-          <div className="rf-stat-label">Resistance rate</div>
-        </div>
-        <div className="rf-stat">
-          <div className="rf-stat-value" style={{ color: '#3eb99a' }}>{river.isolatesTested}</div>
-          <div className="rf-stat-label">Isolates tested</div>
-        </div>
-        <div className="rf-stat">
-          <div className="rf-stat-value" style={{ color: '#f0a500' }}>{river.resistanceGenes}</div>
-          <div className="rf-stat-label">Resistance genes</div>
-        </div>
-        <div className="rf-stat">
-          <div className="rf-stat-value" style={{ color: '#e8edf2' }}>{river.visitsCompleted}</div>
-          <div className="rf-stat-label">Visits completed</div>
-        </div>
-      </div>
+// ── Loading skeleton ──────────────────────────────────────────────────────────
 
-      {/* Resistance bar */}
-      <div className="rf-resist-block">
-        <div className="rf-resist-label">Overall resistance rate across visits</div>
-        <div className="rf-resist-row">
-          <div className="rf-resist-track">
-            <div className="rf-resist-fill"
-              style={{ width: `${river.resistanceRate}%`, background: RISK_COLOR[river.risk] }} />
-          </div>
-          <span className="rf-resist-pct">{river.resistanceRate}%</span>
+function LoadingSkeleton() {
+  return (
+    <div className="sd-page">
+      <aside className="sd-sidebar">
+        <div style={{ padding: '24px 16px', color: '#5a7a94', fontSize: 13 }}>
+          Loading samples…
         </div>
+      </aside>
+      <main className="sd-main">
+        <div style={{ padding: 40, color: '#5a7a94', fontSize: 14 }}>
+          Fetching sample data from server…
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ── Error state ───────────────────────────────────────────────────────────────
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="sd-page">
+      <aside className="sd-sidebar" />
+      <main className="sd-main">
+        <div style={{ padding: 40 }}>
+          <div style={{ color: '#e04040', fontSize: 14, marginBottom: 12 }}>
+            Failed to load samples: {message}
+          </div>
+          <button
+            onClick={onRetry}
+            style={{
+              padding: '8px 16px', background: '#1D9E75', color: '#fff',
+              border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13,
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <div style={{ padding: 40 }}>
+      <div style={{ color: '#5a7a94', fontSize: 14, marginBottom: 8 }}>
+        No samples found. Upload a dataset to get started.
       </div>
     </div>
   );
 }
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function RiverFlows() {
-  const { isolates, loading, error } = useIsolates();
-  const [searchQuery,  setSearchQuery]  = useState('');
-  const [activeId,     setActiveId]     = useState<string | 'all'>('all');
-  const [activeSafety, setActiveSafety] = useState<'all' | RiskLevel>('all');
+  const { samples, loading, error, refetch } = useSamples();
 
-  if (loading) return (
-    <div className="rf-page">
-      <div style={{ padding: 40, color: '#5a7a94', fontSize: 14 }}>Loading river data…</div>
-    </div>
-  );
-  if (error) return (
-    <div className="rf-page">
-      <div style={{ padding: 40, color: '#e04040', fontSize: 14 }}>Failed to load: {error}</div>
-    </div>
-  );
+  const [searchQuery,      setSearchQuery]      = useState('');
+  const [activeRegion,     setActiveRegion]     = useState<string | null>(null);
+  const [activeOrganism,   setActiveOrganism]   = useState<string | null>(null);
+  const [selectedSample,   setSelectedSample]   = useState<Sample | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const allRivers = toRiverFlows(isolates);
+  // Derive unique filter options from live data
+  const regions   = useMemo(() => uniqueSorted(samples.map(s => s.region).filter(Boolean)), [samples]);
+  const organisms = useMemo(() => uniqueSorted(samples.map(s => s.organism ?? '').filter(Boolean)), [samples]);
 
-  const visibleRivers = allRivers.filter(r => {
-    const matchId     = activeId     === 'all' || r.id === activeId;
-    const matchSafety = activeSafety === 'all' || r.risk === activeSafety;
-    const matchSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        r.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchId && matchSafety && matchSearch;
-  });
+  // Apply filters
+  const filteredSamples = useMemo(() => {
+    return samples.filter(s => {
+      if (activeRegion   && s.region             !== activeRegion)   return false;
+      if (activeOrganism && (s.organism ?? '')   !== activeOrganism) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (
+          !s.sampleName.toLowerCase().includes(q)           &&
+          !(s.organism ?? '').toLowerCase().includes(q)     &&
+          !s.isolationSource.toLowerCase().includes(q)
+        ) return false;
+      }
+      return true;
+    });
+  }, [samples, activeRegion, activeOrganism, searchQuery]);
+
+  // Auto-select first sample when data loads or filters change
+  useEffect(() => {
+    if (filteredSamples.length === 0) {
+      setSelectedSample(null);
+      return;
+    }
+    setSelectedSample(prev => {
+      if (prev && filteredSamples.some(s => s.id === prev.id)) return prev;
+      return filteredSamples[0];
+    });
+  }, [filteredSamples]);
+
+  const showSampleList = !!(activeRegion || activeOrganism || searchQuery.length > 0);
+
+  // ── Early returns ────────────────────────────────────────────────────────────
+
+  if (loading) return <LoadingSkeleton />;
+  if (error)   return <ErrorState message={error} onRetry={refetch} />;
+
+  const s = selectedSample;
 
   return (
-    <div className="rf-page">
-      <aside className="rf-sidebar">
-        <div className="rf-search-wrap">
-          <div className="rf-search">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" placeholder="Search river…" value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)} />
-          </div>
-        </div>
+    <div className="sd-page">
 
-        <div className="rf-section-label">Filter by River</div>
-        <div className="rf-river-list">
-          <div className={`rf-river-item ${activeId === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveId('all')}>
-            <div className="rf-river-name">All Rivers</div>
-            <div className="rf-river-meta">{allRivers.length} groups</div>
-          </div>
-          {allRivers.filter(r =>
-            r.name.toLowerCase().includes(searchQuery.toLowerCase())
-          ).map(r => (
-            <div key={r.id}
-              className={`rf-river-item ${activeId === r.id ? 'active' : ''}`}
-              onClick={() => setActiveId(r.id)}>
-              <div className="rf-river-name">{r.name}</div>
-              <div className="rf-river-meta">{r.isolatesTested} isolates · {r.id}</div>
+      {/* ══ SIDEBAR ══ */}
+      <aside className={`sd-sidebar${sidebarCollapsed ? ' sd-sidebar--collapsed' : ''}`}>
+
+        {!sidebarCollapsed && (
+          <>
+            {/* Search */}
+            <div className="sd-search-wrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a7a8a" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input
+                className="sd-search-inp"
+                type="text"
+                placeholder="Search Samples"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
             </div>
-          ))}
-        </div>
 
-        <div className="rf-section-label">Filter by Safety</div>
-        <div className="rf-safety-list">
-          {(['all', 'high', 'medium', 'low'] as const).map(f => (
-            <div key={f}
-              className={`rf-safety-item ${activeSafety === f ? 'active' : ''}`}
-              onClick={() => setActiveSafety(f)}>
-              {f === 'all' && 'All'}
-              {f === 'high' && 'High Risk Rivers'}
-              {f === 'medium' && 'Moderate Risk Rivers'}
-              {f === 'low' && 'Safe Rivers'}
-            </div>
-          ))}
-        </div>
+            {/* Filter by location */}
+            {regions.length > 0 && (
+              <>
+                <div className="sd-sb-section">Filter by location</div>
+                <div className="sd-sb-divider" />
+                {regions.map(r => (
+                  <div
+                    key={r}
+                    className={`sd-sb-item${activeRegion === r ? ' sd-sb-item--active' : ''}`}
+                    onClick={() => setActiveRegion(prev => prev === r ? null : r)}
+                  >
+                    {r}
+                  </div>
+                ))}
+              </>
+            )}
 
-        <button className="rf-collapse-btn" aria-label="Collapse sidebar">
+            {/* Filter by organism */}
+            {organisms.length > 0 && (
+              <>
+                <div className="sd-sb-section" style={{ marginTop: 20 }}>Filter by organism</div>
+                <div className="sd-sb-divider" />
+                {organisms.map(o => (
+                  <div
+                    key={o}
+                    className={`sd-sb-item${activeOrganism === o ? ' sd-sb-item--active' : ''}`}
+                    onClick={() => setActiveOrganism(prev => prev === o ? null : o)}
+                  >
+                    {o}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Filtered sample list */}
+            {showSampleList && filteredSamples.length > 0 && (
+              <>
+                <div className="sd-sb-section" style={{ marginTop: 20 }}>
+                  {filteredSamples.length} result{filteredSamples.length !== 1 ? 's' : ''}
+                </div>
+                <div className="sd-sb-divider" />
+                {filteredSamples.map(sam => (
+                  <div
+                    key={sam.id}
+                    className={`sd-sb-sample${s?.id === sam.id ? ' sd-sb-sample--active' : ''}`}
+                    onClick={() => setSelectedSample(sam)}
+                  >
+                    <div className="sd-sb-sample-name">{sam.sampleId ?? sam.sampleName}</div>
+                    <div className="sd-sb-sample-meta">
+                      {(sam.organism ?? 'Unknown').split(' ')[0]} · {sam.isolationSource}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {showSampleList && filteredSamples.length === 0 && (
+              <div style={{ padding: '12px 16px', fontSize: 11, color: '#5a7a8a' }}>
+                No results for current filters.
+              </div>
+            )}
+
+            {/* Total count */}
+            {samples.length > 0 && (
+              <div style={{ padding: '16px 16px 0', fontSize: 11, color: '#5a7a8a' }}>
+                {samples.length} total sample{samples.length !== 1 ? 's' : ''} loaded
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Collapse toggle */}
+        <button
+          className="sd-collapse-btn"
+          onClick={() => setSidebarCollapsed(p => !p)}
+          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
           <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
-            <path d="M7 1L1 7l6 6" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d={sidebarCollapsed ? 'M3 1l6 6-6 6' : 'M7 1L1 7l6 6'}
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            />
           </svg>
         </button>
       </aside>
 
-      <main className="rf-main">
-        <div className="rf-page-title">All River Flows</div>
-        {visibleRivers.length === 0 && (
-          <p style={{ color: '#5a7a94', fontSize: 14, marginTop: 8 }}>
-            No results match the current filters.
-          </p>
+      {/* ══ MAIN ══ */}
+      <main className="sd-main">
+
+        {!s && <EmptyState />}
+
+        {s && (
+          <>
+            {/* Header */}
+            <div className="sd-header">
+              <h1 className="sd-heading">{s.sampleName}</h1>
+              <div className="sd-coords">
+                <strong>{s.geoLocName}</strong>
+                &nbsp;·&nbsp;{s.latitude.toFixed(4)}, {s.longitude.toFixed(4)}
+              </div>
+            </div>
+
+            {/* Two-column content */}
+            <div className="sd-grid">
+
+              {/* ── Left column ── */}
+              <div className="sd-left">
+
+                <div className="sd-top-row">
+
+                  {/* Info card */}
+                  <div className="sd-card sd-info-card">
+                    {s.organism    && <div className="sd-info-row"><span className="sd-info-key">Organism:</span><span className="sd-info-val">{s.organism}</span></div>}
+                    <div className="sd-info-row"><span className="sd-info-key">Isolation source:</span><span className="sd-info-val">{s.isolationSource}</span></div>
+                    {s.collectedBy && <div className="sd-info-row"><span className="sd-info-key">Collected by:</span><span className="sd-info-val">{s.collectedBy}</span></div>}
+                    <div className="sd-info-row"><span className="sd-info-key">Collection date:</span><span className="sd-info-val">{s.collectionDate}</span></div>
+                    {s.analysisType && <div className="sd-info-row"><span className="sd-info-key">Analysis type:</span><span className="sd-info-val">{s.analysisType}</span></div>}
+                    {s.amrClass    && <div className="sd-info-row"><span className="sd-info-key">AMR class:</span><span className="sd-info-val">{s.amrClass}</span></div>}
+                    {s.accession   && <div className="sd-info-row"><span className="sd-info-key">Accession:</span><span className="sd-info-val sd-mono">{s.accession}</span></div>}
+                    {s.isolateId   && <div className="sd-info-row"><span className="sd-info-key">Isolate ID:</span><span className="sd-info-val sd-mono">{s.isolateId}</span></div>}
+                  </div>
+
+                  {/* Stat tiles 2×2 */}
+                  <div className="sd-tiles">
+                    <div className="sd-tile sd-tile--teal">
+                      <div className="sd-tile-val">{s.pctIdentity != null ? `${s.pctIdentity}%` : '—'}</div>
+                      <div className="sd-tile-lbl">Identity</div>
+                    </div>
+                    <div className="sd-tile sd-tile--amber">
+                      <div className="sd-tile-val">{s.pctCoverage != null ? `${s.pctCoverage}%` : '—'}</div>
+                      <div className="sd-tile-lbl">Coverage</div>
+                    </div>
+                    <div className="sd-tile sd-tile--dark">
+                      <div className="sd-tile-val">{s.alignmentLength ?? '—'}</div>
+                      <div className="sd-tile-lbl">Alignment length</div>
+                    </div>
+                    <div className="sd-tile sd-tile--teal2">
+                      <div className="sd-tile-val">{s.refSeqLength ?? '—'}</div>
+                      <div className="sd-tile-lbl">Ref. seq. length</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Environmental parameters */}
+                {(s.ph != null || s.tempWaterC != null || s.tdsMgL != null || s.dissolvedOxygenMgL != null) && (
+                  <div className="sd-card">
+                    <div className="sd-card-title">Environmental parameters</div>
+                    <EnvBar label="pH"             value={s.ph}                 max={14}   unit=""   color="#1D9E75" />
+                    <EnvBar label="Temp. of water" value={s.tempWaterC}         max={40}   unit="°C" color="#f0a500" />
+                    <EnvBar label="TDS (mg/L)"     value={s.tdsMgL}             max={1500} unit=""   color="#d45050" />
+                    <EnvBar label="Dissolved O₂"   value={s.dissolvedOxygenMgL} max={15}   unit=""   color="#1D9E75" />
+                  </div>
+                )}
+              </div>
+
+              {/* ── Right column ── */}
+              <div className="sd-right">
+
+                {/* Leaflet map — only mount when coordinates are finite numbers */}
+                <div className="sd-card sd-map-card">
+                  <div className="sd-card-title">River map view</div>
+                  <div className="sd-map-container">
+                    {Number.isFinite(s.latitude) && Number.isFinite(s.longitude) ? (
+                      <MapContainer
+                        key={`${s.id}-map`}
+                        center={[s.latitude, s.longitude]}
+                        zoom={10}
+                        zoomControl
+                        style={{ width: '100%', height: '100%', borderRadius: '8px' }}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <FlyTo lat={s.latitude} lng={s.longitude} />
+                        <Marker position={[s.latitude, s.longitude]}>
+                          <Popup>
+                            <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                              <strong>{s.sampleId ?? s.sampleName}</strong><br />
+                              {s.geoLocName}<br />
+                              {s.organism && <><em>{s.organism}</em><br /></>}
+                              {s.isolationSource}<br />
+                              {s.collectionDate}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      </MapContainer>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        height: '100%', color: '#5a7a8a', fontSize: 13 }}>
+                        No coordinates available for this sample.
+                      </div>
+                    )}
+                  </div>
+                  <div className="sd-map-meta">
+                    {Number.isFinite(s.latitude) && Number.isFinite(s.longitude)
+                      ? `${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)} · ${s.geoLocName}`
+                      : s.geoLocName}
+                  </div>
+                </div>
+
+                {/* AMR genes + SIR + virulence + plasmids */}
+                <div className="sd-card">
+                  {s.amrGenes.length > 0 && (
+                    <>
+                      <div className="sd-card-title">AMR resistance genes</div>
+                      <div className="sd-pills">
+                        {s.amrGenes.map(g => <span key={g} className="sd-pill">{g}</span>)}
+                      </div>
+                    </>
+                  )}
+
+                  {s.predictedSir.length > 0 && (
+                    <>
+                      <div className="sd-card-title" style={{ marginTop: s.amrGenes.length > 0 ? 14 : 0 }}>
+                        Predicted SIR profiles
+                      </div>
+                      <div className="sd-pills">
+                        {s.predictedSir.map(p => <span key={p} className="sd-pill">{p}</span>)}
+                      </div>
+                    </>
+                  )}
+
+                  {s.virulenceGenes.length > 0 && (
+                    <>
+                      <div className="sd-card-title" style={{ marginTop: 14 }}>Virulence genes</div>
+                      <div className="sd-pills">
+                        {s.virulenceGenes.map(v => <span key={v} className="sd-pill">{v}</span>)}
+                      </div>
+                    </>
+                  )}
+
+                  {s.plasmidReplicons.length > 0 && (
+                    <>
+                      <div className="sd-card-title" style={{ marginTop: 14 }}>Plasmid replicons</div>
+                      <div className="sd-pills">
+                        {s.plasmidReplicons.map(p => <span key={p} className="sd-pill">{p}</span>)}
+                      </div>
+                    </>
+                  )}
+
+                  {[s.amrGenes, s.predictedSir, s.virulenceGenes, s.plasmidReplicons].every(a => a.length === 0) && (
+                    <div style={{ color: '#5a7a8a', fontSize: 12 }}>
+                      No genomic data available for this sample.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         )}
-        {visibleRivers.map(river => (
-          <RiverCard key={river.id} river={river} />
-        ))}
       </main>
     </div>
   );

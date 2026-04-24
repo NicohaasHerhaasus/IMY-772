@@ -9,6 +9,7 @@ import { runMigration as runSamplesMigration } from './infrastructure/database/m
 import { runMigration as runSamplesUniqueConstraintMigration } from './infrastructure/database/migrations/005_samples_unique_constraint';
 import { runMigration as runExampleAmrFinderPlusMigration } from './infrastructure/database/migrations/006_create_example_amrfinder_plus';
 import { runMigration as runMapAttachmentsMigration } from './infrastructure/database/migrations/007_create_map_attachments';
+import { runMigration as runUploadedFilesMigration } from './infrastructure/database/migrations/008_create_uploaded_files';
 
 const PORT = process.env.PORT || 3000;
 
@@ -96,6 +97,7 @@ const startServer = async () => {
     await runSamplesUniqueConstraintMigration(pool);
     await runExampleAmrFinderPlusMigration(pool);
     await runMapAttachmentsMigration(pool);
+    await runUploadedFilesMigration(pool);
 
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
