@@ -7,9 +7,9 @@ const NAV_LINKS = [
   { label: "About", path: "/about" },
   { label: "Map View", path: "/map-view" },
   { label: "AMR Profiles", path: "/amr-profiles" },
-  { label: "River Flows", path: "/river-flows" },
+  { label: "Sample Details", path: "/river-flows" },
   { label: "Data Explorer", path: "/data-explorer" },
-  { label: "Isolates", path: "/isolates" },
+  { label: "Datasets", path: "/isolates" },
 ];
 
 export default function Navbar() {

@@ -11,6 +11,7 @@ import { runMigration as runExampleAmrFinderPlusMigration } from './infrastructu
 import { runMigration as runMapAttachmentsMigration } from './infrastructure/database/migrations/007_create_map_attachments';
 import { runMigration as runUploadedDatafilesMigration } from './infrastructure/database/migrations/008_create_uploaded_datafiles';
 import { runMigration as runUploadedDatafilesFileDataMigration } from './infrastructure/database/migrations/009_add_file_data_to_uploaded_datafiles';
+import { runMigration as runUploadedFilesMigration } from './infrastructure/database/migrations/008_create_uploaded_files';
 
 const PORT = process.env.PORT || 3000;
 
@@ -100,6 +101,7 @@ const startServer = async () => {
     await runMapAttachmentsMigration(pool);
     await runUploadedDatafilesMigration(pool);
     await runUploadedDatafilesFileDataMigration(pool);
+    await runUploadedFilesMigration(pool);
 
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);

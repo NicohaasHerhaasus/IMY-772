@@ -4,12 +4,14 @@ import { StarAmrUploadService } from '../../../application/services/staramr-uplo
 import { ExampleAmrFinderPlusUploadService } from '../../../application/services/example-amrfinder-plus-upload.service';
 import { UploadedDatafileService } from '../../../application/services/uploaded-datafile.service';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { DatasetsService } from '../../../application/services/datasets.service';
 
 export class UploadController {
   constructor(
     private readonly starAmrUploadService: StarAmrUploadService,
     private readonly exampleAmrFinderPlusUploadService: ExampleAmrFinderPlusUploadService,
     private readonly uploadedDatafileService: UploadedDatafileService,
+    private readonly datasetsService: DatasetsService,
   ) {}
 
   uploadStarAmrWorkbook = async (
@@ -36,6 +38,19 @@ export class UploadController {
         uploadedBy: userId,
         fileBuffer: req.file.buffer,
       });
+
+      // Record file upload metadata
+      try {
+        await this.datasetsService.recordFileUpload(
+          req.file.originalname,
+          'staramr',
+          result.isolatesCount,
+          'isolates'
+        );
+      } catch (error) {
+        console.warn('Failed to record file metadata:', error);
+      }
+
       res.status(201).json({
         status: 'success',
         data: result,
