@@ -22,8 +22,10 @@ jobs:
 
             cd /home/ubuntu/app
 
-            echo "==> Pulling latest changes"
-            git pull origin main
+            echo "==> Resetting repo"
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
 
             echo "==> Installing and building API"
             cd api
