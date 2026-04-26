@@ -29,7 +29,8 @@ export type DatasetType =
   | "staramr"
   | "amrfinder-plus"
   | "amrfinder-plus-tsv"
-  | "map-attachment";
+  | "map-attachment"
+  | "genotypic";
 
 export type FileStatus = "loaded" | "processing" | "error" | "validating";
 
@@ -94,12 +95,20 @@ const DATASET_CONFIG: Record<
     ext: "file",
     uploadable: false,
   },
+  genotypic: {
+    label: "Genotypic",
+    uploadEndpoint: "",
+    accept: "",
+    ext: "xlsx/tsv",
+    uploadable: false,
+  },
 };
 
 const SECTION_ORDER: { label: string; types: DatasetType[] }[] = [
   { label: "Isolate uploads", types: ["isolates"] },
   { label: "StarAMR uploads", types: ["staramr"] },
   { label: "AMRFinder+ uploads", types: ["amrfinder-plus", "amrfinder-plus-tsv"] },
+  { label: "Genotypic uploads", types: ["genotypic"] },
   { label: "Map uploads", types: ["map-attachment"] },
 ];
 
@@ -117,6 +126,7 @@ function chipMatchesType(chip: FilterChip, type: DatasetType): boolean {
 
 function fileIconStyle(type: DatasetType) {
   if (type === "map-attachment") return { bg: "#12243a", stroke: "#93c5fd" };
+  if (type === "genotypic") return { bg: "#311b2f", stroke: "#f9a8d4" };
   if (type === "amrfinder-plus-tsv") return { bg: "#0c2d45", stroke: "#60a5fa" };
   if (type === "staramr")            return { bg: "#0a2d1a", stroke: "#4ade80" };
   return                                    { bg: "#2a1f0a", stroke: "#fbbf24" };

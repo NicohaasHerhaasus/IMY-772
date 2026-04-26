@@ -20,26 +20,29 @@ export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
         source_table
       FROM (
         SELECT
-          id,
-          filename,
-          file_type,
-          status,
-          row_count,
-          error_message,
-          uploaded_at,
-          source_table
-        FROM uploaded_files
-        UNION ALL
-        SELECT
-          id,
-          display_name AS filename,
-          'map-attachment'::text AS file_type,
+          u.id,
+          u.display_name AS filename,
+          CASE
+            WHEN u.source_type = 'map_pin' THEN 'map-attachment'
+            WHEN u.upload_channel = 'staramr_workbook' THEN 'staramr'
+            WHEN u.upload_channel = 'example_amrfinder_workbook' THEN 'amrfinder-plus'
+            WHEN u.upload_channel = 'example_amrfinder_tsv' THEN 'amrfinder-plus-tsv'
+            WHEN u.upload_channel LIKE 'genotypic_%' THEN 'genotypic'
+            ELSE 'isolates'
+          END AS file_type,
           'loaded'::text AS status,
           NULL::int AS row_count,
           NULL::text AS error_message,
-          created_at AS uploaded_at,
-          'map_attachments'::text AS source_table
-        FROM map_attachments
+          u.created_at AS uploaded_at,
+          CASE
+            WHEN u.source_type = 'map_pin' THEN 'map_attachments'
+            WHEN u.upload_channel = 'staramr_workbook' THEN 'staramr_isolates'
+            WHEN u.upload_channel = 'example_amrfinder_workbook' THEN 'example_amrfinder_plus'
+            WHEN u.upload_channel = 'example_amrfinder_tsv' THEN 'example_amrfinder_plus'
+            WHEN u.upload_channel LIKE 'genotypic_%' THEN 'genotypic_analysis'
+            ELSE 'samples'
+          END AS source_table
+        FROM uploaded_datafiles u
       ) datasets
       ORDER BY uploaded_at DESC`
     );
@@ -72,26 +75,29 @@ export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
         source_table
       FROM (
         SELECT
-          id,
-          filename,
-          file_type,
-          status,
-          row_count,
-          error_message,
-          uploaded_at,
-          source_table
-        FROM uploaded_files
-        UNION ALL
-        SELECT
-          id,
-          display_name AS filename,
-          'map-attachment'::text AS file_type,
+          u.id,
+          u.display_name AS filename,
+          CASE
+            WHEN u.source_type = 'map_pin' THEN 'map-attachment'
+            WHEN u.upload_channel = 'staramr_workbook' THEN 'staramr'
+            WHEN u.upload_channel = 'example_amrfinder_workbook' THEN 'amrfinder-plus'
+            WHEN u.upload_channel = 'example_amrfinder_tsv' THEN 'amrfinder-plus-tsv'
+            WHEN u.upload_channel LIKE 'genotypic_%' THEN 'genotypic'
+            ELSE 'isolates'
+          END AS file_type,
           'loaded'::text AS status,
           NULL::int AS row_count,
           NULL::text AS error_message,
-          created_at AS uploaded_at,
-          'map_attachments'::text AS source_table
-        FROM map_attachments
+          u.created_at AS uploaded_at,
+          CASE
+            WHEN u.source_type = 'map_pin' THEN 'map_attachments'
+            WHEN u.upload_channel = 'staramr_workbook' THEN 'staramr_isolates'
+            WHEN u.upload_channel = 'example_amrfinder_workbook' THEN 'example_amrfinder_plus'
+            WHEN u.upload_channel = 'example_amrfinder_tsv' THEN 'example_amrfinder_plus'
+            WHEN u.upload_channel LIKE 'genotypic_%' THEN 'genotypic_analysis'
+            ELSE 'samples'
+          END AS source_table
+        FROM uploaded_datafiles u
       ) datasets
       WHERE id = $1`,
       [id]
@@ -148,7 +154,14 @@ export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
   async getRowsBySourceTable(sourceTable: string, fileId?: string): Promise<Record<string, unknown>[]> {
     // Dynamically query the source table (with basic SQL injection protection)
     // This assumes all source tables follow the same naming conventions
-    const allowedTables = ['samples', 'isolates', 'staramr_isolates', 'example_amrfinder_plus', 'map_attachments'];
+    const allowedTables = [
+      'samples',
+      'isolates',
+      'staramr_isolates',
+      'example_amrfinder_plus',
+      'genotypic_analysis',
+      'map_attachments',
+    ];
 
     if (!allowedTables.includes(sourceTable)) {
       throw new Error(`Invalid source table: ${sourceTable}`);
