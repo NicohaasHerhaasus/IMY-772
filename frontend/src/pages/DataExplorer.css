@@ -200,14 +200,20 @@
   height: 36px;
   border-radius: 8px;
   border: none;
-  padding: 0 8px;
+  padding: 0 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
   color: #0d1f2d;
   background: #ffffff;
   outline: none;
+  cursor: pointer;
+  min-width: 0;
 }
 .de-date-inp:focus { box-shadow: 0 0 0 2px rgba(216, 226, 224, 0.35); }
+.de-date-inp::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+}
 
 /* Range pair (min/max numeric inputs) */
 .de-range-row { display: flex; gap: 6px; }

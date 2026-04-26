@@ -155,13 +155,20 @@ export class QueryBuilderService {
 
     const client = await this.pool.connect();
     try {
-      // Total rows in the geo-filtered universe (for match rate)
-      const geoParams = [filters.geo_loc_name];
+      // Total rows in universe used for match-rate denominator
+      const useGeoUniverse =
+        !!filters.geo_loc_name &&
+        filters.geo_loc_name.trim() !== '' &&
+        filters.geo_loc_name !== 'All';
+      const geoCountQuery = useGeoUniverse
+        ? `SELECT COUNT(*) AS count FROM samples WHERE geo_loc_name = $1`
+        : `SELECT COUNT(*) AS count FROM samples`;
+      const geoCountParams = useGeoUniverse ? [filters.geo_loc_name] : [];
       const { rows: geoCountRows } = await client.query<{ count: string }>(
-        `SELECT COUNT(*) AS count FROM samples WHERE geo_loc_name = $1`,
-        geoParams,
+        geoCountQuery,
+        geoCountParams,
       );
-      const geoTotal = parseInt(geoCountRows[0].count, 10);
+      const geoTotal = parseInt(geoCountRows[0]?.count ?? '0', 10);
 
       // Actual filtered query
       const { rows } = await client.query<Record<string, unknown>>(
@@ -253,9 +260,6 @@ export class QueryBuilderService {
   private validateFilters(filters: QueryBuilderFilters): void {
     const errors: string[] = [];
 
-    if (!filters.geo_loc_name?.trim()) {
-      errors.push('geo_loc_name is required.');
-    }
     if (!filters.collection_date_start?.trim()) {
       errors.push('collection_date_start is required.');
     }
@@ -297,8 +301,10 @@ export class QueryBuilderService {
 
     // ── Mandatory ──────────────────────────────────────────────────────────
 
-    params.push(filters.geo_loc_name);
-    conditions.push(`geo_loc_name = $${params.length}`);
+    if (filters.geo_loc_name && filters.geo_loc_name !== 'All') {
+      params.push(filters.geo_loc_name);
+      conditions.push(`geo_loc_name = $${params.length}`);
+    }
 
     // collection_date is stored as VARCHAR("YYYY-MM-DD") — cast for range comparison
     params.push(filters.collection_date_start);
