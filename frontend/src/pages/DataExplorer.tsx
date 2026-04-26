@@ -560,17 +560,31 @@ const EMPTY_FILTERS: Filters = {
   amrSubclass: '',
 };
 
+function isAllFilter(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === '' || normalized === 'all';
+}
+
+function openDatePicker(input: HTMLInputElement): void {
+  const pickerCapable = input as HTMLInputElement & { showPicker?: () => void };
+  try {
+    pickerCapable.showPicker?.();
+  } catch {
+    // Some browsers require strict user-gesture contexts; native picker still works.
+  }
+}
+
 // Map frontend Filters → backend QueryBuilderFilters
 function toApiFilters(f: Filters): QueryBuilderFilters {
   return {
-    geo_loc_name: f.geo,
+    geo_loc_name: isAllFilter(f.geo) ? '' : f.geo,
     collection_date_start: f.dateFrom,
     collection_date_end: f.dateTo,
     collected_by: f.collectedBy || undefined,
     amr_resistance_gene: f.amrGene || undefined,
     predicted_sir_profile: f.sir || undefined,
-    organism: f.organism || undefined,
-    isolation_source: f.source || undefined,
+    organism: isAllFilter(f.organism) ? undefined : f.organism,
+    isolation_source: isAllFilter(f.source) ? undefined : f.source,
     element_class: f.amrClass || undefined,
     element_subclass: f.amrSubclass || undefined,
   };
@@ -667,21 +681,15 @@ function SelectField({
 // ── Validation ────────────────────────────────────────────────────────────────
 
 interface ValidationErrors {
-  geo?: string;
   date?: string;
-  atLeastOne?: string;
 }
 
 function validate(f: Filters): ValidationErrors {
   const errs: ValidationErrors = {};
-  if (!f.geo) errs.geo = 'Geographic location is required.';
   if (!f.dateFrom || !f.dateTo) {
     errs.date = 'Both start and end dates are required.';
   } else if (f.dateFrom > f.dateTo) {
     errs.date = 'Start date must be on or before end date.';
-  }
-  if (!f.organism && !f.source) {
-    errs.atLeastOne = 'Select at least one of Organism or Isolation source.';
   }
   return errs;
 }
@@ -971,9 +979,6 @@ export default function DataExplorer() {
             placeholder="All regions"
             loading={optionsLoading}
           />
-          {validationErrors.geo && (
-            <div className="de-field-error">{validationErrors.geo}</div>
-          )}
 
           <div className="de-field">
             <div className="de-flabel de-flabel--green">
@@ -986,12 +991,14 @@ export default function DataExplorer() {
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setF('dateFrom')(e.target.value)}
+                onClick={(e) => openDatePicker(e.currentTarget)}
               />
               <input
                 className="de-date-inp"
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setF('dateTo')(e.target.value)}
+                onClick={(e) => openDatePicker(e.currentTarget)}
               />
             </div>
             {validationErrors.date && (
@@ -1050,9 +1057,6 @@ export default function DataExplorer() {
             options={options?.isolationSources ?? []}
             loading={optionsLoading}
           />
-          {validationErrors.atLeastOne && (
-            <div className="de-field-error">{validationErrors.atLeastOne}</div>
-          )}
 
           {/* ── Optional ── */}
           <div className="de-section-label" style={{ marginTop: 10 }}>

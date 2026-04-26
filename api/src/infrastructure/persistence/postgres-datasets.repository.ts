@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import * as XLSX from 'xlsx';
 import {
   DatasetsRepositoryPort,
   UploadedFileRecord,
@@ -6,6 +7,26 @@ import {
 
 export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
   constructor(private readonly pool: Pool) {}
+
+  private parseDelimited(content: string, delimiter: ',' | '\t'): Record<string, unknown>[] {
+    const lines = content
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .map((l) => l.trimEnd())
+      .filter((l) => l.length > 0);
+    if (lines.length === 0) return [];
+    const headers = lines[0].split(delimiter).map((h) => h.trim());
+    const rows: Record<string, unknown>[] = [];
+    for (const line of lines.slice(1)) {
+      const cols = line.split(delimiter);
+      const row: Record<string, unknown> = {};
+      headers.forEach((h, i) => {
+        row[h || `column_${i + 1}`] = cols[i] ?? '';
+      });
+      rows.push(row);
+    }
+    return rows;
+  }
 
   async getAllFiles(): Promise<UploadedFileRecord[]> {
     const result = await this.pool.query(
@@ -177,6 +198,7 @@ export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
           display_name,
           original_filename,
           mime_type,
+          file_data,
           latitude,
           longitude,
           uploaded_by,
@@ -185,7 +207,54 @@ export class PostgresDatasetsRepository implements DatasetsRepositoryPort {
         WHERE id = $1`,
         [fileId],
       );
-      return result.rows;
+      const file = result.rows[0] as
+        | {
+            id: string;
+            display_name: string;
+            original_filename: string;
+            mime_type: string;
+            file_data: Buffer | null;
+            latitude: number;
+            longitude: number;
+            uploaded_by: string;
+            created_at: Date;
+          }
+        | undefined;
+
+      if (!file || !file.file_data) return [];
+
+      const lowerName = file.original_filename.toLowerCase();
+      const mime = (file.mime_type ?? '').toLowerCase();
+
+      try {
+        if (lowerName.endsWith('.csv') || mime.includes('csv')) {
+          return this.parseDelimited(file.file_data.toString('utf8'), ',');
+        }
+        if (lowerName.endsWith('.tsv') || mime.includes('tab-separated') || lowerName.endsWith('.txt')) {
+          return this.parseDelimited(file.file_data.toString('utf8'), '\t');
+        }
+        if (lowerName.endsWith('.xlsx') || mime.includes('spreadsheetml')) {
+          const wb = XLSX.read(file.file_data, { type: 'buffer' });
+          const firstSheet = wb.SheetNames[0];
+          if (!firstSheet) return [];
+          return XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[firstSheet], { defval: '' });
+        }
+      } catch {
+        // fall through to metadata row
+      }
+
+      return [
+        {
+          id: file.id,
+          display_name: file.display_name,
+          original_filename: file.original_filename,
+          mime_type: file.mime_type,
+          latitude: file.latitude,
+          longitude: file.longitude,
+          uploaded_by: file.uploaded_by,
+          created_at: file.created_at,
+        },
+      ];
     }
 
     // Use dynamic query with parameterized table name (note: table names can't be parameterized in pg)
