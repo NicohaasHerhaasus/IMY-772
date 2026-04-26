@@ -117,7 +117,7 @@ export default function ManageDatafiles() {
     <div className="w-full pb-4">
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[2rem] font-bold text-primary m-0 tracking-[-0.3px] leading-tight">
+          <h1 className="text-[2rem] font-bold text-primary m-0 tracking-[-0.3px] leading-tight" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800 }}>
           Manage Existing Datafiles
           </h1>
           <p className="m-0 text-[0.9rem] text-text-muted">

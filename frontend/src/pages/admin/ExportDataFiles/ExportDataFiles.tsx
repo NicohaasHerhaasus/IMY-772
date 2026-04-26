@@ -32,7 +32,7 @@ export default function ExportDatafiles() {
 
   return (
     <div>
-      <h1 className="text-[2rem] font-bold text-primary mb-7 tracking-[-0.3px] transition-all duration-200">
+      <h1 className="text-[2rem] font-bold text-primary mb-7 tracking-[-0.3px] transition-all duration-200" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800 }}>
         Export Data{dataSource ? ` from ${dataSource}` : ""}
       </h1>
 
