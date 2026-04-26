@@ -1,10 +1,10 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 // Per-user: 10 requests per hour
 export const chatbotUserLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 10,
-  keyGenerator: (req: any) => req.userId ?? req.ip,
+  keyGenerator: (req: any) => req.userId ?? ipKeyGenerator(req.ip),
   message: {
     status: 429,
     message: 'Rate limit exceeded. You can send 10 messages per hour.',

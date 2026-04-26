@@ -41,11 +41,11 @@
    PAGE HEADING
    ============================================= */
 .upload-page-title {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Syne', sans-serif;
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: -0.04em;
-  color: var(--ink);
+  color: #1c2f42;
   margin: 0 0 1.75rem;
   line-height: 1.15;
 }
@@ -88,7 +88,7 @@
    ============================================= */
 .upload-dropzone {
   position: relative;
-  background: var(--surface);
+  background: var(--surface-raised);
   border: 2px dashed var(--border);
   border-radius: var(--radius-lg);
   padding: 3rem 2rem;

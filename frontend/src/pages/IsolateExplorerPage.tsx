@@ -28,7 +28,9 @@ export type DatasetType =
   | "isolates"
   | "staramr"
   | "amrfinder-plus"
-  | "amrfinder-plus-tsv";
+  | "amrfinder-plus-tsv"
+  | "map-attachment"
+  | "genotypic";
 
 export type FileStatus = "loaded" | "processing" | "error" | "validating";
 
@@ -51,14 +53,16 @@ interface ClientFile extends UploadedFileRecord {
   rowsFetched?: boolean;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const RAW_API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API_BASE = RAW_API_BASE.endsWith("/api")
+  ? RAW_API_BASE
+  : `${RAW_API_BASE.replace(/\/$/, "")}/api`;
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 
 const DATASET_CONFIG: Record<
   DatasetType,
-  { label: string; uploadEndpoint: string; accept: string; ext: string }
+  { label: string; uploadEndpoint: string; accept: string; ext: string; uploadable?: boolean }
 > = {
   isolates: {
     label: "Isolates",
@@ -84,12 +88,28 @@ const DATASET_CONFIG: Record<
     accept: ".tsv,.txt",
     ext: "tsv",
   },
+  "map-attachment": {
+    label: "Map file",
+    uploadEndpoint: "",
+    accept: "",
+    ext: "file",
+    uploadable: false,
+  },
+  genotypic: {
+    label: "Genotypic",
+    uploadEndpoint: "",
+    accept: "",
+    ext: "xlsx/tsv",
+    uploadable: false,
+  },
 };
 
 const SECTION_ORDER: { label: string; types: DatasetType[] }[] = [
   { label: "Isolate uploads", types: ["isolates"] },
   { label: "StarAMR uploads", types: ["staramr"] },
   { label: "AMRFinder+ uploads", types: ["amrfinder-plus", "amrfinder-plus-tsv"] },
+  { label: "Genotypic uploads", types: ["genotypic"] },
+  { label: "Map uploads", types: ["map-attachment"] },
 ];
 
 const FILTER_CHIPS: FilterChip[] = ["All", "Isolates", "StarAMR", "AMRFinder+"];
@@ -105,6 +125,8 @@ function chipMatchesType(chip: FilterChip, type: DatasetType): boolean {
 }
 
 function fileIconStyle(type: DatasetType) {
+  if (type === "map-attachment") return { bg: "#12243a", stroke: "#93c5fd" };
+  if (type === "genotypic") return { bg: "#311b2f", stroke: "#f9a8d4" };
   if (type === "amrfinder-plus-tsv") return { bg: "#0c2d45", stroke: "#60a5fa" };
   if (type === "staramr")            return { bg: "#0a2d1a", stroke: "#4ade80" };
   return                                    { bg: "#2a1f0a", stroke: "#fbbf24" };
@@ -300,7 +322,7 @@ function UploadModal({ onClose, onUploaded }: UploadModalProps) {
                 DatasetType,
                 (typeof DATASET_CONFIG)[DatasetType]
               ][]
-            ).map(([key, c]) => (
+            ).filter(([, c]) => c.uploadable !== false).map(([key, c]) => (
               <button
                 key={key}
                 style={{
@@ -563,6 +585,8 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
   const [files, setFiles] = useState<ClientFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const [selected, setSelected] = useState<ClientFile | null>(null);
   const [filterChip, setFilterChip] = useState<FilterChip>("All");
   const [panelSearch, setPanelSearch] = useState("");
@@ -602,6 +626,7 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
   async function selectFile(file: ClientFile) {
     setSelected(file);
     setTableSearch("");
+    setDownloadError(null);
     if (file.rowsFetched) return; // already loaded
 
     try {
@@ -651,6 +676,35 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
   const errorCount  = files.filter((f) => f.status === "error").length;
   const rows        = selected?.rows ?? [];
   const rowCount    = selected?.rowCount ?? rows.length;
+
+  async function downloadSelectedFile() {
+    if (!selected) return;
+    setDownloadError(null);
+    setDownloading(true);
+    try {
+      const res = await fetch(`${API_BASE}/datafiles/${encodeURIComponent(selected.id)}/public-download`);
+      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      const blob = await res.blob();
+      const cd = res.headers.get("Content-Disposition");
+      let filename = selected.name || "download";
+      if (cd) {
+        const m = /filename\*?=(?:UTF-8'')?["']?([^"';]+)/i.exec(cd);
+        if (m?.[1]) filename = decodeURIComponent(m[1].replace(/["']/g, "").trim());
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setDownloadError((e as Error).message ?? "Download failed.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -902,16 +956,21 @@ export default function DataExplorerPage({ isAdmin = false }: DataExplorerPagePr
                     </span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {([<IconColumns />, <IconFilter />, <IconExport />] as React.ReactNode[]).map(
-                    (ic, i) => (
-                      <div key={i} className="icon-btn-hover" style={S.iconBtn}>
-                        {ic}
-                      </div>
-                    )
-                  )}
-                </div>
+                <button
+                  className="icon-btn-hover"
+                  style={{ ...S.iconBtn, width: "auto", padding: "0 12px", gap: 6, color: "#2a6b5a", fontWeight: 600, fontSize: 11 }}
+                  onClick={downloadSelectedFile}
+                  disabled={downloading}
+                >
+                  <IconExport />
+                  {downloading ? "Downloading..." : "Download"}
+                </button>
               </div>
+              {downloadError && (
+                <div style={{ padding: "8px 22px 0", color: "#A32D2D", fontSize: 11 }}>
+                  {downloadError}
+                </div>
+              )}
 
               {/* Stats */}
               <div style={S.rpStats}>
