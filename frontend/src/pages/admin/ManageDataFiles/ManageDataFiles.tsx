@@ -117,10 +117,10 @@ export default function ManageDatafiles() {
     <div className="w-full pb-4">
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[2rem] font-bold text-primary m-0 tracking-[-0.3px] leading-tight" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800 }}>
+          <h1 className="text-[2rem] font-bold m-0 tracking-[-0.3px] leading-tight" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, color: '#1c2f42' }}>
           Manage Existing Datafiles
           </h1>
-          <p className="m-0 text-[0.9rem] text-text-muted">
+          <p className="m-0 text-[0.9rem]" style={{ color: '#4a5d6e' }}>
             Rename or remove uploaded files, including map pin uploads.
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function ManageDatafiles() {
             {filtered.map((file, index) => (
               <li
                 key={file.id}
-                className="flex items-stretch bg-[#f5fbf8] border-[1.5px] border-accent/20 rounded-[10px] overflow-hidden transition-[box-shadow,transform] duration-150 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px animate-row-in"
+                className="flex items-stretch bg-white border border-black/[0.07] rounded-[10px] overflow-hidden transition-[box-shadow,transform] duration-150 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px animate-row-in"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <div className="w-[5px] self-stretch bg-accent shrink-0" />

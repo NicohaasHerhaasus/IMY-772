@@ -50,7 +50,7 @@
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: var(--ink);
+  color: #1c2f42;
   margin: 0 0 0.35rem;
   line-height: 1.15;
 }
@@ -58,7 +58,7 @@
 .chatbot-page__subtitle {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.875rem;
-  color: var(--ink-60);
+  color: #4a5d6e;
   margin: 0 0 1.75rem;
 }
 
