@@ -17,7 +17,7 @@ export class DatasetsService {
       throw new Error(`File not found: ${id}`);
     }
 
-    return this.datasetsRepository.getRowsBySourceTable(file.source_table);
+    return this.datasetsRepository.getRowsBySourceTable(file.source_table, file.id);
   }
 
   async recordFileUpload(

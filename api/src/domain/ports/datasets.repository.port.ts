@@ -1,9 +1,15 @@
 export interface UploadedFileRecord {
   id: string;
   filename: string;
-  file_type: 'isolates' | 'staramr' | 'amrfinder-plus' | 'amrfinder-plus-tsv' | 'genotypic';
+  file_type:
+    | 'isolates'
+    | 'staramr'
+    | 'amrfinder-plus'
+    | 'amrfinder-plus-tsv'
+    | 'genotypic'
+    | 'map-attachment';
   status: 'loaded' | 'processing' | 'error' | 'validating';
-  row_count: number;
+  row_count: number | null;
   error_message?: string | null;
   uploaded_at: string; // ISO string from database
   source_table: string;
@@ -34,5 +40,5 @@ export interface DatasetsRepositoryPort {
   /**
    * Fetch all rows from a specific table (source_table).
    */
-  getRowsBySourceTable(sourceTable: string): Promise<Record<string, unknown>[]>;
+  getRowsBySourceTable(sourceTable: string, fileId?: string): Promise<Record<string, unknown>[]>;
 }
