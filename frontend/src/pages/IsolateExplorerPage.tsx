@@ -185,19 +185,6 @@ const IconUpload = () => (
   </svg>
 );
 
-const IconColumns = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.8" strokeLinecap="round">
-    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-  </svg>
-);
-
-const IconFilter = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.8" strokeLinecap="round">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-  </svg>
-);
-
 const IconExport = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.8" strokeLinecap="round">
     <polyline points="8 17 12 21 16 17" />
