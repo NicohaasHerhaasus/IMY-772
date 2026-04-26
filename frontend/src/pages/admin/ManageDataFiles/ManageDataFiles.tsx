@@ -114,14 +114,19 @@ export default function ManageDatafiles() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-7 gap-4 flex-wrap">
-        <h1 className="text-[2rem] font-bold text-primary m-0 tracking-[-0.3px]">
+    <div className="w-full pb-4">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[2rem] font-bold text-primary m-0 tracking-[-0.3px] leading-tight">
           Manage Existing Datafiles
-        </h1>
+          </h1>
+          <p className="m-0 text-[0.9rem] text-text-muted">
+            Rename or remove uploaded files, including map pin uploads.
+          </p>
+        </div>
 
         {/* Search bar */}
-        <div className="flex items-center gap-2 bg-white border-[1.5px] border-black/10 rounded-lg px-3.5 py-2 min-w-[220px] transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(26,158,122,0.1)]">
+        <div className="flex items-center gap-2 bg-white border-[1.5px] border-black/10 rounded-lg px-3.5 py-2 min-w-[240px] md:min-w-[300px] transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(26,158,122,0.1)]">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={16} height={16} className="text-text-light shrink-0">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -144,7 +149,7 @@ export default function ManageDatafiles() {
         </div>
       </div>
 
-      <Card className="p-6 min-h-[200px]">
+      <Card className="p-5 md:p-6 min-h-[220px] border border-black/[0.06] shadow-sm">
         {loading ? (
           <p className="m-0 text-text-muted">Loading datafiles...</p>
         ) : error ? (
@@ -157,28 +162,30 @@ export default function ManageDatafiles() {
             <p className="m-0">No datafiles found{search ? ` for "${search}"` : ""}.</p>
           </div>
         ) : (
-          <ul className="list-none m-0 p-0 flex flex-col gap-3">
+          <ul className="list-none m-0 p-0 flex flex-col gap-2.5">
             {filtered.map((file, index) => (
               <li
                 key={file.id}
-                className="flex items-center bg-[#f5fbf8] border-[1.5px] border-accent/20 rounded-[10px] overflow-hidden transition-[box-shadow,transform] duration-150 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px animate-row-in"
+                className="flex items-stretch bg-[#f5fbf8] border-[1.5px] border-accent/20 rounded-[10px] overflow-hidden transition-[box-shadow,transform] duration-150 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:-translate-y-px animate-row-in"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <div className="w-[5px] self-stretch bg-accent shrink-0" />
-                <div className="flex-1 px-5 py-[18px] flex flex-col gap-1">
-                  <span className="text-[1rem] font-semibold text-primary">{file.displayName}</span>
+                <div className="flex-1 min-w-0 px-5 py-4 flex flex-col gap-1">
+                  <span className="text-[1rem] font-semibold text-primary truncate" title={file.displayName}>
+                    {file.displayName}
+                  </span>
                   <span className="text-[0.8rem] text-text-muted">
                     {file.sourceType === "map_pin" ? "Map pin upload" : "Structured upload"} -{" "}
                     {file.uploadChannel}
                   </span>
-                  <span className="text-[0.78rem] text-text-muted">
+                  <span className="text-[0.78rem] text-text-muted break-words">
                     {file.originalFilename} - {fmtDate(file.createdAt)}
                     {file.latitude !== null && file.longitude !== null
                       ? ` - ${file.latitude.toFixed(5)}, ${file.longitude.toFixed(5)}`
                       : ""}
                   </span>
                 </div>
-                <div className="flex gap-1 px-4">
+                <div className="flex items-center gap-1.5 px-3 py-3 border-l border-black/[0.06] bg-white/55">
                   <button
                     className="flex items-center justify-center w-9 h-9 rounded-lg border-none cursor-pointer transition-[background,color] duration-150 bg-transparent text-[#4b5563] hover:bg-accent/10 hover:text-accent"
                     onClick={() => openEdit(file)}

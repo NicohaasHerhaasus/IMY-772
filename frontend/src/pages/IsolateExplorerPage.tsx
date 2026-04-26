@@ -28,7 +28,8 @@ export type DatasetType =
   | "isolates"
   | "staramr"
   | "amrfinder-plus"
-  | "amrfinder-plus-tsv";
+  | "amrfinder-plus-tsv"
+  | "map-attachment";
 
 export type FileStatus = "loaded" | "processing" | "error" | "validating";
 
@@ -51,14 +52,16 @@ interface ClientFile extends UploadedFileRecord {
   rowsFetched?: boolean;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+const RAW_API_BASE =
+  import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API_BASE = RAW_API_BASE.endsWith("/api")
+  ? RAW_API_BASE
+  : `${RAW_API_BASE.replace(/\/$/, "")}/api`;
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 
 const DATASET_CONFIG: Record<
   DatasetType,
-  { label: string; uploadEndpoint: string; accept: string; ext: string }
+  { label: string; uploadEndpoint: string; accept: string; ext: string; uploadable?: boolean }
 > = {
   isolates: {
     label: "Isolates",
@@ -84,12 +87,20 @@ const DATASET_CONFIG: Record<
     accept: ".tsv,.txt",
     ext: "tsv",
   },
+  "map-attachment": {
+    label: "Map file",
+    uploadEndpoint: "",
+    accept: "",
+    ext: "file",
+    uploadable: false,
+  },
 };
 
 const SECTION_ORDER: { label: string; types: DatasetType[] }[] = [
   { label: "Isolate uploads", types: ["isolates"] },
   { label: "StarAMR uploads", types: ["staramr"] },
   { label: "AMRFinder+ uploads", types: ["amrfinder-plus", "amrfinder-plus-tsv"] },
+  { label: "Map uploads", types: ["map-attachment"] },
 ];
 
 const FILTER_CHIPS: FilterChip[] = ["All", "Isolates", "StarAMR", "AMRFinder+"];
@@ -105,6 +116,7 @@ function chipMatchesType(chip: FilterChip, type: DatasetType): boolean {
 }
 
 function fileIconStyle(type: DatasetType) {
+  if (type === "map-attachment") return { bg: "#12243a", stroke: "#93c5fd" };
   if (type === "amrfinder-plus-tsv") return { bg: "#0c2d45", stroke: "#60a5fa" };
   if (type === "staramr")            return { bg: "#0a2d1a", stroke: "#4ade80" };
   return                                    { bg: "#2a1f0a", stroke: "#fbbf24" };
@@ -300,7 +312,7 @@ function UploadModal({ onClose, onUploaded }: UploadModalProps) {
                 DatasetType,
                 (typeof DATASET_CONFIG)[DatasetType]
               ][]
-            ).map(([key, c]) => (
+            ).filter(([, c]) => c.uploadable !== false).map(([key, c]) => (
               <button
                 key={key}
                 style={{
