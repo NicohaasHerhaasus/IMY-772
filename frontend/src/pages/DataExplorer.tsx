@@ -212,6 +212,24 @@ function validate(f: Filters): ValidationErrors {
   return errs;
 }
 
+function validateCompareRanges(
+  a: { dateFrom: string; dateTo: string },
+  b: { dateFrom: string; dateTo: string },
+): { b?: string; overlap?: string } {
+  const errs: { b?: string; overlap?: string } = {};
+  if (!b.dateFrom || !b.dateTo) {
+    errs.b = 'Both start and end dates required for Range B.';
+  } else if (b.dateFrom > b.dateTo) {
+    errs.b = 'Range B start must be on or before end date.';
+  }
+  if (!errs.b && a.dateFrom && a.dateTo) {
+    if (a.dateFrom <= b.dateTo && b.dateFrom <= a.dateTo) {
+      errs.overlap = 'Date ranges must not overlap.';
+    }
+  }
+  return errs;
+}
+
 // ── Example query card (used in empty state) ────────────────────────────────
 
 function ExampleQueryCard() {
@@ -277,12 +295,20 @@ export default function DataExplorer() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [hasQueried, setHasQueried] = useState(false);
 
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [filtersB, setFiltersB] = useState<{ dateFrom: string; dateTo: string }>({ dateFrom: '', dateTo: '' });
+  const [resultB, setResultB] = useState<QueryResult | null>(null);
+  const [validationErrorsB, setValidationErrorsB] = useState<{ date?: string }>({});
+  const [overlapError, setOverlapError] = useState<string | null>(null);
+
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportingXlsx, setExportingXlsx] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
   // Persist last valid filters used for export
   const lastFiltersRef = useRef<Filters>(EMPTY_FILTERS);
+  const lastFiltersBRef = useRef<Filters>(EMPTY_FILTERS);
 
   // ── Load dropdown options on mount ────────────────────────────────────────
 
@@ -320,32 +346,88 @@ export default function DataExplorer() {
   async function runQuery() {
     const errs = validate(filters);
     setValidationErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+
+    let compareErrs: { b?: string; overlap?: string } = {};
+    if (compareMode) {
+      compareErrs = validateCompareRanges(filters, filtersB);
+      setValidationErrorsB({ date: compareErrs.b });
+      setOverlapError(compareErrs.overlap ?? null);
+    }
+
+    if (Object.keys(errs).length > 0 || Object.keys(compareErrs).length > 0) return;
 
     setQueryLoading(true);
     setQueryErrors([]);
     setResult(null);
+    setResultB(null);
     setExportError(null);
 
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch(`${API_BASE}/query`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(toApiFilters(filters)),
-      });
-      const json = await res.json();
 
-      if (!res.ok) {
-        setQueryErrors(
-          json.errors ?? [json.message ?? `Server error (${res.status})`],
-        );
-        return;
+      if (!compareMode) {
+        const res = await fetch(`${API_BASE}/query`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(toApiFilters(filters)),
+        });
+        const json = await res.json();
+
+        if (!res.ok) {
+          setQueryErrors(
+            json.errors ?? [json.message ?? `Server error (${res.status})`],
+          );
+          return;
+        }
+
+        setResult(json.data as QueryResult);
+        lastFiltersRef.current = { ...filters };
+        setHasQueried(true);
+      } else {
+        const filtersForB: Filters = { ...filters, dateFrom: filtersB.dateFrom, dateTo: filtersB.dateTo };
+
+        const [resA, resB] = await Promise.allSettled([
+          fetch(`${API_BASE}/query`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(toApiFilters(filters)),
+          }),
+          fetch(`${API_BASE}/query`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(toApiFilters(filtersForB)),
+          }),
+        ]);
+
+        const errors: string[] = [];
+
+        if (resA.status === 'fulfilled') {
+          const json = await resA.value.json();
+          if (resA.value.ok) {
+            setResult(json.data as QueryResult);
+            lastFiltersRef.current = { ...filters };
+          } else {
+            errors.push(`Range A: ${json.errors?.[0] ?? json.message ?? `Server error (${resA.value.status})`}`);
+          }
+        } else {
+          errors.push('Range A query failed.');
+        }
+
+        if (resB.status === 'fulfilled') {
+          const json = await resB.value.json();
+          if (resB.value.ok) {
+            setResultB(json.data as QueryResult);
+            lastFiltersBRef.current = { ...filtersForB };
+          } else {
+            errors.push(`Range B: ${json.errors?.[0] ?? json.message ?? `Server error (${resB.value.status})`}`);
+          }
+        } else {
+          errors.push('Range B query failed.');
+        }
+
+        if (errors.length > 0) setQueryErrors(errors);
+        setHasQueried(true);
       }
-
-      setResult(json.data as QueryResult);
-      lastFiltersRef.current = { ...filters };
-      setHasQueried(true);
     } catch (err) {
       setQueryErrors([
         err instanceof Error ? err.message : 'An unexpected error occurred.',
@@ -358,23 +440,42 @@ export default function DataExplorer() {
   function resetAll() {
     setFilters(EMPTY_FILTERS);
     setResult(null);
+    setResultB(null);
+    setCompareMode(false);
+    setFiltersB({ dateFrom: '', dateTo: '' });
     setHasQueried(false);
     setQueryErrors([]);
     setValidationErrors({});
+    setValidationErrorsB({});
+    setOverlapError(null);
     setExportError(null);
   }
 
   // ── Export handlers ───────────────────────────────────────────────────────
 
+  async function triggerCompareDownload(
+    endpoint: '/export/csv' | '/export/xlsx',
+    ext: 'csv' | 'xlsx',
+  ) {
+    const ts = Date.now();
+    await triggerDownload(endpoint, lastFiltersRef.current, `range_a_${ts}.${ext}`);
+    await new Promise((r) => setTimeout(r, 200));
+    await triggerDownload(endpoint, lastFiltersBRef.current, `range_b_${ts}.${ext}`);
+  }
+
   async function handleExportCsv() {
     setExportingCsv(true);
     setExportError(null);
     try {
-      await triggerDownload(
-        '/export/csv',
-        lastFiltersRef.current,
-        `query_results_${Date.now()}.csv`,
-      );
+      if (compareMode && resultB !== null) {
+        await triggerCompareDownload('/export/csv', 'csv');
+      } else {
+        await triggerDownload(
+          '/export/csv',
+          lastFiltersRef.current,
+          `query_results_${Date.now()}.csv`,
+        );
+      }
     } catch (err) {
       setExportError(err instanceof Error ? err.message : 'CSV export failed.');
     } finally {
@@ -386,11 +487,15 @@ export default function DataExplorer() {
     setExportingXlsx(true);
     setExportError(null);
     try {
-      await triggerDownload(
-        '/export/xlsx',
-        lastFiltersRef.current,
-        `query_results_${Date.now()}.xlsx`,
-      );
+      if (compareMode && resultB !== null) {
+        await triggerCompareDownload('/export/xlsx', 'xlsx');
+      } else {
+        await triggerDownload(
+          '/export/xlsx',
+          lastFiltersRef.current,
+          `query_results_${Date.now()}.xlsx`,
+        );
+      }
     } catch (err) {
       setExportError(err instanceof Error ? err.message : 'XLSX export failed.');
     } finally {
@@ -414,13 +519,21 @@ export default function DataExplorer() {
         ...(filters.dateFrom || filters.dateTo
           ? [
               {
-                label: 'Date',
+                label: compareMode ? 'Range A' : 'Date',
                 value: `${filters.dateFrom || '…'} → ${filters.dateTo || '…'}`,
               },
             ]
           : []),
+        ...(compareMode && (filtersB.dateFrom || filtersB.dateTo)
+          ? [
+              {
+                label: 'Range B',
+                value: `${filtersB.dateFrom || '…'} → ${filtersB.dateTo || '…'}`,
+              },
+            ]
+          : []),
       ].filter((t) => t.value !== ''),
-    [filters],
+    [filters, compareMode, filtersB],
   );
 
   // Rows as table columns (keep order from first row's keys)
@@ -429,20 +542,107 @@ export default function DataExplorer() {
     [result],
   );
 
+  const isCompareResult = compareMode && result !== null && resultB !== null;
+
   const canExport = hasQueried && result !== null && result.rows.length > 0 && !queryLoading;
 
-  // ── Example queries ───────────────────────────────────────────────────────
-  // NOTE: EXAMPLE_QUERIES was removed as it's no longer used; use loadExample callback instead
+  // ── Table render helper ───────────────────────────────────────────────────
 
+  function renderTable(rows: Record<string, unknown>[], cols: string[]) {
+    return (
+      <div className="de-table-scroll">
+        <table className="de-table">
+          <thead>
+            <tr>
+              {cols.map((col) => (
+                <th key={col}>{col.replace(/_/g, ' ')}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i}>
+                {cols.map((col) => {
+                  const val = row[col];
+                  const str = val === null || val === undefined ? '' : String(val);
+                  const isGene = col === 'amr_resistance_genes';
+                  const isSir = col === 'predicted_sir_profile';
+                  const isClass = col === 'element_class';
+                  const isPrimary = col === 'sample_name';
+                  const isMono = col === 'isolate_id' || col === 'accession_closest_sequence';
+                  const isItalic = col === 'organism';
+                  return (
+                    <td
+                      key={col}
+                      className={
+                        isPrimary
+                          ? 'de-td-primary'
+                          : isMono
+                            ? 'de-td-mono'
+                            : isItalic
+                              ? 'de-td-italic'
+                              : isGene
+                                ? 'de-td-genes'
+                                : isSir
+                                  ? 'de-td-sir'
+                                  : 'de-td-muted'
+                      }
+                    >
+                      {isClass ? (
+                        <span className="de-pill de-pill--blue">{str}</span>
+                      ) : (
+                        str
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
-  // NOTE: loadAndRun was removed as it's no longer used; use loadExample callback instead
+  // ── Stat cards render helper ──────────────────────────────────────────────
+
+  function renderStatCards(r: QueryResult) {
+    return (
+      <div className="de-stats">
+        <div className="de-stat-card">
+          <div className="de-stat-value de-stat-value--red">
+            {r.matchRate !== null ? `${r.matchRate}%` : 'N/A'}
+          </div>
+          <div className="de-stat-label">Match rate</div>
+        </div>
+        <div className="de-stat-card">
+          <div className="de-stat-value de-stat-value--teal">
+            {r.isolatesReturned}
+          </div>
+          <div className="de-stat-label">Isolates returned</div>
+        </div>
+        <div className="de-stat-card">
+          <div className="de-stat-value de-stat-value--amber">
+            {r.uniqueAmrGenes}
+          </div>
+          <div className="de-stat-label">Unique AMR genes</div>
+        </div>
+        <div className="de-stat-card">
+          <div className="de-stat-value de-stat-value--dark">
+            {r.organisms}
+          </div>
+          <div className="de-stat-label">Organisms</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="de-page">
       {/* ══ SIDEBAR ══ */}
       <aside className="de-sidebar">
         <div className="de-sidebar-head">
-          <div className="de-sidebar-title" style={{ fontFamily: "'Syne', sans-serif" }}>Query builder</div>            
+          <div className="de-sidebar-title" style={{ fontFamily: "'Syne', sans-serif" }}>Query builder</div>
         </div>
 
         <div className="de-sidebar-body">
@@ -475,7 +675,7 @@ export default function DataExplorer() {
           <div className="de-field">
             <div className="de-flabel de-flabel--green">
               <span className="de-dot de-dot--green" />
-              *Collection date
+              *Collection date{compareMode ? ' (Range A)' : ''}
             </div>
             <div className="de-date-row">
               <input
@@ -497,6 +697,63 @@ export default function DataExplorer() {
               <div className="de-field-error">{validationErrors.date}</div>
             )}
           </div>
+
+          {/* Compare mode toggle */}
+          <div className="de-compare-toggle">
+            <label className="de-toggle-label">
+              <input
+                type="checkbox"
+                checked={compareMode}
+                onChange={(e) => {
+                  if (!e.target.checked) {
+                    setCompareMode(false);
+                    setFiltersB({ dateFrom: '', dateTo: '' });
+                    setResultB(null);
+                    setValidationErrorsB({});
+                    setOverlapError(null);
+                  } else {
+                    setCompareMode(true);
+                  }
+                }}
+              />
+              <span className="de-toggle-track">
+                <span className="de-toggle-thumb" />
+              </span>
+              Compare date ranges
+            </label>
+          </div>
+
+          {/* Range B date pickers */}
+          {compareMode && (
+            <div className="de-field de-field--compare-b">
+              <div className="de-flabel de-flabel--purple">
+                <span className="de-dot de-dot--purple" />
+                Range B dates
+              </div>
+              <div className="de-date-row">
+                <input
+                  className="de-date-inp"
+                  type="date"
+                  value={filtersB.dateFrom}
+                  onChange={(e) => setFiltersB((p) => ({ ...p, dateFrom: e.target.value }))}
+                  onClick={(e) => openDatePicker(e.currentTarget)}
+                />
+                <input
+                  className="de-date-inp"
+                  type="date"
+                  value={filtersB.dateTo}
+                  onChange={(e) => setFiltersB((p) => ({ ...p, dateTo: e.target.value }))}
+                  onClick={(e) => openDatePicker(e.currentTarget)}
+                />
+              </div>
+              {validationErrorsB.date && (
+                <div className="de-field-error">{validationErrorsB.date}</div>
+              )}
+              {overlapError && (
+                <div className="de-field-error">{overlapError}</div>
+              )}
+            </div>
+          )}
 
           <SelectField
             label="*Collected by"
@@ -584,10 +841,10 @@ export default function DataExplorer() {
             {queryLoading ? (
               <>
                 <span className="de-spinner" />
-                Querying…
+                {compareMode ? 'Comparing…' : 'Querying…'}
               </>
             ) : (
-              'Generate →'
+              compareMode ? 'Compare →' : 'Generate →'
             )}
           </button>
           <button className="de-reset-btn" onClick={resetAll} disabled={queryLoading}>
@@ -602,10 +859,15 @@ export default function DataExplorer() {
         <div className="de-topbar">
           <div className="de-topbar-left">
             <div className="de-page-title" style={{ fontFamily: "'Syne', sans-serif" }}>DATA EXPLORER</div>
-            {result !== null && (
+            {result !== null && !isCompareResult && (
               <div className="de-page-meta">
                 {result.isolatesReturned} record
                 {result.isolatesReturned !== 1 ? 's' : ''} returned
+              </div>
+            )}
+            {isCompareResult && (
+              <div className="de-page-meta">
+                {result!.isolatesReturned + resultB!.isolatesReturned} records across 2 ranges
               </div>
             )}
           </div>
@@ -631,7 +893,7 @@ export default function DataExplorer() {
                   <path d="M3 12h10M8 3v7M5 8l3 3 3-3" />
                 </svg>
               )}
-              Export CSV
+              {isCompareResult ? 'Export CSV (×2)' : 'Export CSV'}
             </button>
             <button
               className={`de-export-btn${exportingXlsx ? ' de-export-btn--loading' : ''}`}
@@ -654,7 +916,7 @@ export default function DataExplorer() {
                   <path d="M3 12h10M8 3v7M5 8l3 3 3-3" />
                 </svg>
               )}
-              Export XLSX
+              {isCompareResult ? 'Export XLSX (×2)' : 'Export XLSX'}
             </button>
           </div>
         </div>
@@ -685,37 +947,53 @@ export default function DataExplorer() {
           </div>
         )}
 
-        {/* Stat cards */}
-        <div className="de-stats">
-          <div className="de-stat-card">
-            <div className="de-stat-value de-stat-value--red">
-              {result
-                ? result.matchRate !== null
-                  ? `${result.matchRate}%`
-                  : 'N/A'
-                : '—'}
+        {/* Stat cards — single mode */}
+        {!isCompareResult && (
+          <div className="de-stats">
+            <div className="de-stat-card">
+              <div className="de-stat-value de-stat-value--red">
+                {result
+                  ? result.matchRate !== null
+                    ? `${result.matchRate}%`
+                    : 'N/A'
+                  : '—'}
+              </div>
+              <div className="de-stat-label">Match rate</div>
             </div>
-            <div className="de-stat-label">Match rate</div>
-          </div>
-          <div className="de-stat-card">
-            <div className="de-stat-value de-stat-value--teal">
-              {result ? result.isolatesReturned : '—'}
+            <div className="de-stat-card">
+              <div className="de-stat-value de-stat-value--teal">
+                {result ? result.isolatesReturned : '—'}
+              </div>
+              <div className="de-stat-label">Isolates returned</div>
             </div>
-            <div className="de-stat-label">Isolates returned</div>
-          </div>
-          <div className="de-stat-card">
-            <div className="de-stat-value de-stat-value--amber">
-              {result ? result.uniqueAmrGenes : '—'}
+            <div className="de-stat-card">
+              <div className="de-stat-value de-stat-value--amber">
+                {result ? result.uniqueAmrGenes : '—'}
+              </div>
+              <div className="de-stat-label">Unique AMR genes</div>
             </div>
-            <div className="de-stat-label">Unique AMR genes</div>
-          </div>
-          <div className="de-stat-card">
-            <div className="de-stat-value de-stat-value--dark">
-              {result ? result.organisms : '—'}
+            <div className="de-stat-card">
+              <div className="de-stat-value de-stat-value--dark">
+                {result ? result.organisms : '—'}
+              </div>
+              <div className="de-stat-label">Organisms</div>
             </div>
-            <div className="de-stat-label">Organisms</div>
           </div>
-        </div>
+        )}
+
+        {/* Stat cards — compare mode */}
+        {isCompareResult && (
+          <>
+            <div className="de-compare-range-header de-compare-range-header--a">
+              Range A: {filters.dateFrom} → {filters.dateTo}
+            </div>
+            {renderStatCards(result!)}
+            <div className="de-compare-range-header de-compare-range-header--b">
+              Range B: {filtersB.dateFrom} → {filtersB.dateTo}
+            </div>
+            {renderStatCards(resultB!)}
+          </>
+        )}
 
         {/* Results area */}
         <div className="de-results">
@@ -725,7 +1003,7 @@ export default function DataExplorer() {
               <div className="de-loading-bar" />
               <div className="de-loading-bar de-loading-bar--wide" />
               <div className="de-loading-bar de-loading-bar--narrow" />
-              <div className="de-loading-text">Running query…</div>
+              <div className="de-loading-text">{compareMode ? 'Comparing ranges…' : 'Running query…'}</div>
             </div>
           )}
 
@@ -759,96 +1037,83 @@ export default function DataExplorer() {
             </div>
           )}
 
-          {/* Empty results */}
-          {hasQueried && !queryLoading && result !== null && result.rows.length === 0 && (
-            <div className="de-empty">
-              <div className="de-empty-icon">
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M8 12h8" />
-                </svg>
-              </div>
-              <div className="de-empty-title">No results match your filters</div>
-              <div className="de-empty-sub">
-                Try relaxing one or more of the active filters
-              </div>
-            </div>
+          {/* Single mode results */}
+          {!isCompareResult && hasQueried && !queryLoading && result !== null && (
+            <>
+              {result.rows.length === 0 ? (
+                <div className="de-empty">
+                  <div className="de-empty-icon">
+                    <svg
+                      width="40"
+                      height="40"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8 12h8" />
+                    </svg>
+                  </div>
+                  <div className="de-empty-title">No results match your filters</div>
+                  <div className="de-empty-sub">
+                    Try relaxing one or more of the active filters
+                  </div>
+                </div>
+              ) : (
+                <div className="de-table-wrap">
+                  <div className="de-table-header">
+                    <span className="de-table-count">
+                      {result.isolatesReturned} isolate
+                      {result.isolatesReturned !== 1 ? 's' : ''}
+                    </span>
+                    <span className="de-table-note">
+                      {tableColumns.length} columns · CSV and XLSX export use identical data
+                    </span>
+                  </div>
+                  {renderTable(result.rows, tableColumns)}
+                </div>
+              )}
+            </>
           )}
 
-          {/* Results table — dynamic columns from API response */}
-          {hasQueried && !queryLoading && result !== null && result.rows.length > 0 && (
-            <div className="de-table-wrap">
-              <div className="de-table-header">
-                <span className="de-table-count">
-                  {result.isolatesReturned} isolate
-                  {result.isolatesReturned !== 1 ? 's' : ''}
-                </span>
-                <span className="de-table-note">
-                  {tableColumns.length} columns · CSV and XLSX export use identical data
-                </span>
+          {/* Compare mode results — two separate tables */}
+          {isCompareResult && !queryLoading && (
+            <>
+              <div className="de-compare-table-section">
+                <div className="de-compare-section-label de-compare-section-label--a">
+                  Range A · {result!.isolatesReturned} isolate{result!.isolatesReturned !== 1 ? 's' : ''} · {filters.dateFrom} → {filters.dateTo}
+                </div>
+                {result!.rows.length === 0 ? (
+                  <div className="de-empty de-empty--inline">
+                    <div className="de-empty-title">No results for Range A</div>
+                    <div className="de-empty-sub">Try adjusting the Range A date window</div>
+                  </div>
+                ) : (
+                  <div className="de-table-wrap">
+                    {renderTable(result!.rows, tableColumns)}
+                  </div>
+                )}
               </div>
-              <div className="de-table-scroll">
-                <table className="de-table">
-                  <thead>
-                    <tr>
-                      {tableColumns.map((col) => (
-                        <th key={col}>{col.replace(/_/g, ' ')}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.rows.map((row, i) => (
-                      <tr key={i}>
-                        {tableColumns.map((col) => {
-                          const val = row[col];
-                          const str = val === null || val === undefined ? '' : String(val);
-                          // Apply semantic cell classes based on column name
-                          const isGene = col === 'amr_resistance_genes';
-                          const isSir = col === 'predicted_sir_profile';
-                          const isClass = col === 'element_class';
-                          const isPrimary = col === 'sample_name';
-                          const isMono = col === 'isolate_id' || col === 'accession_closest_sequence';
-                          const isItalic = col === 'organism';
-                          return (
-                            <td
-                              key={col}
-                              className={
-                                isPrimary
-                                  ? 'de-td-primary'
-                                  : isMono
-                                    ? 'de-td-mono'
-                                    : isItalic
-                                      ? 'de-td-italic'
-                                      : isGene
-                                        ? 'de-td-genes'
-                                        : isSir
-                                          ? 'de-td-sir'
-                                          : 'de-td-muted'
-                              }
-                            >
-                              {isClass ? (
-                                <span className="de-pill de-pill--blue">{str}</span>
-                              ) : (
-                                str
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+              <div className="de-compare-table-section">
+                <div className="de-compare-section-label de-compare-section-label--b">
+                  Range B · {resultB!.isolatesReturned} isolate{resultB!.isolatesReturned !== 1 ? 's' : ''} · {filtersB.dateFrom} → {filtersB.dateTo}
+                </div>
+                {resultB!.rows.length === 0 ? (
+                  <div className="de-empty de-empty--inline">
+                    <div className="de-empty-title">No results for Range B</div>
+                    <div className="de-empty-sub">Try adjusting the Range B date window</div>
+                  </div>
+                ) : (
+                  <div className="de-table-wrap">
+                    {renderTable(resultB!.rows, tableColumns)}
+                  </div>
+                )}
               </div>
-            </div>
+            </>
           )}
         </div>
       </main>
