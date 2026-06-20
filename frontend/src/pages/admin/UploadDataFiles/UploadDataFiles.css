@@ -83,6 +83,19 @@
   margin-left: 2px;
 }
 
+/* Static upload-type field shown in place of the dropdown while only one
+   upload type is available. */
+.upload-type-static {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1c2f42;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+}
+
 /* =============================================
    FILE DROPZONE
    ============================================= */
