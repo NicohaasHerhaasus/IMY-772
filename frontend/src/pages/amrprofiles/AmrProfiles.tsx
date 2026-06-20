@@ -340,10 +340,11 @@
 
 // src/pages/AmrProfiles/AmrProfiles.tsx
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import './AmrProfiles.css';
 import DataAnalyticsCard from '../../components/AMRProfiles/Dataanalyticscard';
+import { MapBaseLayers } from '../../lib/MapBaseLayers';
 // import SiteVisitTimeline from '../../components/SiteVisitTimeline/SiteVisitTimeline';
 // import { useSiteVisits } from '../../lib/useSiteVisits';
 import { useIsolates } from '../../context/IsolatesContext';
@@ -697,10 +698,7 @@ export default function AmrProfiles() {
               zoomControl={false}
               style={{ width: '100%', height: '100%', minHeight: 260 }}
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <MapBaseLayers />
               <FlyTo coords={mapCenter} />
               {mapMarkers.map(m => (
                 <CircleMarker

@@ -4,7 +4,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
   MapContainer,
-  TileLayer,
   CircleMarker,
   Marker,
   useMap,
@@ -19,6 +18,7 @@ import {
   type MapAttachmentListItem,
   type MapAttachmentMarker,
 } from "../../../lib/mapAttachmentsApi";
+import { MapBaseLayers } from "../../../lib/MapBaseLayers";
 import "./MapLocationUpload.css";
 
 const pinDropIcon = L.divIcon({
@@ -239,7 +239,7 @@ export default function MapLocationUpload() {
               zoom={6}
               className="map-location-upload__map"
             >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <MapBaseLayers />
               <MapPinController pinPosition={pinPosition} onPinChange={updatePinPosition} />
               <MapCenterSync pinPosition={pinPosition} />
               {mapMarkers.map((m) => (
