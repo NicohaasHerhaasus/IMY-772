@@ -344,6 +344,8 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import './AmrProfiles.css';
 import DataAnalyticsCard from '../../components/AMRProfiles/Dataanalyticscard';
+// import SiteVisitTimeline from '../../components/SiteVisitTimeline/SiteVisitTimeline';
+// import { useSiteVisits } from '../../lib/useSiteVisits';
 import { useIsolates } from '../../context/IsolatesContext';
 import {
   toAmrProfileData, toMapMarkers, classifyGene,
@@ -430,6 +432,10 @@ export default function AmrProfiles() {
   const mapCenter: [number, number] = selectedKey && placeholderCoords[selectedKey]
     ? placeholderCoords[selectedKey] : [-28.0, 26.0];
 
+  // Representative isolate for selected group (used to fetch visits)
+  const representativeIsolateName = selectedIsolates.length > 0 ? selectedIsolates[0].isolateName ?? null : null;
+  // const { visits: siteVisits, loading: visitsLoading } = useSiteVisits(representativeIsolateName);
+
   return (
     <div className="amr-page">
 
@@ -465,10 +471,10 @@ export default function AmrProfiles() {
         </div>
 
         {/* Site details section */}
-        <div className="amr-section-label">Site Details</div>
+        {/* <div className="amr-section-label">Site Details</div> */}
 
         {/* Quality ring - green if ALL isolates passed, red if ANY failed */}
-        {(() => {
+        {/* {(() => {
           const allPassed  = profile ? profile.failedCount === 0 : false;
           const ringColor  = allPassed ? '#4caf82' : '#e04040';
           const ringLabel  = allPassed ? 'Passed' : 'Failed';
@@ -501,7 +507,7 @@ export default function AmrProfiles() {
               </p>
             </div>
           );
-        })()}
+        })()} */}
 
         {/* Organisms Detected */}
         <div className="amr-section-label">Organisms Detected</div>
@@ -707,6 +713,9 @@ export default function AmrProfiles() {
                     fillOpacity: 0.85,
                     weight: 2,
                   }}
+                  eventHandlers={{
+                    click: () => setSelectedKey(m.id),
+                  }}
                 >
                   <Popup>
                     <strong>{m.label}</strong><br/>
@@ -731,7 +740,24 @@ export default function AmrProfiles() {
           </div>
         </div>
 
-      </main>
+          {/* ── ROW 5: Site Visit Timeline below the map ── */}
+          {/* <div style={{ marginTop: 12 }}>
+            {representativeIsolateName ? (
+              <div className="amr-card">
+                <div className="amr-card-title">Site Visit Timeline — {representativeIsolateName}</div>
+                <div style={{ padding: 12 }}>
+                  {visitsLoading ? <div>Loading visits…</div> : <SiteVisitTimeline visits={siteVisits} />}
+                </div>
+              </div>
+            ) : (
+              <div className="amr-card">
+                <div className="amr-card-title">Site Visit Timeline</div>
+                <div style={{ padding: 12, color: '#5a6b64' }}>Select an isolate group on the map to view visits.</div>
+              </div>
+            )}
+          </div> */}
+
+        </main>
     </div>
   );
 }

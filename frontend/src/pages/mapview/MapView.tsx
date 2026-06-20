@@ -11,6 +11,8 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+// import SiteVisitTimeline from "../../components/SiteVisitTimeline/SiteVisitTimeline";
+// import { useSiteVisits } from '../../lib/useSiteVisits';
 import "./MapView.css";
 // river context removed — map focuses on isolate samples
 import { useAuth } from "../../context/AuthContext";
@@ -179,6 +181,8 @@ export default function MapView() {
 
   const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [selectedIsolate, setSelectedIsolate] = useState<typeof isolates[number] | null>(null);
+  // const { visits: siteVisits, loading: visitsLoading } = useSiteVisits(selectedIsolate?.isolateName ?? null);
 
   function FlyToCoords({ coords }: { coords: [number, number] | null }) {
     const map = useMap();
@@ -421,6 +425,8 @@ export default function MapView() {
                     }
                   }
                 }
+                // select isolate to load visits
+                setSelectedIsolate(iso as any);
               };
 
               return (
@@ -533,6 +539,13 @@ export default function MapView() {
             </span>
           )}
         </p>
+        {/* Site visit timeline (for selected isolate) */}
+        {selectedIsolate && (
+          <div style={{ marginTop: 12 }}>
+            <h3 style={{ margin: '6px 0 8px 0' }}>Site visits — {selectedIsolate.isolateName}</h3>
+            {/* {visitsLoading ? <div>Loading visits…</div> : <SiteVisitTimeline visits={siteVisits} />} */}
+          </div>
+        )}
         </div>
 
         {/* Health status legend */}
