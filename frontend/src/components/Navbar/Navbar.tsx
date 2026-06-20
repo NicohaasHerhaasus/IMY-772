@@ -6,8 +6,8 @@ import "./Navbar.css";
 const NAV_LINKS = [
   { label: "About", path: "/about" },
   { label: "Map View", path: "/map-view" },
-  { label: "AMR Profiles", path: "/amr-profiles" },
   { label: "Sample Details", path: "/river-flows" },
+  { label: "AMR Profiles", path: "/amr-profiles" },
   { label: "Data Explorer", path: "/data-explorer" },
   { label: "Datasets", path: "/isolates" },
 ];
