@@ -3,10 +3,11 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './RiverFlows.css';
+import { useSamples } from '../../lib/useSamples';
+import type { Sample } from '../../lib/useSamples';
 
 // Fix Leaflet default icon path broken by Vite
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -16,116 +17,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-/** Shape returned by GET /api/samples after controller transforms */
-export interface Sample {
-  id:                   string;
-  sampleName:           string;
-  analysisType:         string | null;
-  isolateId:            string | null;
-  organism:             string | null;
-  /** lab_sample_id from DB */
-  sampleId:             string | null;
-  isolationSource:      string;
-  collectionDate:       string;
-  geoLocName:           string;
-  /** Parsed from geoLocName ("South Africa: Gauteng" → "Gauteng") */
-  region:               string;
-  latitude:             number;
-  longitude:            number;
-  collectedBy:          string | null;
-  /** Split from amr_resistance_genes string */
-  amrGenes:             string[];
-  sequenceName:         string | null;
-  elementType:          string | null;
-  amrClass:             string | null;
-  subclass:             string | null;
-  pctCoverage:          number | null;
-  pctIdentity:          number | null;
-  alignmentLength:      number | null;
-  refSeqLength:         number | null;
-  accession:            string | null;
-  /** Split from virulence_genes string */
-  virulenceGenes:       string[];
-  /** Split from plasmid_replicons string */
-  plasmidReplicons:     string[];
-  /** Split from predicted_sir_profile string */
-  predictedSir:         string[];
-  ph:                   number | null;
-  tempWaterC:           number | null;
-  tdsMgL:               number | null;
-  dissolvedOxygenMgL:   number | null;
-}
-
-interface ApiResponse {
-  status: 'success' | 'error';
-  data:   { samples: Sample[]; count: number };
-}
+// Types are provided by shared hook
 
 // ── Fetch hook ────────────────────────────────────────────────────────────────
 
-function useSamples() {
-  const [samples,  setSamples]  = useState<Sample[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
-
-  const fetchSamples = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Get Cognito access token if available (optional for public access)
-      let accessToken: string | undefined;
-      try {
-        const { tokens } = await fetchAuthSession();
-        accessToken = tokens?.accessToken?.toString();
-        if (accessToken) {
-          console.log('[useSamples] fetchAuthSession tokens available');
-        }
-      } catch (sessionErr) {
-        // Auth session not available — that's OK for public access
-        console.log('[useSamples] No auth session (public access)', sessionErr);
-      }
-
-      let res: Response;
-      try {
-        const headers: Record<string, string> = {};
-        if (accessToken) {
-          headers.Authorization = `Bearer ${accessToken}`;
-        }
-        res = await fetch('/api/samples', { headers });
-        console.log('[useSamples] fetch status:', res.status);
-      } catch (networkErr) {
-        throw new Error(`Network error — is the API server running? (${String(networkErr)})`);
-      }
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => '(no body)');
-        throw new Error(`API returned ${res.status} ${res.statusText}: ${text}`);
-      }
-
-      const rawText = await res.text();
-      console.log('[useSamples] raw response:', rawText.slice(0, 300));
-
-      let json: ApiResponse;
-      try {
-        json = JSON.parse(rawText);
-      } catch {
-        throw new Error(`API response was not valid JSON (status ${res.status}). Body: ${rawText.slice(0, 200)}`);
-      }
-
-      setSamples(json.data.samples);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchSamples(); }, [fetchSamples]);
-
-  return { samples, loading, error, refetch: fetchSamples };
-}
+// useSamples moved to shared hook
 
 // ── Derived lists for filter sidebar ─────────────────────────────────────────
 

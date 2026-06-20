@@ -12,7 +12,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "./MapView.css";
-import { useRiver } from "../../layouts/RiverContext";
+// river context removed — map focuses on isolate samples
 import { useAuth } from "../../context/AuthContext";
 import {
   downloadMapAttachment,
@@ -21,26 +21,11 @@ import {
   type MapAttachmentListItem,
   type MapAttachmentMarker,
 } from "../../lib/mapAttachmentsApi";
+import { useIsolates } from '../../context/IsolatesContext';
+import { useSamples } from '../../lib/useSamples';
 
 
-interface River {
-  id: number;
-  name: string;
-  sites: number;
-  location: string;
-  province: string;
-  coordinates: [number,number];
-  risk: "low" | "medium" | "high";
-}
-
-
-const RIVERS: River[] = [
-  { id: 1, name: "Apies River",    sites: 14, location: "Pretoria", province:"Gauteng", coordinates:[-25.75,28.23],risk:"high" },
-  { id: 2, name: "Henops River",   sites: 8,  location: "Centurion" , province:"Gauteng", coordinates: [-25.85, 28.18] , risk: "medium"},
-  { id: 3, name: "Limpopo River",  sites: 10, location: "Limpopo" ,province:"Limpopo" ,coordinates: [-22.0, 29.0] , risk: "low"},
-  { id: 4, name: "Lotus River",  sites: 6, location: "Cape Town" ,province:"Western Cape" ,coordinates: [-34.05, 18.51] , risk: "high"},
-
-];
+// rivers data removed
 
 const STATS: Record<number, {
   samplingSites: number;
@@ -55,15 +40,7 @@ const STATS: Record<number, {
   4: { samplingSites: 6,  sitesAtRisk: 2,  organismsDetected: 12, lastUpdated: "Nov 10", siteVisits: "4 of 7 Site Visits" },
 };
 
-function FlyToRiver({ coordinates }: { coordinates: [number, number] }) {
-  const map = useMap();
-
-  map.flyTo(coordinates, 10, {
-    duration: 1.5,
-  });
-
-  return null;
-}
+// FlyToRiver removed
 
 const pinDropIcon = L.divIcon({
   className: "mv-pin-drop",
@@ -71,6 +48,45 @@ const pinDropIcon = L.divIcon({
   iconSize: [28, 36],
   iconAnchor: [14, 34],
 });
+
+function getRiskLevel(sample: any): 'high'|'medium'|'low'|'none' {
+  // normalize fields that might be named differently in the API
+  const genesRaw = sample?.amrResistanceGenes ?? sample?.amrGenes ?? [];
+  const predicted = (sample?.predictedSirProfile ?? sample?.predictedSir ?? '') as string | string[];
+
+  // normalize genes to an array of lowercase strings
+  const genes = Array.isArray(genesRaw)
+    ? (genesRaw as any[]).map((g) => String(g).toLowerCase())
+    : String(genesRaw || '').trim()
+        ? String(genesRaw).split(/[,;\s]+/).map((s) => s.toLowerCase()).filter(Boolean)
+        : [];
+
+  // priority gene check (example list)
+  const priority = ['mcr-1', 'blandm', 'blakpc', 'vana'].map((p) => p.toLowerCase());
+  if (genes.length > 0 && genes.some((g) => priority.some((p) => g.includes(p)))) return 'high';
+
+  const geneCount = genes.length;
+  if (geneCount >= 3) return 'high';
+  if (geneCount >= 1) return 'medium';
+
+  if (Array.isArray(predicted) ? predicted.includes('R') : String(predicted).toLowerCase().includes('resist')) {
+    return 'high';
+  }
+
+  return 'low';
+}
+
+const riskColor: Record<string,string> = {
+  high: '#d62728',
+  medium: '#ff7f0e',
+  low: '#2ca02c',
+  none: '#6c757d',
+};
+
+function getColorForSample(sample:any){
+  const level = getRiskLevel(sample);
+  return riskColor[level] ?? riskColor.none;
+}
 
 function formatCoord(n: number) {
   return n.toFixed(5);
@@ -134,10 +150,9 @@ function useCountUp(target: number, duration: number = 800) {
 
 export default function MapView() {
   const { user, login } = useAuth();
-  const { activeRiverId: activeRiver, setActiveRiverId: setActiveRiver } = useRiver();
-  const stats = STATS[activeRiver];
-  const [selectedProvince, setSelectedProvince] = useState<string>("All");
-  const [riverSearch, setRiverSearch] = useState("");
+  const stats = STATS[1];
+  const [isolateSearch, setIsolateSearch] = useState("");
+  const [selectedSeqType, setSelectedSeqType] = useState<string>("All");
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
@@ -148,22 +163,78 @@ export default function MapView() {
   const animatedSamplingSites = useCountUp(stats.samplingSites);
   const animatedSitesAtRisk = useCountUp(stats.sitesAtRisk);
   const animatedOrganisms = useCountUp(stats.organismsDetected);
-  const provinces = ["All", ...Array.from(new Set(RIVERS.map(r => r.province)))];
-  const filteredRivers = RIVERS.filter((river) => {
-  const matchesProvince =
-    selectedProvince === "All" || river.province === selectedProvince;
+  // isolate list search + sequence type filter
+  const { isolates } = useIsolates();
+  
+  const seqTypes = ["All", ...Array.from(new Set(isolates.map(i => i.sequenceType ?? 'Unknown'))).sort()];
+  const filteredIsolates = isolates.filter((iso) => {
+    const matchesSeq = selectedSeqType === 'All' || (iso.sequenceType ?? 'Unknown') === selectedSeqType;
+    const q = isolateSearch.trim().toLowerCase();
+    const matchesSearch = !q || iso.isolateName.toLowerCase().includes(q);
+    return matchesSeq && matchesSearch;
+  });
 
-  const matchesSearch =
-    river.name.toLowerCase().includes(riverSearch.toLowerCase());
+  // samples (to resolve isolate -> sample coords)
+  const { samples } = useSamples();
 
-  return matchesProvince && matchesSearch;
-});
+  const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
-useEffect(() => {
-  if (filteredRivers.length > 0) {
-    setActiveRiver(filteredRivers[0].id);
+  function FlyToCoords({ coords }: { coords: [number, number] | null }) {
+    const map = useMap();
+    useEffect(() => {
+      if (!coords) return;
+      // eslint-disable-next-line no-console
+      console.debug('[MapView] FlyToCoords running, coords:', coords);
+      // log current center
+      // eslint-disable-next-line no-console
+      console.debug('[MapView] before flyTo center:', map.getCenter());
+      map.flyTo(coords, 12, { animate: true, duration: 1.0 });
+      // eslint-disable-next-line no-console
+      console.debug('[MapView] after flyTo requested');
+    }, [coords, map]);
+    return null;
   }
-}, [selectedProvince, riverSearch]);
+
+  function MapReadySetter({ onReady }: { onReady: (m: L.Map) => void }) {
+    const map = useMap();
+    useEffect(() => {
+      if (map) onReady(map);
+    }, [map, onReady]);
+    return null;
+  }
+
+  const isolatesWithCoords = useMemo(() => {
+    // Be permissive about types: isolateId may be number or string, lat/lng may be strings.
+    return filteredIsolates
+      .map((iso) => {
+        const sample = samples.find((s) => {
+          if (s == null) return false;
+          const sid = s.isolateId == null ? '' : String(s.isolateId);
+          const isoName = (iso as any).isolateName ?? (iso.id == null ? '' : String(iso.id));
+          const iid = isoName == null ? '' : String(isoName);
+          // samples.store isolate identifiers as filenames like "UPMP-1126_assembly.fasta";
+          // match when the sample isolateId contains the isolateName, or equals it.
+          return sid !== '' && iid !== '' && (sid === iid || sid.includes(iid));
+        });
+        if (!sample) return null;
+        const lat = Number((sample as any).latitude);
+        const lng = Number((sample as any).longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return { iso, lat, lng, sample };
+      })
+      .filter(Boolean) as Array<{ iso: (typeof isolates)[number]; lat: number; lng: number; sample: any }>;
+  }, [filteredIsolates, samples]);
+
+  // Debug logs to help runtime inspection when markers don't appear
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.debug('[MapView] samples count:', samples.length, 'isolates count:', isolates.length);
+    if (samples.length > 0) {
+      // eslint-disable-next-line no-console
+      console.debug('[MapView] sample[0]:', samples[0]);
+    }
+  }, [samples, isolates.length]);
 
   const updatePinPosition = useCallback((pos: [number, number]) => {
     setPinPosition(pos);
@@ -249,6 +320,24 @@ useEffect(() => {
     [updatePinPosition],
   );
 
+  // Overview metrics
+  const totalSamples = samples.length;
+  const totalIsolates = isolates.length;
+  const geoLocatedSamples = useMemo(() => {
+    return samples.filter((s) => {
+      const lat = Number((s as any).latitude);
+      const lng = Number((s as any).longitude);
+      return Number.isFinite(lat) && Number.isFinite(lng);
+    }).length;
+  }, [samples]);
+
+  const filesAttached = mapMarkers.length;
+
+  const animatedTotalSamples = useCountUp(totalSamples);
+  const animatedTotalIsolates = useCountUp(totalIsolates);
+  const animatedGeoLocated = useCountUp(geoLocatedSamples);
+  const animatedFilesAttached = useCountUp(filesAttached);
+
   return (
     <div className="mapview-page">
 
@@ -281,29 +370,28 @@ useEffect(() => {
 
     <input
       type="text"
-      placeholder="Search by River..."
-      value={riverSearch}
-      onChange={(e) => setRiverSearch(e.target.value)}
+      placeholder="Search isolates..."
+      value={isolateSearch}
+      onChange={(e) => setIsolateSearch(e.target.value)}
       className="mv-search-input"
     />
   </div>
 </div>
 
-<div className="mv-section-header">Filter by Province</div>
+{/* <div className="mv-section-header">Filter by Sequence Type</div>
 <div className="mv-river-list">
-  {provinces.map((province) => (
+  {seqTypes.map((t) => (
     <div
-      key={province}
-      className={`mv-river-item ${selectedProvince === province ? "active" : ""}`}
-      onClick={() => setSelectedProvince(province)}
+      key={t}
+      className={`mv-river-item ${selectedSeqType === t ? 'active' : ''}`}
+      onClick={() => setSelectedSeqType(t)}
     >
-      <div className="mv-river-name">{province}</div>
+      <div className="mv-river-name">{t}</div>
     </div>
   ))}
-</div>
+</div> */}
 
-        {/* Filter by River */}
-        <div className="mv-section-header">Filter by River</div>
+        <div className="mv-section-header">Isolates</div>
         <div className="mv-river-list">
           {/* {RIVERS.map((r) => (
             <div
@@ -315,18 +403,43 @@ useEffect(() => {
               <div className="mv-river-meta">{r.sites} sites · {r.location}</div>
             </div>
           ))} */}
-          {filteredRivers.map((r) => (
-  <div
-    key={r.id}
-    className={`mv-river-item ${activeRiver === r.id ? "active" : ""}`}
-    onClick={() => setActiveRiver(r.id)}
-  >
-    <div className="mv-river-name">{r.name}</div>
-    <div className="mv-river-meta">
-      {r.sites} sites · {r.location} ({r.province})
-    </div>
-  </div>
-))}
+          {isolatesWithCoords && isolatesWithCoords.length > 0 ? (
+            isolatesWithCoords.map(({ iso, lat, lng, sample }) => {
+              const onClick = () => {
+                // eslint-disable-next-line no-console
+                console.debug('[MapView] isolate clicked (with coords):', iso.id ?? iso.isolateName, { lat, lng });
+                if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                  // eslint-disable-next-line no-console
+                  console.debug('[MapView] setting focusCoords to', [lat, lng]);
+                  setFocusCoords([lat, lng]);
+                  if (mapInstance) {
+                    try {
+                      mapInstance.flyTo([lat, lng], 12, { animate: true, duration: 1.0 });
+                    } catch (e) {
+                      // eslint-disable-next-line no-console
+                      console.debug('[MapView] mapInstance.flyTo failed', e);
+                    }
+                  }
+                }
+              };
+
+              return (
+                <div key={iso.id} className={`mv-river-item`} onClick={onClick} title={iso.isolateName}>
+                  <div className="mv-river-name">
+                    {iso.isolateName}
+                    {sample ? (
+                      <span className="mv-sample-name" style={{ fontSize: '12px', color: '#9aa', marginLeft: 8 }}>
+                        — {sample.sampleName}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mv-river-meta">{iso.sequenceType ?? '—'}</div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="mv-river-item">No isolates with geo-located samples</div>
+          )}
         </div>
 
       </aside>
@@ -335,11 +448,11 @@ useEffect(() => {
       <main className="mv-map-area">
         <div className="mv-map-stack">
         <MapContainer
-        
-          center={[-29.0, 24.0] as [number, number]}
+          center={([-29.0, 24.0] as [number, number])}
           zoom={6}
           className="mv-map"
         >
+          <MapReadySetter onReady={(m) => setMapInstance(m)} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
@@ -350,72 +463,42 @@ useEffect(() => {
             onOpenModal={() => setPinModalOpen(true)}
           />
 
-          <FlyToRiver coordinates={RIVERS.find(r => r.id === activeRiver)!.coordinates}/>
+          <FlyToCoords coords={focusCoords} />
 
+          {/* debug: show how many isolates have coords */}
+          <div className="mv-debug-badge" style={{ position: 'absolute', left: 12, top: 60, zIndex: 650 }}>
+            {isolatesWithCoords.length} isolates with coords
+          </div>
 
-          {/* Example: River risk points */}
-          <CircleMarker
-            center={[-25.75, 28.23]} 
-            radius={10}
-            pathOptions={{ color: "red" }}
-          >
-            <Popup>Apies River – High AMR Risk</Popup>
-          </CircleMarker>
+          {/* debug: show current focus coords */}
+          <div id="mv-focus-debug" style={{ position: 'absolute', left: 12, top: 90, zIndex: 650, background: 'rgba(255,255,255,0.9)', padding: '6px 8px', borderRadius: 6 }}>
+            Focus: {focusCoords ? `${focusCoords[0].toFixed(4)}, ${focusCoords[1].toFixed(4)}` : 'none'}
+          </div>
 
-          <CircleMarker
-            center={[-25.85, 28.18]} // Henops
-            radius={8}
-            pathOptions={{ color: "orange" }}
-          >
-            <Popup>Henops River – Medium Risk</Popup>
-          </CircleMarker>
+          {/* Rivers and example risk markers removed per latest requirements */}
 
+          {isolatesWithCoords.map(({ iso, lat, lng, sample }) => {
+            const color = getColorForSample(sample);
+            const level = getRiskLevel(sample);
+            const radius = level === 'high' ? 9 : level === 'medium' ? 7 : 6;
+            return (
+              <CircleMarker
+                key={`iso-${iso.id}`}
+                center={[lat, lng]}
+                radius={radius}
+                pathOptions={{ color, fillColor: color, fillOpacity: 0.9 }}
+              >
+              <Popup>
+                <div style={{ maxWidth: 220 }}>
+                  <strong>{iso.isolateName}</strong>
+                  <div style={{ fontSize: 12, color: '#666' }}>{iso.sequenceType ?? '—'}</div>
+                  <div style={{ marginTop: 6, fontSize: 13 }}>{sample.sampleName}</div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          )})
 
-        {/* {RIVERS.map((river) => (
-          <CircleMarker
-            key={river.id}
-            center={river.coordinates}
-            radius={activeRiver === river.id ? 12 : 8}
-            pathOptions={{
-              color:
-                river.risk === "high"
-                  ? "#e04040"
-                  : river.risk === "medium"
-                  ? "#f0a500"
-                  : "#4caf82",
-            }}
-          >
-            <Popup>
-              {river.name} <br />
-              {river.sites} sites <br />
-              Risk: {river.risk}
-            </Popup>
-          </CircleMarker>
-        ))} */}
-
-        {filteredRivers.map((river) => (
-  <CircleMarker
-    key={river.id}
-    center={river.coordinates}
-    radius={activeRiver === river.id ? 12 : 8}
-    pathOptions={{
-      color:
-        river.risk === "high"
-          ? "#e04040"
-          : river.risk === "medium"
-          ? "#f0a500"
-          : "#4caf82",
-    }}
-  >
-    <Popup>
-      {river.name}<br />
-      {river.sites} sites<br />
-      {river.location}, {river.province}<br />
-      Risk: {river.risk}
-    </Popup>
-  </CircleMarker>
-))}
-
+        }
         {mapMarkers.map((m) => (
           <CircleMarker
             key={m.id}
@@ -436,6 +519,8 @@ useEffect(() => {
           />
         ))}
 
+        
+
 
 </MapContainer>
         <p className="mv-map-hint" role="note">
@@ -453,10 +538,10 @@ useEffect(() => {
         {/* Health status legend */}
         <div className="mv-legend">
           <div className="mv-legend-title">Health Status</div>
-          <div className="mv-legend-item"><span className="mv-dot mv-dot--low"/>Low AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot mv-dot--medium"/>Medium AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot mv-dot--high"/>High AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot mv-dot--none"/>No data</div>
+          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.low }} />Low AMR Risk</div>
+          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.medium }} />Medium AMR Risk</div>
+          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.high }} />High AMR Risk</div>
+          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.none }} />No data</div>
           <div className="mv-legend-divider" />
           <div className="mv-legend-title">Location data</div>
           <div className="mv-legend-item"><span className="mv-dot mv-dot--attach"/>File uploaded</div>
@@ -563,27 +648,27 @@ useEffect(() => {
         <div className="mv-overview-title">Overview</div>
 
         <div className="mv-stat-card">
-          <div className="mv-stat-label">Sampling Sites</div>
-          <div className={`mv-stat-value mv-stat-value--green`}>{animatedSamplingSites}</div>
-          <div className="mv-stat-sub">{RIVERS.find(r => r.id === activeRiver)?.name}</div>
+          <div className="mv-stat-label">Total Samples</div>
+          <div className={`mv-stat-value mv-stat-value--green`}>{animatedTotalSamples}</div>
+          <div className="mv-stat-sub">Total uploaded samples</div>
         </div>
 
         <div className="mv-stat-card">
-          <div className="mv-stat-label">Sites at Risk</div>
-          <div className="mv-stat-value mv-stat-value--orange">{animatedSitesAtRisk}</div>
-          <div className="mv-stat-sub">High AMR detected</div>
+          <div className="mv-stat-label">Total Isolates</div>
+          <div className="mv-stat-value mv-stat-value--orange">{animatedTotalIsolates}</div>
+          <div className="mv-stat-sub">Distinct isolates in dataset</div>
         </div>
 
         <div className="mv-stat-card">
-          <div className="mv-stat-label">Organisms Detected</div>
-          <div className="mv-stat-value mv-stat-value--amber">{animatedOrganisms}</div>
-          <div className="mv-stat-sub">{RIVERS.find(r => r.id === activeRiver)?.name}</div>
+          <div className="mv-stat-label">Geo-located Samples</div>
+          <div className="mv-stat-value mv-stat-value--amber">{animatedGeoLocated}</div>
+          <div className="mv-stat-sub">Samples with valid coordinates</div>
         </div>
 
         <div className="mv-stat-card">
-          <div className="mv-stat-label">Last Updated</div>
-          <div className="mv-stat-value--date">{stats.lastUpdated}</div>
-          <div className="mv-stat-sub">{stats.siteVisits}</div>
+          <div className="mv-stat-label">Files Attached</div>
+          <div className="mv-stat-value--date">{animatedFilesAttached}</div>
+          <div className="mv-stat-sub">Map attachment files</div>
         </div>
       </aside>
 
