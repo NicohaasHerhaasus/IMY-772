@@ -154,7 +154,7 @@ export default function MapView() {
   const { user, login } = useAuth();
   const stats = STATS[1];
   const [isolateSearch, setIsolateSearch] = useState("");
-  const [selectedSeqType, _setSelectedSeqType] = useState<string>("All");
+  const [selectedSeqType] = useState<string>("All");
   const [pinPosition, setPinPosition] = useState<[number, number] | null>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [mapMarkers, setMapMarkers] = useState<MapAttachmentMarker[]>([]);
@@ -163,13 +163,11 @@ export default function MapView() {
   const [locationFilesLoading, setLocationFilesLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [legendOpen, setLegendOpen] = useState(true);
-  const _animatedSamplingSites = useCountUp(stats.samplingSites);
-  const _animatedSitesAtRisk = useCountUp(stats.sitesAtRisk);
-  const _animatedOrganisms = useCountUp(stats.organismsDetected);
+  useCountUp(stats.samplingSites);
+  useCountUp(stats.sitesAtRisk);
+  useCountUp(stats.organismsDetected);
   // isolate list search + sequence type filter
   const { isolates } = useIsolates();
-  
-  const _seqTypes = ["All", ...Array.from(new Set(isolates.map(i => i.sequenceType ?? 'Unknown'))).sort()];
   const filteredIsolates = isolates.filter((iso) => {
     const matchesSeq = selectedSeqType === 'All' || (iso.sequenceType ?? 'Unknown') === selectedSeqType;
     const q = isolateSearch.trim().toLowerCase();
