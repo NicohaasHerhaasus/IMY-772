@@ -4,7 +4,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
   MapContainer,
-  TileLayer,
   CircleMarker,
   Popup,
   Marker,
@@ -25,6 +24,7 @@ import {
 } from "../../lib/mapAttachmentsApi";
 import { useIsolates } from '../../context/IsolatesContext';
 import { useSamples } from '../../lib/useSamples';
+import { MapBaseLayers } from "../../lib/MapBaseLayers";
 
 
 // rivers data removed
@@ -162,6 +162,7 @@ export default function MapView() {
   const [locationFiles, setLocationFiles] = useState<MapAttachmentListItem[]>([]);
   const [locationFilesLoading, setLocationFilesLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [legendOpen, setLegendOpen] = useState(true);
   const animatedSamplingSites = useCountUp(stats.samplingSites);
   const animatedSitesAtRisk = useCountUp(stats.sitesAtRisk);
   const animatedOrganisms = useCountUp(stats.organismsDetected);
@@ -453,15 +454,14 @@ export default function MapView() {
       {/* ── MAP AREA ── */}
       <main className="mv-map-area">
         <div className="mv-map-stack">
+        <div className="mv-map-wrap">
         <MapContainer
           center={([-29.0, 24.0] as [number, number])}
           zoom={6}
           className="mv-map"
         >
           <MapReadySetter onReady={(m) => setMapInstance(m)} />
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <MapBaseLayers />
 
           <MapPinController
             pinPosition={pinPosition}
@@ -470,16 +470,6 @@ export default function MapView() {
           />
 
           <FlyToCoords coords={focusCoords} />
-
-          {/* debug: show how many isolates have coords */}
-          <div className="mv-debug-badge" style={{ position: 'absolute', left: 12, top: 60, zIndex: 650 }}>
-            {isolatesWithCoords.length} isolates with coords
-          </div>
-
-          {/* debug: show current focus coords */}
-          <div id="mv-focus-debug" style={{ position: 'absolute', left: 12, top: 90, zIndex: 650, background: 'rgba(255,255,255,0.9)', padding: '6px 8px', borderRadius: 6 }}>
-            Focus: {focusCoords ? `${focusCoords[0].toFixed(4)}, ${focusCoords[1].toFixed(4)}` : 'none'}
-          </div>
 
           {/* Rivers and example risk markers removed per latest requirements */}
 
@@ -529,6 +519,47 @@ export default function MapView() {
 
 
 </MapContainer>
+
+        <div className={`mv-legend ${legendOpen ? "mv-legend--open" : "mv-legend--collapsed"}`}>
+          <button
+            type="button"
+            className="mv-legend-toggle"
+            onClick={() => setLegendOpen((open) => !open)}
+            aria-expanded={legendOpen}
+            aria-controls="mv-legend-body"
+          >
+            <span className="mv-legend-toggle__label">Map legend</span>
+            <svg
+              className="mv-legend-toggle__chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M2.5 4.5L6 8L9.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          {legendOpen && (
+            <div id="mv-legend-body" className="mv-legend-body">
+              <div className="mv-legend-title">Health Status</div>
+              <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.low }} />Low AMR Risk</div>
+              <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.medium }} />Medium AMR Risk</div>
+              <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.high }} />High AMR Risk</div>
+              <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.none }} />No data</div>
+              <div className="mv-legend-divider" />
+              <div className="mv-legend-title">Location data</div>
+              <div className="mv-legend-item"><span className="mv-dot mv-dot--attach"/>File uploaded</div>
+            </div>
+          )}
+        </div>
+        </div>
         <p className="mv-map-hint" role="note">
           <strong>Click the map</strong> to drop a pin and open location files. Drag the pin to adjust.{" "}
           <span className="mv-map-hint__teal">Teal dots</span> mark uploaded files - click one to view downloads.
@@ -548,17 +579,6 @@ export default function MapView() {
         )}
         </div>
 
-        {/* Health status legend */}
-        <div className="mv-legend">
-          <div className="mv-legend-title">Health Status</div>
-          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.low }} />Low AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.medium }} />Medium AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.high }} />High AMR Risk</div>
-          <div className="mv-legend-item"><span className="mv-dot" style={{ background: riskColor.none }} />No data</div>
-          <div className="mv-legend-divider" />
-          <div className="mv-legend-title">Location data</div>
-          <div className="mv-legend-item"><span className="mv-dot mv-dot--attach"/>File uploaded</div>
-        </div>
         {markersLoadError && user && (
           <div className="mv-attach-toast" role="status">
             Could not load file markers: {markersLoadError}

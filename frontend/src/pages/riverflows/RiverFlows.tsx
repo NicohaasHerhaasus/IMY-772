@@ -2,12 +2,13 @@
 // Integrated with backend — fetches from GET /api/samples
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './RiverFlows.css';
 import { useSamples } from '../../lib/useSamples';
 import type { Sample } from '../../lib/useSamples';
+import { MapBaseLayers } from '../../lib/MapBaseLayers';
 
 // Fix Leaflet default icon path broken by Vite
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -363,10 +364,7 @@ export default function RiverFlows() {
                         zoomControl
                         style={{ width: '100%', height: '100%', borderRadius: '8px' }}
                       >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
+                        <MapBaseLayers />
                         <FlyTo lat={s.latitude} lng={s.longitude} />
                         <Marker position={[s.latitude, s.longitude]}>
                           <Popup>
