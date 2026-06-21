@@ -11,6 +11,7 @@ import mapAttachmentRoutes from './presentation/http/routes/map-attachment.route
 import datafilesRoutes from './presentation/http/routes/datafiles.routes';
 import datasetsRoutes from './presentation/http/routes/datasets.routes';
 import chatbotRoutes from './presentation/http/routes/chatbot.routes';
+import siteVisitsRoutes from './presentation/http/routes/site-visits.routes';
 import { errorMiddleware } from './presentation/http/middleware/error.middleware';
 import queryBuilderRouter from './presentation/http/routes/query-builder.routes';
 
@@ -35,6 +36,7 @@ app.use('/api/samples', samplesRoutes);
 app.use('/api/map-attachments', mapAttachmentRoutes);
 app.use('/api/datafiles', datafilesRoutes);
 app.use('/api/datasets', datasetsRoutes);
+app.use('/api/site-visits', siteVisitsRoutes);
 app.use('/api/admin/chatbot', chatbotRoutes);
 app.use('/api/query-builder', queryBuilderRouter);
 

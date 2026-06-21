@@ -1,5 +1,13 @@
 # IMY-772
 
+Full documentation are in the [Docs](Docs/) folder:
+
+- [System Overview](Docs/System-Overview.md) — What the system is and how it solves the problem.
+- [Setup & Deployment Guide](Docs/Setup-and-Deployment-Guide.md) — Guide on how to run app.
+- [Operations Guide](Docs/Operations-Guide.md) — How to use the features of the app as a admin and a general user.
+
+Below is a quick start for local development:
+
 ## Setup
 
 Both the frontend and API require their own environment file before you can run them. Neither file is committed - copy the example and fill in your values.

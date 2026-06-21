@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, type ChangeEvent } from "react";
-import { Button, Card, FormField, Select } from "../../../components/ui";
+// `Select` removed from imports while the upload-type dropdown is disabled - re-add to restore it.
+import { Button, Card, FormField } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
 import {
   EXAMPLE_AMRFINDER_PLUS_PREVIEW_COLUMNS,
@@ -43,12 +44,26 @@ function getApiErrorMessage(response: Response, body: unknown, rawText: string):
 /** Genotypic options first - StarAMR is a different workbook shape (Summary + Detailed_Summary only). */
 const UPLOAD_TYPES = [
   "Sample Dashboard Excel (.xlsx)",
-  "Genotypic Analysis Excel (.xlsx)",
-  "Genotypic Analysis TSV (.tsv)",
-  "StarAMR Workbook (.xlsx)",
-  "Example AMRFinderPlus Excel (.xlsx)",
-  "Example AMRFinderPlus TSV (.tsv)",
+  // Other upload types temporarily disabled - uncomment to re-enable.
+  // "Genotypic Analysis Excel (.xlsx)",
+  // "Genotypic Analysis TSV (.tsv)",
+  // "StarAMR Workbook (.xlsx)",
+  // "Example AMRFinderPlus Excel (.xlsx)",
+  // "Example AMRFinderPlus TSV (.tsv)",
 ] as const;
+
+/**
+ * Full set of upload types kept for typing so the (currently disabled) handler
+ * and preview branches below still type-check. Re-enable an option by adding it
+ * back to UPLOAD_TYPES above.
+ */
+type UploadType =
+  | "Sample Dashboard Excel (.xlsx)"
+  | "Genotypic Analysis Excel (.xlsx)"
+  | "Genotypic Analysis TSV (.tsv)"
+  | "StarAMR Workbook (.xlsx)"
+  | "Example AMRFinderPlus Excel (.xlsx)"
+  | "Example AMRFinderPlus TSV (.tsv)";
 
 const GENOTYPIC_TSV_HEADERS = [
   "University of Pretoria Culture number",
@@ -343,7 +358,7 @@ function ExampleAmrFinderPlusPreviewTable({ rows }: { rows: ExampleAmrFinderPlus
 
 export default function UploadDataFiles() {
   const { getAccessToken } = useAuth();
-  const [uploadType, setUploadType] = useState<(typeof UPLOAD_TYPES)[number]>(UPLOAD_TYPES[0]);
+  const [uploadType, setUploadType] = useState<UploadType>(UPLOAD_TYPES[0]);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<FilePreviewState>({ kind: "none" });
   const [dragging, setDragging] = useState(false);
@@ -702,16 +717,21 @@ export default function UploadDataFiles() {
 
       <Card className="gap-7">
         <FormField label="Upload type" required className="max-w-[400px]">
-          <Select
-            value={uploadType}
-            onChange={(value) => {
-              setUploadType(value as (typeof UPLOAD_TYPES)[number]);
-              resetState(null);
-              if (fileInputRef.current) fileInputRef.current.value = "";
-            }}
-            options={[...UPLOAD_TYPES]}
-            placeholder="Choose type"
-          />
+          {/*
+            Dropdown disabled while only one upload type is available.
+            Re-enable (and re-add options to UPLOAD_TYPES) to restore:
+            <Select
+              value={uploadType}
+              onChange={(value) => {
+                setUploadType(value as UploadType);
+                resetState(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+              options={[...UPLOAD_TYPES]}
+              placeholder="Choose type"
+            />
+          */}
+          <div className="upload-type-static">{uploadType}</div>
         </FormField>
 
         <p className="text-[0.9rem] text-text-muted">
