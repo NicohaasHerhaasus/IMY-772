@@ -1,7 +1,7 @@
 // src/pages/RiverFlows/RiverFlows.tsx
 // Integrated with backend — fetches from GET /api/samples
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';

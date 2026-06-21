@@ -358,7 +358,7 @@ function ExampleAmrFinderPlusPreviewTable({ rows }: { rows: ExampleAmrFinderPlus
 
 export default function UploadDataFiles() {
   const { getAccessToken } = useAuth();
-  const [uploadType, setUploadType] = useState<UploadType>(UPLOAD_TYPES[0]);
+  const [uploadType, _setUploadType] = useState<UploadType>(UPLOAD_TYPES[0]);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<FilePreviewState>({ kind: "none" });
   const [dragging, setDragging] = useState(false);

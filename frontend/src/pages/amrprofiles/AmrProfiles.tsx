@@ -434,7 +434,7 @@ export default function AmrProfiles() {
     ? placeholderCoords[selectedKey] : [-28.0, 26.0];
 
   // Representative isolate for selected group (used to fetch visits)
-  const representativeIsolateName = selectedIsolates.length > 0 ? selectedIsolates[0].isolateName ?? null : null;
+  // const representativeIsolateName = selectedIsolates.length > 0 ? selectedIsolates[0].isolateName ?? null : null;
   // const { visits: siteVisits, loading: visitsLoading } = useSiteVisits(representativeIsolateName);
 
   return (
